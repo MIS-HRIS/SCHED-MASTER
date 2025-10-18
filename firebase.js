@@ -47,17 +47,3 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
   }
 
   window.addEventListener("load", () => setTimeout(initFirebase, 500));
-
-// Expose useful Firebase helpers to global scope for non-module scripts
-if (typeof window !== 'undefined') {
-  try {
-    window.onSnapshot = typeof onSnapshot !== 'undefined' ? onSnapshot : window.onSnapshot;
-    window.collection = typeof collection !== 'undefined' ? collection : window.collection;
-    window.doc = typeof doc !== 'undefined' ? doc : window.doc;
-    window.addDoc = typeof addDoc !== 'undefined' ? addDoc : window.addDoc;
-    window.updateDoc = typeof updateDoc !== 'undefined' ? updateDoc : window.updateDoc;
-    window.deleteDoc = typeof deleteDoc !== 'undefined' ? deleteDoc : window.deleteDoc;
-    window.db = typeof db !== 'undefined' ? db : window.db;
-    window.auth = typeof auth !== 'undefined' ? auth : window.auth;
-  } catch(e) { console.warn('Firebase export error', e); }
-}

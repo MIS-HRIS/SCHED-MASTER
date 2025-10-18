@@ -610,7 +610,3 @@
         particleContainer.appendChild(particle);
         gsap.to(particle, { x: (Math.random()-0.5)*200, y: (Math.random()-0.5)*200, duration: Math.random()*20+15, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
-
-loadState();
-  updateButtonStates();
-  recheckConflicts();
