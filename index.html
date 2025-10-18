@@ -500,39 +500,49 @@
 
 
   <script type="module">
-    // Import Firebase modules
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+ /***** 🔥 Firebase Imports (Top Level) *****/
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setLogLevel } 
+    from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      /***** Firebase Setup *****/
-      let db, auth, userId, monitoringCollectionRef;
-      let unsubscribeMonitoring = () => {}; // To detach listener later
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
-      
-      try {
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-        setLogLevel('debug');
+  /***** Firebase Configuration *****/
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEGYeA0ere_txZPbwxMH5-BRflZqh_ef0",
+    authDomain: "wikitehra.firebaseapp.com",
+    projectId: "wikitehra",
+    storageBucket: "wikitehra.firebasestorage.app",
+    messagingSenderId: "761691537990",
+    appId: "1:761691537990:web:3da838e3b77bf2d052c047"
+  };
 
-        await signInAnonymously(auth);
-        userId = auth.currentUser.uid;
-        
-        // Setup Firestore collection reference for monitoring
-        const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
-        monitoringCollectionRef = collection(db, monitoringPath);
-        
-        // Start listening for real-time updates
-        listenForMonitoringUpdates();
+  /***** Initialize Firebase *****/
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  setLogLevel("debug");
 
-      } catch (error) {
-          console.error("Firebase initialization failed:", error);
-          showWarning("Could not connect to real-time monitoring service.");
-      }
+  document.addEventListener("DOMContentLoaded", async () => {
+    let userId;
+    let monitoringCollectionRef;
+    let unsubscribeMonitoring = () => {};
+    const appId = typeof __app_id !== "undefined" ? __app_id : "sched-master-default";
 
+    try {
+      await signInAnonymously(auth);
+      userId = auth.currentUser.uid;
+      console.log("Firebase connected ✅ Anonymous user:", userId);
+
+      // Firestore collection reference
+      const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
+      monitoringCollectionRef = collection(db, monitoringPath);
+
+      // Start listening for real-time updates
+      listenForMonitoringUpdates();
+    } catch (error) {
+      console.error("Firebase initialization failed:", error);
+      showWarning("Could not connect to real-time monitoring service.");
+    }
 
       /***** State *****/
       let workScheduleData = [];
