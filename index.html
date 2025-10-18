@@ -505,6 +505,7 @@
       let restDayData = [];
       let monitoringData = []; // This will be managed by Firestore
       let currentlyEditing = { type: null, index: null };
+      let unsubscribeMonitoring = () => {};
       const undoStack = { work: [], rest: [] };
       const redoStack = { work: [], rest: [] };
       const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
