@@ -1141,6 +1141,7 @@
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
       const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
       monitoringCollectionRef = collection(db, monitoringPath);  // now this works!
+      window.monitoringCollectionRef = monitoringCollectionRef;
       console.log("🔥 Firebase connected for:", appId);
       listenForMonitoringUpdates();
     } catch (error) {
