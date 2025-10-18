@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sched Master</title>
+  <!-- Tailwind CSS for rapid UI development -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Library for Excel file generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- GSAP for advanced animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <!-- Ionicons for icons -->
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="p-4 sm:p-6 lg:p-8">
+
+  <div id="particle-container"></div>
+  <div id="warning-banner" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg shadow-md transition-opacity opacity-0 z-50"></div>
+  <div id="success-message" class="hidden fixed top-16 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-md transition-opacity opacity-0 z-50"></div>
+
+  <div class="max-w-[1400px] mx-auto">
+    <header class="mb-10 text-center rounded-2xl shadow-lg p-8 sm:p-12 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-slate-800/50 z-0"></div>
+        <div class="relative z-10">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">Sched Master</h1>
+            <p class="mt-4 text-lg sm:text-xl text-slate-200">Your intelligent schedule conflict checker.</p>
+        </div>
+    </header>
+
+    <div class="flex justify-center space-x-4 mb-8">
+      <button id="tab-schedule" class="tab-btn active">📅 Schedule Input</button>
+      <button id="tab-monitoring" class="tab-btn">📊 Monitoring Dashboard</button>
+    </div>
+
+    <main id="app-container">
+      <!-- Schedule Input View -->
+      <div id="view-schedule">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Work Schedule Section -->
+          <div class="dashboard-card">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
+            <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button id="generateWorkFile" class="action-btn" disabled>
+                <ion-icon name="download-outline"></ion-icon>
+                Generate Work File</button>
+              <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
+              <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
+              <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
+            </div>
+          </div>
+
+          <!-- Rest Day Schedule Section -->
+          <div class="dashboard-card">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Rest Day Schedule</h2>
+            <textarea id="restScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your rest day schedule data here..."></textarea>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button id="generateRestFile" class="action-btn" disabled>
+                <ion-icon name="download-outline"></ion-icon>
+                Generate Rest Day File</button>
+              <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
+              <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
+              <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary & Conflicts Section -->
+        <div id="summary" class="dashboard-card mt-8">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
+            <p id="summaryText">No data pasted yet.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <!-- Work Schedule Table -->
+          <div class="dashboard-card">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Emp. No</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Date</th>
+                    <th>Shift Code</th>
+                    <th>Day of Week</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="workTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rest Day Schedule Table -->
+          <div class="dashboard-card">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full data-table">
+                <thead>
+                  <tr>
+                    <th>Conflict</th>
+                    <th>#</th>
+                    <th>Emp. No</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Date</th>
+                    <th>Day of Week</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="restTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring Dashboard View -->
+        <div id="view-monitoring" class="hidden">
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-slate-800">Branch Upload Monitoring</h2>
+                    <button id="addMonitoringRowBtn" class="action-btn">
+                        <ion-icon name="add-circle-outline"></ion-icon>
+                        Add Branch
+                    </button>
+                </div>
+
+                <!-- Overall Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-1">
+                         <span class="text-sm font-semibold text-slate-600">Overall Upload Progress</span>
+                         <span id="monitoringProgressText" class="text-sm font-bold text-teal-600">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-4">
+                        <div id="monitoringProgressBar" class="bg-gradient-to-r from-cyan-400 to-teal-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Monitoring Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr>
+                                <th>POS Code</th>
+                                <th>Branch Name</th>
+                                <th>SAP Code</th>
+                                <th class="text-center">Uploaded</th>
+                                <th>Uploaded By</th>
+                                <th>Uploaded Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monitoringTableBody">
+                            <!-- Rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+  </div>
+
+  <button id="backToTopBtn" title="Go to top">
+    <ion-icon name="arrow-up-outline"></ion-icon>
+  </button>
+
+  <!-- Edit Row Modal -->
+    <div id="editModal" class="hidden fixed inset-0 z-[10000] items-center justify-center">
+        <div class="modal-overlay fixed inset-0 bg-black/30"></div>
+        <div class="relative max-w-lg w-11/12 my-10 mx-auto bg-white rounded-lg p-6 shadow-xl z-[10001]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Edit Schedule Entry</h3>
+                <button id="closeEditModalBtn" class="text-2xl text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <form id="editForm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="editEmployeeNo" class="block text-sm font-medium text-slate-700">Employee No.</label>
+                        <input type="text" id="editEmployeeNo" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                    </div>
+                     <div>
+                        <label for="editName" class="block text-sm font-medium text-slate-700">Name</label>
+                        <input type="text" id="editName" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                    </div>
+                     <div>
+                        <label for="editPosition" class="block text-sm font-medium text-slate-700">Position</label>
+                        <input type="text" id="editPosition" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                    </div>
+                     <div>
+                        <label for="editDate" class="block text-sm font-medium text-slate-700">Date</label>
+                        <input type="text" id="editDate" placeholder="MM/DD/YYYY" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                    </div>
+                    <div id="editShiftCodeWrapper">
+                        <label for="editShiftCode" class="block text-sm font-medium text-slate-700">Shift Code</label>
+                        <input type="text" id="editShiftCode" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="editDayOfWeek" class="block text-sm font-medium text-slate-700">Day of Week</label>
+                        <input type="text" id="editDayOfWeek" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                    </div>
+                </div>
+                 <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancelEditBtn" class="action-btn secondary">Cancel</button>
+                    <button type="submit" class="action-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>
