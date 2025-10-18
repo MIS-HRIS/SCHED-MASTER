@@ -1121,12 +1121,14 @@
     from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
       // ✅ Make Firestore helpers visible to other scripts
-  window.onSnapshot = onSnapshot;
-  window.collection = collection;
-  window.doc = doc;
-  window.addDoc = addDoc;
-  window.updateDoc = updateDoc;
-  window.deleteDoc = deleteDoc;
+window.db = db;
+window.auth = auth;
+window.onSnapshot = onSnapshot;
+window.collection = collection;
+window.doc = doc;
+window.addDoc = addDoc;
+window.updateDoc = updateDoc;
+window.deleteDoc = deleteDoc;
 
   const firebaseConfig = {
     apiKey: "AIzaSyDEGYeA0ere_txZPbwxMH5-BRflZqh_ef0",
@@ -1140,7 +1142,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
-
+  
   // ✅ add this line before using it
   let monitoringCollectionRef;
 
