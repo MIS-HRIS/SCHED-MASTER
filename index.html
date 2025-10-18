@@ -520,18 +520,28 @@
     const auth = getAuth(app);
     setLogLevel("debug");
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        await signInAnonymously(auth);
-        const userId = auth.currentUser?.uid;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
-        const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
-        monitoringCollectionRef = collection(db, monitoringPath);
-        listenForMonitoringUpdates();
-      } catch (error) {
-        console.error("Firebase initialization failed:", error);
-        showWarning("Could not connect to real-time monitoring service.");
-      }
+// ✅ Initialize Firebase only after everything is defined
+async function initFirebase() {
+  try {
+    await signInAnonymously(auth);
+    const userId = auth.currentUser?.uid;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
+    const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
+    monitoringCollectionRef = collection(db, monitoringPath);
+    console.log("Firebase connected for:", appId);
+    // Start listening for Firestore updates after DOM + functions loaded
+    listenForMonitoringUpdates();
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+    showWarning("Could not connect to real-time monitoring service.");
+  }
+}
+
+// ✅ Run after DOM is ready and functions exist
+window.addEventListener("load", () => {
+  setTimeout(initFirebase, 500); // give the rest of the script time to load
+});
+
       /***** State *****/
       let workScheduleData = [];
       let restDayData = [];
