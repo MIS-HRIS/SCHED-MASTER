@@ -1112,49 +1112,48 @@
         gsap.to(particle, { x: (Math.random()-0.5)*200, y: (Math.random()-0.5)*200, duration: Math.random()*20+15, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
 
-  <!-- Firebase Setup -->
-// At the top of your App.jsx or a separate firebase.js file
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously } from "firebase/auth";
-import { getFirestore, collection } from "firebase/firestore";
+<!-- ✅ Proper Firebase Setup -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } 
+    from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDEGYeA0ere_txZPbwxMH5-BRflZqh_ef0",
-  authDomain: "wikitehra.firebaseapp.com",
-  projectId: "wikitehra",
-  storageBucket: "wikitehra.appspot.com",
-  messagingSenderId: "761691537990",
-  appId: "1:761691537990:web:3da838e3b77bf2d052c047"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEGYeA0ere_txZPbwxMH5-BRflZqh_ef0",
+    authDomain: "wikitehra.firebaseapp.com",
+    projectId: "wikitehra",
+    storageBucket: "wikitehra.appspot.com",
+    messagingSenderId: "761691537990",
+    appId: "1:761691537990:web:3da838e3b77bf2d052c047"
+  };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-    async function initFirebase() {
-      try {
-        await signInAnonymously(auth);
-        const userId = auth.currentUser?.uid;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
-        const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
-        monitoringCollectionRef = collection(db, monitoringPath);
-        console.log("Firebase connected for:", appId);
-        listenForMonitoringUpdates();
-      } catch (error) {
-        console.error("Firebase initialization failed:", error);
+  async function initFirebase() {
+    try {
+      await signInAnonymously(auth);
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
+      const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
+      monitoringCollectionRef = collection(db, monitoringPath);
+      console.log("🔥 Firebase connected for:", appId);
+      listenForMonitoringUpdates();
+    } catch (error) {
+      console.error("Firebase initialization failed:", error);
+      if (typeof showWarning === "function")
         showWarning("Could not connect to real-time monitoring service.");
-      }
     }
+  }
 
-    window.addEventListener("load", () => {
-      setTimeout(initFirebase, 500);
-    });
-  </script>
+  window.addEventListener("load", () => setTimeout(initFirebase, 500));
+</script>
 
-  <script>
-    loadState();
-    updateButtonStates();
-    recheckConflicts();
-  </script>
+<script>
+  loadState();
+  updateButtonStates();
+  recheckConflicts();
+</script>
 </body>
 </html>
