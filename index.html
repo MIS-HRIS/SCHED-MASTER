@@ -1113,7 +1113,6 @@
       }
     </script> 
 
-<!-- ✅ Proper Firebase Setup -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
   import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -1133,12 +1132,15 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
+  // ✅ add this line before using it
+  let monitoringCollectionRef;
+
   async function initFirebase() {
     try {
       await signInAnonymously(auth);
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'sched-master-default';
       const monitoringPath = `/artifacts/${appId}/public/data/monitoring`;
-      monitoringCollectionRef = collection(db, monitoringPath);
+      monitoringCollectionRef = collection(db, monitoringPath);  // now this works!
       console.log("🔥 Firebase connected for:", appId);
       listenForMonitoringUpdates();
     } catch (error) {
