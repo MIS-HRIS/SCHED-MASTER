@@ -132,6 +132,7 @@
             <div class="dashboard-card">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold text-slate-800">Branch Upload Monitoring</h2>
+                    <div class="flex space-x-4 items-center">
                     <button id="addMonitoringRowBtn" class="action-btn">
                         <ion-icon name="add-circle-outline"></ion-icon>
                         Add Branch
@@ -148,6 +149,44 @@
                         <div id="monitoringProgressBar" class="bg-gradient-to-r from-cyan-400 to-teal-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                 </div>
+
+<!-- Month & Year Selector -->
+<div class="flex justify-between items-center mb-6">
+    <div class="flex items-center gap-4">
+        <label for="monthPicker" class="text-sm font-semibold text-slate-600">Month:</label>
+        <select id="monthPicker" class="monitoring-table-input">
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+
+        <label for="yearPicker" class="text-sm font-semibold text-slate-600">Year:</label>
+        <select id="yearPicker" class="monitoring-table-input">
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2027">2028</option>
+            <option value="2027">2029</option>
+            <option value="2027">2030</option>
+            <option value="2027">2031</option>
+        </select>
+    </div>
+    <button id="loadMonthData" class="action-btn secondary">
+        Load Data
+    </button>
+    <button id="exportExcel" class="action-btn">
+        Export to Excel
+    </button>
+</div>
 
                 <!-- Monitoring Table -->
                 <div class="overflow-x-auto">
@@ -230,5 +269,6 @@
   updateButtonStates();
   recheckConflicts();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
