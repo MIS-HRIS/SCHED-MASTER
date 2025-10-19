@@ -610,14 +610,22 @@
         particleContainer.appendChild(particle);
         gsap.to(particle, { x: (Math.random()-0.5)*200, y: (Math.random()-0.5)*200, duration: Math.random()*20+15, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
+// Function to create a reference for the selected month and year
+const progressRef = (month, year) => {
+    return collection(db, "monitoring", "_meta", "progress", `${year}-${month}`, "entries");
+};
+
 // Function to load data for the selected month and year
 async function loadMonthData() {
     const month = document.getElementById("monthPicker").value;
     const year = document.getElementById("yearPicker").value;
 
+    // Log selected month and year
+    console.log("Fetching data for:", month, year);
+
     // Fetch data from Firestore based on selected month and year
-    const progressDataRef = progressRef(month, year); // Use progressRef to get entries
-    const snapshot = await getDocs(progressDataRef);
+    const progressDataRef = progressRef(month, year); // Firestore reference
+    const snapshot = await getDocs(progressDataRef); // Fetch data
     const progressData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Render the data in the table
@@ -632,14 +640,18 @@ async function loadMonthData() {
 // Event listener to trigger loadMonthData() when the "Load Data" button is clicked
 document.getElementById("loadMonthData").addEventListener("click", loadMonthData);
 
+// Function to export data to Excel
 function exportToExcel(progressData) {
     const month = document.getElementById("monthPicker").value;
     const year = document.getElementById("yearPicker").value;
-    
+
+    // Log exporting data
+    console.log('Exporting data:', progressData);
+
     // Create a new workbook and add a worksheet
     const ws = XLSX.utils.json_to_sheet(progressData);
     const wb = XLSX.utils.book_new();
-    
+
     // Set a header with the month and year
     const header = `Branch Upload Monitoring Report\nMonth: ${month} ${year}\n\n`;
 
@@ -647,7 +659,7 @@ function exportToExcel(progressData) {
     const wsHeader = XLSX.utils.aoa_to_sheet([[header]]);
     XLSX.utils.book_append_sheet(wb, wsHeader, "Header");
     XLSX.utils.book_append_sheet(wb, ws, "Progress Data");
-    
+
     // Write the Excel file
     XLSX.writeFile(wb, `Monitoring_Report_${year}_${month}.xlsx`);
 }
@@ -657,10 +669,11 @@ document.getElementById("exportExcel").addEventListener("click", function() {
     // Load the progress data from Firestore for the selected month/year before exporting
     const month = document.getElementById("monthPicker").value;
     const year = document.getElementById("yearPicker").value;
-    const progressDataRef = progressRef(month, year);
+    const progressDataRef = progressRef(month, year); // Get Firestore reference
 
+    // Fetch data from Firestore and pass it to exportToExcel
     getDocs(progressDataRef).then(snapshot => {
         const progressData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        exportToExcel(progressData);
+        exportToExcel(progressData); // Export the fetched data to Excel
     });
 });
