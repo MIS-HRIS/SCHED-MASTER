@@ -183,43 +183,61 @@
           renderRestTable();
       }
       
-      function generateFile(data, fileNamePrefix) {
-          if (data.length === 0) {
-              showWarning('No data to generate file.');
-              return;
-          }
+function generateFile(data, fileNamePrefix) {
+    if (data.length === 0) {
+        showWarning('No data to generate file.');
+        return;
+    }
 
-          let formattedData;
+    // 🏷️ Get branch name and set fixed display date
+    const branchName = document.getElementById('branchNameInput')?.value.trim() || 'UnnamedBranch';
+    const formattedDate = "10-01-25"; // your fixed export date
 
-          if (fileNamePrefix === 'WorkSchedule') {
-              formattedData = data.map(row => ({
-                  'Employee Number': row.employeeNo,
-                  'Work Date': jsDateToExcel(row.date),
-                  'Shift Code': row.shiftCode,
-              }));
-          } else if (fileNamePrefix === 'RestDaySchedule') {
-              formattedData = data.map(row => ({
-                  'Employee No': row.employeeNo,
-                  'Rest Day Date': jsDateToExcel(row.date),
-              }));
-          } else {
-              // Fallback for any other case
-              formattedData = data.map(row => {
-                  const newRow = { ...row };
-                  delete newRow.conflict;
-                  delete newRow.conflictReason;
-                  newRow.date = jsDateToExcel(newRow.date);
-                  return newRow;
-              });
-          }
+    let formattedData;
 
-          const worksheet = XLSX.utils.json_to_sheet(formattedData);
-          const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-          XLSX.writeFile(workbook, `${fileNamePrefix}_${new Date().toISOString().slice(0,10)}.xlsx`);
-          showSuccess('File generated successfully!');
-      }
+    if (fileNamePrefix === 'WorkSchedule') {
+        formattedData = data.map(row => ({
+            'Employee Number': row.employeeNo,
+            'Work Date': new Date(row.date), // store as real JS Date
+            'Shift Code': row.shiftCode,
+        }));
+    } else if (fileNamePrefix === 'RestDaySchedule') {
+        formattedData = data.map(row => ({
+            'Employee No': row.employeeNo,
+            'Rest Day Date': new Date(row.date),
+        }));
+    } else {
+        formattedData = data.map(row => {
+            const newRow = { ...row };
+            delete newRow.conflict;
+            delete newRow.conflictReason;
+            newRow.date = new Date(newRow.date);
+            return newRow;
+        });
+    }
 
+    // 🧾 Create Excel worksheet
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+    // ✅ Format Excel Date Column
+    Object.keys(worksheet).forEach(cell => {
+        if (cell[0] === "!" || !worksheet[cell].v) return;
+        const val = worksheet[cell].v;
+        if (val instanceof Date || /^\d{4}-\d{2}-\d{2}/.test(val)) {
+            worksheet[cell].t = "d";
+            worksheet[cell].z = "mm/dd/yy"; // Display format MM/DD/YY
+        }
+    });
+
+    // 📘 Finalize workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+    // 💾 Save file with branch name and fixed date
+    XLSX.writeFile(workbook, `${fileNamePrefix}_${branchName}_${formattedDate}.xlsx`);
+
+    showSuccess('File generated successfully!');
+}
       /*************************\
        * UI & RENDERING     *
       \*************************/
