@@ -128,9 +128,11 @@ updateButtonStates();
 renderWorkTable();
 renderRestTable();
 
-// 🧭 Automatically scroll to summary area after pasting
-document.getElementById('summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+// ✅ After rendering, wait a tiny bit, then scroll down smoothly
+setTimeout(() => {
+  const target = document.getElementById('summary');
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, 300);
       
       function detectColumnMapping(rows, isWork) {
           let headerRow = -1;
