@@ -126,22 +126,44 @@ function handlePaste(event) {
     return;
   }
 
-  const text = (event.clipboardData || window.clipboardData).getData("text");
+  const rawText = (event.clipboardData || window.clipboardData).getData("text") || "";
+  const text = rawText.trim();
   const isWork = event.target.id === "workScheduleInput";
   const type = isWork ? "work" : "rest";
 
   saveUndoState(type);
 
-  const rows = text.split("\n").map((row) => row.split("\t"));
-  const { mapping, headerRow } = detectColumnMapping(rows, isWork);
+  // Normalize newlines and drop empty lines
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) {
+    console.warn("Paste contained no text.");
+    return;
+  }
 
-  const data = rows
+  // Choose best splitter per line:
+  // - Prefer tabs (typical from Excel)
+  // - Then multiple spaces (fixed-width / copied text)
+  // - Then commas
+  // - Fallback to single-space (last resort)
+  const parsedRows = lines.map((line) => {
+    if (line.includes("\t")) return line.split("\t").map(c => c.trim());
+    if (/\s{2,}/.test(line)) return line.split(/\s{2,}/).map(c => c.trim());
+    if (line.includes(",")) return line.split(",").map(c => c.trim());
+    return line.split(/\s+/).map(c => c.trim());
+  });
+
+  // Debug help when things don't parse as expected
+  console.debug("Parsed rows count:", parsedRows.length, "Sample row cols:", parsedRows[0].length, parsedRows[0]);
+
+  const { mapping, headerRow } = detectColumnMapping(parsedRows, isWork);
+
+  const data = parsedRows
     .slice(headerRow + 1)
     .map((row) => {
       const entry = {};
       for (const key in mapping) {
         if (mapping[key] !== null && row[mapping[key]] !== undefined) {
-          entry[key] = row[mapping[key]].trim();
+          entry[key] = (row[mapping[key]] || "").trim();
         } else {
           entry[key] = "";
         }
@@ -162,10 +184,12 @@ function handlePaste(event) {
     }));
   }
 
+  // Update UI + persist
   recheckConflicts();
   updateButtonStates();
   renderWorkTable();
   renderRestTable();
+  saveState();
 
   // ✅ Wait until next frame (DOM updated), then scroll to table
   setTimeout(() => {
