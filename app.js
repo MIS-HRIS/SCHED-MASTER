@@ -156,9 +156,6 @@ function handlePaste(event) {
   }, 300);
 }
 
-      workInput.addEventListener('paste', handlePaste);
-restInput.addEventListener('paste', handlePaste);
-
       function recheckConflicts() {
           const scheduleMap = new Map();
           
