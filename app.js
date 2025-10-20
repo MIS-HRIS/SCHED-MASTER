@@ -251,6 +251,9 @@ function detectColumnMapping(rows, isWork) {
 //////////////////////
 // HANDLE PASTE     //
 //////////////////////
+//////////////////////
+// HANDLE PASTE     //
+//////////////////////
 function handlePaste(event) {
   event.preventDefault();
 
@@ -266,7 +269,7 @@ function handlePaste(event) {
   const type = isWork ? "work" : "rest";
 
   console.log("📋 Paste detected (isWork:", isWork, ")");
-  saveUndoState(type);
+  saveUndoState(type); // Saves the state *before* we add new data
 
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
   if (lines.length === 0) {
@@ -298,27 +301,40 @@ function handlePaste(event) {
     })
     .filter((entry) => entry.employeeNo && entry.name && entry.date);
 
+  // --- FIX: Append new data instead of replacing ---
   if (isWork) {
-    workScheduleData = data.map((d) => ({
+    const newData = data.map((d) => ({
       ...d,
       date: excelDateToJS(d.date),
       conflict: false,
       conflictReason: ''
     }));
+    // Use .concat() to ADD the new data to the existing data
+    workScheduleData = workScheduleData.concat(newData);
   } else {
-    restDayData = data.map((d) => ({
+    const newData = data.map((d) => ({
       ...d,
       date: excelDateToJS(d.date),
       conflict: false,
       conflictReason: ''
     }));
+    // Use .concat() to ADD the new data to the existing data
+    restDayData = restDayData.concat(newData);
   }
+  // --- END FIX ---
 
   recheckConflicts();
   updateButtonStates();
   renderWorkTable();
   renderRestTable();
   saveState();
+
+  // Clear the input box after pasting
+  if (isWork && workInput) {
+    workInput.value = '';
+  } else if (!isWork && restInput) {
+    restInput.value = '';
+  }
 
   // smooth scroll to the table
   setTimeout(() => {
@@ -328,7 +344,6 @@ function handlePaste(event) {
     }
   }, 300);
 }
-
 //////////////////////
 // CONFLICT CHECK   //
 //////////////////////
