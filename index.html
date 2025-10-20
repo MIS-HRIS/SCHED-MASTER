@@ -41,108 +41,99 @@
       <button id="tab-monitoring" class="tab-btn">📊 Monitoring Dashboard</button>
     </div>
 
-<main id="app-container">
-  <!-- Schedule Input View -->
-  <div id="view-schedule">
+    <main id="app-container">
+      <!-- Schedule Input View -->
+      <div id="view-schedule">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Work Schedule Section -->
+          <div class="dashboard-card">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
+            <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button id="generateWorkFile" class="action-btn" disabled>
+                <div class="mt-2">
+  <label for="branchNameInput" class="block text-sm font-semibold text-slate-700 mb-1">Branch Name:</label>
+  <input type="text" id="branchNameInput" class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter Branch Name..." />
+</div>
+                <ion-icon name="download-outline"></ion-icon>
+                Generate Work File</button>
+              <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
+              <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
+              <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
+            </div>
+          </div>
 
-    <!-- ✅ Shared Branch Name Input -->
-    <div class="dashboard-card mb-6">
-      <label for="branchNameInput" class="block text-lg font-semibold text-slate-700 mb-2">
-        Branch Name:
-      </label>
-      <input 
-        type="text" 
-        id="branchNameInput" 
-        class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" 
-        placeholder="Enter Branch Name before generating..."
-      />
-    </div>
+          <!-- Rest Day Schedule Section -->
+          <div class="dashboard-card">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Rest Day Schedule</h2>
+            <textarea id="restScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your rest day schedule data here..."></textarea>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <div class="mt-2">
+  <label for="branchNameInput" class="block text-sm font-semibold text-slate-700 mb-1">Branch Name:</label>
+  <input type="text" id="branchNameInput" class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter Branch Name..." />
+</div>
+              <button id="generateRestFile" class="action-btn" disabled>
+                <ion-icon name="download-outline"></ion-icon>
+                Generate Rest Day File</button>
+              <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
+              <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
+              <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
+            </div>
+          </div>
+        </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Work Schedule Section -->
-      <div class="dashboard-card">
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
-        <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
-        <div class="mt-4 flex flex-wrap gap-3">
-          <button id="generateWorkFile" class="action-btn" disabled>
-            <ion-icon name="download-outline"></ion-icon>
-            Generate Work File
-          </button>
-          <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
-          <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
-          <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
+        <!-- Summary & Conflicts Section -->
+        <div id="summary" class="dashboard-card mt-8">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
+            <p id="summaryText">No data pasted yet.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <!-- Work Schedule Table -->
+          <div class="dashboard-card">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Emp. No</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Date</th>
+                    <th>Shift Code</th>
+                    <th>Day of Week</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="workTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rest Day Schedule Table -->
+          <div class="dashboard-card">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full data-table">
+                <thead>
+                  <tr>
+                    <th>Conflict</th>
+                    <th>#</th>
+                    <th>Emp. No</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Date</th>
+                    <th>Day of Week</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="restTableBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-
-      <!-- Rest Day Schedule Section -->
-      <div class="dashboard-card">
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">Rest Day Schedule</h2>
-        <textarea id="restScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your rest day schedule data here..."></textarea>
-        <div class="mt-4 flex flex-wrap gap-3">
-          <button id="generateRestFile" class="action-btn" disabled>
-            <ion-icon name="download-outline"></ion-icon>
-            Generate Rest Day File
-          </button>
-          <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
-          <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
-          <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Summary & Conflicts Section -->
-    <div id="summary" class="dashboard-card mt-8">
-      <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
-      <p id="summaryText">No data pasted yet.</p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-      <!-- Work Schedule Table -->
-      <div class="dashboard-card">
-        <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
-        <div class="overflow-x-auto">
-          <table class="min-w-full data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Emp. No</th>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Date</th>
-                <th>Shift Code</th>
-                <th>Day of Week</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="workTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Rest Day Schedule Table -->
-      <div class="dashboard-card">
-        <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
-        <div class="overflow-x-auto">
-          <table class="min-w-full data-table">
-            <thead>
-              <tr>
-                <th>Conflict</th>
-                <th>#</th>
-                <th>Emp. No</th>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Date</th>
-                <th>Day of Week</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="restTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
 
       <!-- Monitoring Dashboard View -->
         <div id="view-monitoring" class="hidden">
@@ -277,9 +268,15 @@
         </div>
     </div>
   
- <!-- ✅ Firebase and App JS (as modules so imports work) -->
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="app.js"></script>
+<script src="app.js"></script>
+<script type="module" src="firebase.js"></script>
 
+<!-- ✅ then your normal JS files / inline script -->
+<script>
+  loadState();
+  updateButtonStates();
+  recheckConflicts();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
