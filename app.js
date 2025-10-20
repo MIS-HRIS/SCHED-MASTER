@@ -11,6 +11,8 @@
       /***** Element refs *****/
       const workInput = document.getElementById('workScheduleInput');
       const restInput = document.getElementById('restScheduleInput');
+      workInput.addEventListener('paste', handlePaste);
+restInput.addEventListener('paste', handlePaste);
       const workTableBody = document.getElementById('workTableBody');
       const restTableBody = document.getElementById('restTableBody');
       const summaryEl = document.getElementById('summary');
@@ -94,47 +96,50 @@ generateRestFileBtn.addEventListener('click', () => {
        * CORE FUNCTIONS      *
       \*************************/
 
-/*************************\
- * CORE FUNCTIONS      *
-\*************************/
-
 function handlePaste(event) {
   event.preventDefault();
 
   // ✅ Require branch name before pasting
-  const branchName = document.getElementById('branchNameInput')?.value.trim();
+  const branchName = document.getElementById("branchNameInput")?.value.trim();
   if (!branchName) {
-    alert('⚠️ Please enter the Branch Name before pasting schedule data.');
+    alert("⚠️ Please enter the Branch Name before pasting schedule data.");
     return;
   }
 
-  const text = (event.clipboardData || window.clipboardData).getData('text');
-  const isWork = event.target.id === 'workScheduleInput';
-  const type = isWork ? 'work' : 'rest';
+  const text = (event.clipboardData || window.clipboardData).getData("text");
+  const isWork = event.target.id === "workScheduleInput";
+  const type = isWork ? "work" : "rest";
 
   saveUndoState(type);
 
-  const rows = text.split('\n').map(row => row.split('\t'));
+  const rows = text.split("\n").map((row) => row.split("\t"));
   const { mapping, headerRow } = detectColumnMapping(rows, isWork);
 
-  const data = rows.slice(headerRow + 1)
-    .map(row => {
+  const data = rows
+    .slice(headerRow + 1)
+    .map((row) => {
       const entry = {};
       for (const key in mapping) {
         if (mapping[key] !== null && row[mapping[key]] !== undefined) {
           entry[key] = row[mapping[key]].trim();
         } else {
-          entry[key] = '';
+          entry[key] = "";
         }
       }
       return entry;
     })
-    .filter(entry => entry.employeeNo && entry.name && entry.date);
+    .filter((entry) => entry.employeeNo && entry.name && entry.date);
 
   if (isWork) {
-    workScheduleData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+    workScheduleData = data.map((d) => ({
+      ...d,
+      date: excelDateToJS(d.date),
+    }));
   } else {
-    restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+    restDayData = data.map((d) => ({
+      ...d,
+      date: excelDateToJS(d.date),
+    }));
   }
 
   recheckConflicts();
@@ -142,16 +147,16 @@ function handlePaste(event) {
   renderWorkTable();
   renderRestTable();
 
-  // ✅ Smooth scroll after paste
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      const summary = document.getElementById('summary');
-      if (summary) {
-        summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 300);
-  });
-} // 👈 Close function properly
+  // ✅ Wait until next frame (DOM updated), then scroll to table
+  setTimeout(() => {
+    const target = isWork
+      ? document.querySelector("#workTableBody")
+      : document.querySelector("#restTableBody");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, 300);
+}
 
       function recheckConflicts() {
           const scheduleMap = new Map();
