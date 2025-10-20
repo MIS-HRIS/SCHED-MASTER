@@ -759,12 +759,14 @@ function updateMonitoringProgress() {
         } catch (e) { console.error("Could not load schedule state.", e); }
       }
       
-      ['paste', 'click'].forEach(evt => {
-        workInput.addEventListener(evt, saveState);
-        restInput.addEventListener(evt, saveState);
-        clearWorkBtn.addEventListener(evt, saveState);
-        clearRestBtn.addEventListener(evt, saveState);
-      });
+     window.addEventListener("load", () => {
+  ['paste', 'click'].forEach(evt => {
+    workInput?.addEventListener(evt, saveState);
+    restInput?.addEventListener(evt, saveState);
+    clearWorkBtn?.addEventListener(evt, saveState);
+    clearRestBtn?.addEventListener(evt, saveState);
+  });
+});
 
       /***** Parallax Header & Particles *****/
       const header = document.querySelector('header');
