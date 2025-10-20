@@ -7,6 +7,14 @@ let unsubscribeMonitoring = () => {};
 const undoStack = { work: [], rest: [] };
 const redoStack = { work: [], rest: [] };
 const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
+// ✅ Add these DOM references so renderWorkTable() and renderRestTable() can update tables
+let workTableBody = null;
+let restTableBody = null;
+
+window.addEventListener("load", () => {
+  workTableBody = document.getElementById("workTableBody");
+  restTableBody = document.getElementById("restTableBody");
+});
 
 /*************************\
  * EVENT LISTENERS     *
