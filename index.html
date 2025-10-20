@@ -48,22 +48,33 @@
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
             <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
+            
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-y-4 gap-x-2">
+                <!-- Left Side: Branch Info -->
+                <div class="flex items-center gap-3 flex-grow min-w-[280px]">
+                    <label for="branchNameInput" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Branch Name:</label>
+                    <input type="text" id="branchNameInput" class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter Branch Name..." />
+                </div>
 
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3">
-              <label for="branchNameInput" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Branch Name:</label>
-              <input
-                type="text"
-                id="branchNameInput"
-                class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 w-full md:w-52"
-                placeholder="Enter Branch Name..."
-              />
-              <button id="generateWorkFile" class="action-btn flex items-center gap-2 justify-center" disabled>
-                <ion-icon name="download-outline"></ion-icon>
-                Generate Work File
-              </button>
-              <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
-              <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
-              <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
+                <!-- Right Side: Actions -->
+                <div class="flex items-center justify-end gap-3 flex-grow">
+                    <button id="generateWorkFile" class="action-btn flex items-center gap-2 justify-center" disabled>
+                        <ion-icon name="download-outline"></ion-icon>
+                        Generate File
+                    </button>
+                    
+                    <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+                         <button id="undoWork" class="action-btn secondary !p-2" disabled title="Undo">
+                            <ion-icon name="arrow-undo-outline" class="text-lg"></ion-icon>
+                         </button>
+                         <button id="redoWork" class="action-btn secondary !p-2" disabled title="Redo">
+                            <ion-icon name="arrow-redo-outline" class="text-lg"></ion-icon>
+                         </button>
+                         <button id="clearWorkData" class="action-btn danger !p-2" disabled title="Clear Data">
+                            <ion-icon name="trash-outline" class="text-lg"></ion-icon>
+                         </button>
+                    </div>
+                </div>
             </div>
           </div>
 
@@ -71,91 +82,37 @@
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Rest Day Schedule</h2>
             <textarea id="restScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your rest day schedule data here..."></textarea>
+            
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-y-4 gap-x-2">
+                <!-- Left Side: Branch Info -->
+                <div class="flex items-center gap-3 flex-grow min-w-[280px]">
+                    <label for="branchNameRestInput" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Branch Name:</label>
+                    <input type="text" id="branchNameRestInput" class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter Branch Name..." />
+                </div>
 
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3">
-              <label for="branchNameRestInput" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Branch Name:</label>
-              <input
-                type="text"
-                id="branchNameRestInput"
-                class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 w-full md:w-52"
-                placeholder="Enter Branch Name..."
-              />
-              <button id="generateRestFile" class="action-btn flex items-center gap-2 justify-center" disabled>
-                <ion-icon name="download-outline"></ion-icon>
-                Generate Rest Day File
-              </button>
-              <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
-              <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
-              <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
+                <!-- Right Side: Actions -->
+                <div class="flex items-center justify-end gap-3 flex-grow">
+                    <button id="generateRestFile" class="action-btn flex items-center gap-2 justify-center" disabled>
+                        <ion-icon name="download-outline"></ion-icon>
+                        Generate File
+                    </button>
+                    
+                    <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+                         <button id="undoRest" class="action-btn secondary !p-2" disabled title="Undo">
+                            <ion-icon name="arrow-undo-outline" class="text-lg"></ion-icon>
+                         </button>
+                         <button id="redoRest" class="action-btn secondary !p-2" disabled title="Redo">
+                            <ion-icon name="arrow-redo-outline" class="text-lg"></ion-icon>
+                         </button>
+                         <button id="clearRestData" class="action-btn danger !p-2" disabled title="Clear Data">
+                            <ion-icon name="trash-outline" class="text-lg"></ion-icon>
+                         </button>
+                    </div>
+                </div>
             </div>
           </div>
         </div>
 
-        <!-- Summary & Conflicts Section -->
-        <div id="summary" class="dashboard-card mt-8">
-          <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
-          <p id="summaryText">No data pasted yet.</p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          <!-- Work Schedule Table -->
-          <div class="dashboard-card">
-            <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full data-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Emp. No</th>
-                    <th>Name</th>
-                    <th>Position</th>
-                    <th>Date</th>
-                    <th>Shift Code</th>
-                    <th>Day of Week</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="workTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Rest Day Schedule Table -->
-          <div class="dashboard-card">
-            <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full data-table">
-                <thead>
-                  <tr>
-                    <th>Conflict</th>
-                    <th>#</th>
-                    <th>Emp. No</th>
-                    <th>Name</th>
-                    <th>Position</th>
-                    <th>Date</th>
-                    <th>Day of Week</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="restTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Monitoring Dashboard View -->
-      <div id="view-monitoring" class="hidden">
-        <div class="dashboard-card">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-slate-800">Branch Upload Monitoring</h2>
-            <div class="flex space-x-4 items-center">
-              <button id="addMonitoringRowBtn" class="action-btn">
-                <ion-icon name="add-circle-outline"></ion-icon>
-                Add Branch
-              </button>
-            </div>
-          </div>
 
           <!-- Overall Progress Bar -->
           <div class="mb-6">
