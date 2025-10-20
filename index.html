@@ -281,19 +281,5 @@
   <script type="module" src="firebase.js"></script>
   <script type="module" src="app.js"></script>
 
-  <!-- ✅ Then run initialization AFTER app.js is loaded -->
-  <script type="module">
-    import('./app.js').then(({ loadState, updateButtonStates, recheckConflicts }) => {
-      if (typeof loadState === 'function') {
-        loadState();
-        updateButtonStates();
-        recheckConflicts();
-      } else {
-        console.warn("⚠️ app.js loaded but loadState not exported");
-      }
-    }).catch(err => {
-      console.error("Failed to load app module:", err);
-    });
-  </script>
 </body>
 </html>

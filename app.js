@@ -255,95 +255,136 @@ function detectColumnMapping(rows, isWork) {
 // HANDLE PASTE     //
 //////////////////////
 function handlePaste(event) {
-  event.preventDefault();
+  try {
+    event.preventDefault();
+    const pastedText = (event.clipboardData || window.clipboardData).getData('text') || '';
+    const type = event.target && event.target.id === 'workScheduleInput' ? 'work' : 'rest';
 
-  const branchName = document.getElementById("branchNameInput")?.value.trim();
-  if (!branchName) {
-    alert("⚠️ Please enter the Branch Name before pasting schedule data.");
-    return;
+    saveUndoState(type);
+    const parsedData = parsePastedData(pastedText, type);
+
+    if (type === 'work') {
+      // replace or append? original behavior appended; user's snippet replaced.
+      // Keep replace behavior to match the provided working handler:
+      workScheduleData = parsedData.map(d => ({
+        ...d,
+        // ensure both shapes are present
+        employeeNo: d.employeeNo || d.empNo,
+        empNo: d.empNo || d.employeeNo
+      }));
+      if (workInput) workInput.value = '';
+    } else {
+      restDayData = parsedData.map(d => ({
+        ...d,
+        employeeNo: d.employeeNo || d.empNo,
+        empNo: d.empNo || d.employeeNo
+      }));
+      if (restInput) restInput.value = '';
+    }
+
+    recheckConflicts();
+    saveState();
+    updateButtonStates();
+    // re-render tables
+    renderWorkTable();
+    renderRestTable();
+  } catch (err) {
+    console.error("Error in paste handler:", err);
   }
+}
 
-  const rawText = (event.clipboardData || window.clipboardData).getData("text") || "";
-  const text = rawText.trim();
-  const isWork = event.target && event.target.id === "workScheduleInput";
-  const type = isWork ? "work" : "rest";
+/*************************\
+ * ACTION HANDLERS       *
+\*************************/
 
-  console.log("📋 Paste detected (isWork:", isWork, ")");
-  saveUndoState(type); // Saves the state *before* we add new data
+// Helper: parse pasted text into data array (returns array compatible with existing state)
+function parsePastedData(pastedText, type) {
+  if (!pastedText) return [];
 
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-  if (lines.length === 0) {
-    console.warn("Paste contained no text.");
-    return;
-  }
+  const lines = pastedText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return [];
 
-  const parsedRows = lines.map((line) => {
-    if (line.includes("\t")) return line.split("\t").map(c => c.trim());
+  const rows = lines.map(line => {
+    if (line.includes('\t')) return line.split('\t').map(c => c.trim());
     if (/\s{2,}/.test(line)) return line.split(/\s{2,}/).map(c => c.trim());
-    if (line.includes(",")) return line.split(",").map(c => c.trim());
+    if (line.includes(',')) return line.split(',').map(c => c.trim());
     return line.split(/\s+/).map(c => c.trim());
   });
 
-  const { mapping, headerRow } = detectColumnMapping(parsedRows, isWork);
+  const { mapping, headerRow } = detectColumnMapping(rows, type === 'work');
 
-  const data = parsedRows
-    .slice(headerRow + 1)
-    .map((row) => {
-      const entry = {};
-      for (const key in mapping) {
-        if (mapping[key] !== null && row[mapping[key]] !== undefined) {
-          entry[key] = (row[mapping[key]] || "").trim();
-        } else {
-          entry[key] = "";
-        }
-      }
-      return entry;
-    })
-    .filter((entry) => entry.employeeNo && entry.name && entry.date);
+  const parsed = rows.slice(headerRow + 1).map((row, idx) => {
+    const entry = {};
+    // map fields both to user's expected keys (empNo) and existing keys (employeeNo)
+    const emp = mapping.employeeNo;
+    const nameIdx = mapping.name;
+    const posIdx = mapping.position;
+    const dateIdx = mapping.date;
+    const dayIdx = mapping.dayOfWeek;
+    const shiftIdx = mapping.shiftCode;
 
-  // --- FIX: Append new data instead of replacing ---
-  if (isWork) {
-    const newData = data.map((d) => ({
-      ...d,
-      date: excelDateToJS(d.date),
-      conflict: false,
-      conflictReason: ''
-    }));
-    // Use .concat() to ADD the new data to the existing data
-    workScheduleData = workScheduleData.concat(newData);
-  } else {
-    const newData = data.map((d) => ({
-      ...d,
-      date: excelDateToJS(d.date),
-      conflict: false,
-      conflictReason: ''
-    }));
-    // Use .concat() to ADD the new data to the existing data
-    restDayData = restDayData.concat(newData);
-  }
-  // --- END FIX ---
+    const rawDate = (row[dateIdx] !== undefined) ? row[dateIdx] : '';
+    const dateVal = excelDateToJS(rawDate);
 
-  recheckConflicts();
-  updateButtonStates();
-  renderWorkTable();
-  renderRestTable();
-  saveState();
+    entry.id = `${Date.now()}_${idx}`; // lightweight unique id for later edits/deletes
+    entry.empNo = (row[emp] || '').trim();
+    entry.employeeNo = entry.empNo;
+    entry.name = (row[nameIdx] || '').trim();
+    entry.position = (row[posIdx] || '').trim();
+    entry.date = dateVal;
+    entry.dayOfWeek = (row[dayIdx] || '').trim();
+    if (type === 'work') entry.shiftCode = (row[shiftIdx] || '').trim();
+    entry.conflict = false;
+    entry.conflictReason = '';
 
-  // Clear the input box after pasting
-  if (isWork && workInput) {
-    workInput.value = '';
-  } else if (!isWork && restInput) {
-    restInput.value = '';
-  }
+    return entry;
+  }).filter(e => e.empNo && e.name && e.date);
 
-  // smooth scroll to the table
-  setTimeout(() => {
-    const target = isWork ? workTableBody : restTableBody;
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, 300);
+  return parsed;
 }
+
+// Small wrapper so the user's generateExcel can coexist and call existing generator
+function generateExcel(type) {
+  const branchName = document.getElementById('branchNameInput')?.value || 'Branch';
+  const data = type === 'work' ? workScheduleData : restDayData;
+  if (!data || data.length === 0) return;
+  // reuse existing generateFile by picking correct prefix
+  const prefix = type === 'work' ? 'WorkSchedule' : 'RestDaySchedule';
+  generateFile(data, prefix);
+}
+
+// Optional convenience handlers mapped to existing functions
+function handleClear(type) { clearData(type); }
+function handleUndo(type) { undo(type); }
+function handleRedo(type) { redo(type); }
+
+// The edit/delete handlers in the provided snippet expect id-based items.
+// We provide thin adapters that map id -> index and reuse existing row handlers.
+function handleEdit(type, id) {
+  const dataArray = type === 'work' ? workScheduleData : restDayData;
+  const idx = dataArray.findIndex(item => item.id === id);
+  if (idx === -1) return;
+  handleEditRow(type, idx); // existing function uses index
+}
+
+function handleSaveEdit(event) {
+  // existing handleSaveEdit takes the form submit and uses currentlyEditing.index (index-based)
+  // keep current implementation; this adapter only present for compatibility
+  handleSaveEditOriginal?.(event);
+}
+
+function closeEditModal() { hideEditModal(); }
+
+function handleDelete(type, id) {
+  const dataArray = type === 'work' ? workScheduleData : restDayData;
+  const idx = dataArray.findIndex(item => item.id === id);
+  if (idx === -1) return;
+  handleDeleteRow(type, idx);
+}
+
+// Ensure updateButtonStates remains the single source of truth (adapter)
+function updateButtonStatesAdapter() { updateButtonStates(); }
+
 //////////////////////
 // CONFLICT CHECK   //
 //////////////////////
