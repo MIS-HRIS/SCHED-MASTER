@@ -790,27 +790,19 @@ function updateMonitoringProgress() {
         gsap.to(particle, { x: (Math.random()-0.5)*200, y: (Math.random()-0.5)*200, duration: Math.random()*20+15, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
 
-// ✅ Attach immediately (works even if module is loaded after DOM)
-const workInputNow = document.getElementById("workScheduleInput");
-const restInputNow = document.getElementById("restScheduleInput");
+// ✅ Always attach paste listeners after DOM is fully loaded
+window.addEventListener("load", () => {
+  const workInput = document.getElementById("workScheduleInput");
+  const restInput = document.getElementById("restScheduleInput");
 
-if (workInputNow && restInputNow) {
-  workInputNow.addEventListener("paste", handlePaste);
-  restInputNow.addEventListener("paste", handlePaste);
-  console.log("✅ Paste listeners attached immediately!");
-} else {
-  window.addEventListener("load", () => {
-    const workInput = document.getElementById("workScheduleInput");
-    const restInput = document.getElementById("restScheduleInput");
-    if (workInput && restInput) {
-      workInput.addEventListener("paste", handlePaste);
-      restInput.addEventListener("paste", handlePaste);
-      console.log("✅ Paste listeners attached on window.load!");
-    } else {
-      console.warn("⚠️ Inputs not found for paste listeners!");
-    }
-  });
-}
+  if (workInput && restInput) {
+    workInput.addEventListener("paste", handlePaste);
+    restInput.addEventListener("paste", handlePaste);
+    console.log("✅ Paste listeners attached successfully after window load!");
+  } else {
+    console.warn("⚠️ Paste inputs not found on load!");
+  }
+});
 
 // expose init helpers to other module scripts
 export { loadState, updateButtonStates, recheckConflicts };
