@@ -11,8 +11,6 @@
       /***** Element refs *****/
       const workInput = document.getElementById('workScheduleInput');
       const restInput = document.getElementById('restScheduleInput');
-      workInput.addEventListener('paste', handlePaste);
-restInput.addEventListener('paste', handlePaste);
       const workTableBody = document.getElementById('workTableBody');
       const restTableBody = document.getElementById('restTableBody');
       const summaryEl = document.getElementById('summary');
@@ -157,6 +155,9 @@ function handlePaste(event) {
     }
   }, 300);
 }
+
+      workInput.addEventListener('paste', handlePaste);
+restInput.addEventListener('paste', handlePaste);
 
       function recheckConflicts() {
           const scheduleMap = new Map();
