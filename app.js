@@ -188,17 +188,6 @@ function handlePaste(event) {
   }, 300);
 }
 
-// ✅ Attach working paste listeners
-document.addEventListener("DOMContentLoaded", () => {
-  const workInput = document.getElementById("workScheduleInput");
-  const restInput = document.getElementById("restScheduleInput");
-  if (workInput && restInput) {
-    workInput.addEventListener("paste", handlePaste);
-    restInput.addEventListener("paste", handlePaste);
-    console.log("✅ Paste listeners attached!");
-  }
-});
-
 /*************************\
  * CONFLICT CHECKING     *
 \*************************/
@@ -788,19 +777,28 @@ function updateMonitoringProgress() {
         particleContainer.appendChild(particle);
         gsap.to(particle, { x: (Math.random()-0.5)*200, y: (Math.random()-0.5)*200, duration: Math.random()*20+15, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
-// ✅ Ensure paste events are active after everything loads
-document.addEventListener("DOMContentLoaded", () => {
-  const workInput = document.getElementById("workScheduleInput");
-  const restInput = document.getElementById("restScheduleInput");
 
-  if (workInput && restInput) {
-    workInput.addEventListener("paste", handlePaste);
-    restInput.addEventListener("paste", handlePaste);
-    console.log("✅ Paste listeners attached!");
-  } else {
-    console.warn("⚠️ Inputs not found for paste listeners!");
-  }
-});
+// ✅ Attach immediately (works even if module is loaded after DOM)
+const workInputNow = document.getElementById("workScheduleInput");
+const restInputNow = document.getElementById("restScheduleInput");
+
+if (workInputNow && restInputNow) {
+  workInputNow.addEventListener("paste", handlePaste);
+  restInputNow.addEventListener("paste", handlePaste);
+  console.log("✅ Paste listeners attached immediately!");
+} else {
+  window.addEventListener("load", () => {
+    const workInput = document.getElementById("workScheduleInput");
+    const restInput = document.getElementById("restScheduleInput");
+    if (workInput && restInput) {
+      workInput.addEventListener("paste", handlePaste);
+      restInput.addEventListener("paste", handlePaste);
+      console.log("✅ Paste listeners attached on window.load!");
+    } else {
+      console.warn("⚠️ Inputs not found for paste listeners!");
+    }
+  });
+}
 
 // expose init helpers to other module scripts
 export { loadState, updateButtonStates, recheckConflicts };
