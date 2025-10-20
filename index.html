@@ -17,7 +17,6 @@
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
-
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -29,11 +28,11 @@
 
   <div class="max-w-[1400px] mx-auto">
     <header class="mb-10 text-center rounded-2xl shadow-lg p-8 sm:p-12 text-white relative overflow-hidden">
-        <div class="absolute inset-0 bg-slate-800/50 z-0"></div>
-        <div class="relative z-10">
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">Sched Master</h1>
-            <p class="mt-4 text-lg sm:text-xl text-slate-200">Your intelligent schedule conflict checker.</p>
-        </div>
+      <div class="absolute inset-0 bg-slate-800/50 z-0"></div>
+      <div class="relative z-10">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">Sched Master</h1>
+        <p class="mt-4 text-lg sm:text-xl text-slate-200">Your intelligent schedule conflict checker.</p>
+      </div>
     </header>
 
     <div class="flex justify-center space-x-4 mb-8">
@@ -49,56 +48,53 @@
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
             <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
-            <div class="mt-4 flex flex-wrap items-end gap-3">
-  <div class="flex items-center gap-3 flex-wrap">
-    <label for="branchNameInput" class="text-sm font-semibold text-slate-700">Branch Name:</label>
-    <input
-      type="text"
-      id="branchNameInput"
-      class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-      placeholder="Enter Branch Name..."
-    />
-    <button id="generateWorkFile" class="action-btn flex items-center gap-2" disabled>
-      <ion-icon name="download-outline"></ion-icon>
-      Generate Work File
-    </button>
-  </div>
-  <div class="flex gap-3">
-    <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
-    <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
-    <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
-  </div>
-</div>
+
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3">
+              <label for="branchNameInput" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Branch Name:</label>
+              <input
+                type="text"
+                id="branchNameInput"
+                class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 w-full md:w-52"
+                placeholder="Enter Branch Name..."
+              />
+              <button id="generateWorkFile" class="action-btn flex items-center gap-2 justify-center" disabled>
+                <ion-icon name="download-outline"></ion-icon>
+                Generate Work File
+              </button>
+              <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
+              <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
+              <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
+            </div>
+          </div>
 
           <!-- Rest Day Schedule Section -->
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Rest Day Schedule</h2>
             <textarea id="restScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your rest day schedule data here..."></textarea>
-<div class="mt-4 flex flex-wrap items-end gap-3">
-  <div class="flex items-center gap-3 flex-wrap">
-    <label for="branchNameRestInput" class="text-sm font-semibold text-slate-700">Branch Name:</label>
-    <input
-      type="text"
-      id="branchNameRestInput"
-      class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-      placeholder="Enter Branch Name..."
-    />
-    <button id="generateRestFile" class="action-btn flex items-center gap-2" disabled>
-      <ion-icon name="download-outline"></ion-icon>
-      Generate Rest Day File
-    </button>
-  </div>
-  <div class="flex gap-3">
-    <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
-    <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
-    <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
-  </div>
-</div>
+
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3">
+              <label for="branchNameRestInput" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Branch Name:</label>
+              <input
+                type="text"
+                id="branchNameRestInput"
+                class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 w-full md:w-52"
+                placeholder="Enter Branch Name..."
+              />
+              <button id="generateRestFile" class="action-btn flex items-center gap-2 justify-center" disabled>
+                <ion-icon name="download-outline"></ion-icon>
+                Generate Rest Day File
+              </button>
+              <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
+              <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
+              <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Summary & Conflicts Section -->
         <div id="summary" class="dashboard-card mt-8">
-            <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
-            <p id="summaryText">No data pasted yet.</p>
+          <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
+          <p id="summaryText">No data pasted yet.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
@@ -149,147 +145,145 @@
       </div>
 
       <!-- Monitoring Dashboard View -->
-        <div id="view-monitoring" class="hidden">
-            <div class="dashboard-card">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-slate-800">Branch Upload Monitoring</h2>
-                    <div class="flex space-x-4 items-center">
-                    <button id="addMonitoringRowBtn" class="action-btn">
-                        <ion-icon name="add-circle-outline"></ion-icon>
-                        Add Branch
-                    </button>
-                </div>
-                
-                <!-- Overall Progress Bar -->
-                <div class="mb-6">
-                    <div class="flex justify-between items-center mb-1">
-                         <span class="text-sm font-semibold text-slate-600">Overall Upload Progress</span>
-                         <span id="monitoringProgressText" class="text-sm font-bold text-teal-600">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 rounded-full h-4">
-                        <div id="monitoringProgressBar" class="bg-gradient-to-r from-cyan-400 to-teal-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-
-<!-- Month & Year Selector -->
-<div class="flex justify-between items-center mb-6">
-    <div class="flex items-center gap-4">
-        <label for="monthPicker" class="text-sm font-semibold text-slate-600">Month:</label>
-        <select id="monthPicker" class="monitoring-table-input">
-            <option value="01">January</option>
-            <option value="02">February</option>
-            <option value="03">March</option>
-            <option value="04">April</option>
-            <option value="05">May</option>
-            <option value="06">June</option>
-            <option value="07">July</option>
-            <option value="08">August</option>
-            <option value="09">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-        </select>
-
-        <label for="yearPicker" class="text-sm font-semibold text-slate-600">Year:</label>
-        <select id="yearPicker" class="monitoring-table-input">
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-            <option value="2027">2028</option>
-            <option value="2027">2029</option>
-            <option value="2027">2030</option>
-            <option value="2027">2031</option>
-        </select>
-    </div>
-    <button id="loadMonthData" class="action-btn secondary">
-        Load Data
-    </button>
-    <button id="exportExcel" class="action-btn">
-        Export to Excel
-    </button>
-</div>
-
-                <!-- Monitoring Table -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr>
-                                <th>POS Code</th>
-                                <th>Branch Name</th>
-                                <th>SAP Code</th>
-                                <th class="text-center">Uploaded</th>
-                                <th>Uploaded By</th>
-                                <th>Uploaded Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="monitoringTableBody">
-                            <!-- Rows will be dynamically inserted here -->
-                        </tbody>
-                    </table>
-                </div>
+      <div id="view-monitoring" class="hidden">
+        <div class="dashboard-card">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-slate-800">Branch Upload Monitoring</h2>
+            <div class="flex space-x-4 items-center">
+              <button id="addMonitoringRowBtn" class="action-btn">
+                <ion-icon name="add-circle-outline"></ion-icon>
+                Add Branch
+              </button>
             </div>
-        </div>
+          </div>
 
+          <!-- Overall Progress Bar -->
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm font-semibold text-slate-600">Overall Upload Progress</span>
+              <span id="monitoringProgressText" class="text-sm font-bold text-teal-600">0%</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-4">
+              <div id="monitoringProgressBar" class="bg-gradient-to-r from-cyan-400 to-teal-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Month & Year Selector -->
+          <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-4">
+              <label for="monthPicker" class="text-sm font-semibold text-slate-600">Month:</label>
+              <select id="monthPicker" class="monitoring-table-input">
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+
+              <label for="yearPicker" class="text-sm font-semibold text-slate-600">Year:</label>
+              <select id="yearPicker" class="monitoring-table-input">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+                <option value="2030">2030</option>
+                <option value="2031">2031</option>
+              </select>
+            </div>
+            <div class="flex gap-3">
+              <button id="loadMonthData" class="action-btn secondary">Load Data</button>
+              <button id="exportExcel" class="action-btn">Export to Excel</button>
+            </div>
+          </div>
+
+          <!-- Monitoring Table -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead>
+                <tr>
+                  <th>POS Code</th>
+                  <th>Branch Name</th>
+                  <th>SAP Code</th>
+                  <th class="text-center">Uploaded</th>
+                  <th>Uploaded By</th>
+                  <th>Uploaded Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="monitoringTableBody">
+                <!-- Rows will be dynamically inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
-  
+
   <button id="backToTopBtn" title="Go to top">
     <ion-icon name="arrow-up-outline"></ion-icon>
   </button>
-  
-  <!-- Edit Row Modal -->
-    <div id="editModal" class="hidden fixed inset-0 z-[10000] items-center justify-center">
-        <div class="modal-overlay fixed inset-0 bg-black/30"></div>
-        <div class="relative max-w-lg w-11/12 my-10 mx-auto bg-white rounded-lg p-6 shadow-xl z-[10001]">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold">Edit Schedule Entry</h3>
-                <button id="closeEditModalBtn" class="text-2xl text-slate-500 hover:text-slate-800">&times;</button>
-            </div>
-            <form id="editForm">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="editEmployeeNo" class="block text-sm font-medium text-slate-700">Employee No.</label>
-                        <input type="text" id="editEmployeeNo" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
-                    </div>
-                     <div>
-                        <label for="editName" class="block text-sm font-medium text-slate-700">Name</label>
-                        <input type="text" id="editName" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
-                    </div>
-                     <div>
-                        <label for="editPosition" class="block text-sm font-medium text-slate-700">Position</label>
-                        <input type="text" id="editPosition" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
-                    </div>
-                     <div>
-                        <label for="editDate" class="block text-sm font-medium text-slate-700">Date</label>
-                        <input type="text" id="editDate" placeholder="MM/DD/YYYY" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
-                    </div>
-                    <div id="editShiftCodeWrapper">
-                        <label for="editShiftCode" class="block text-sm font-medium text-slate-700">Shift Code</label>
-                        <input type="text" id="editShiftCode" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="editDayOfWeek" class="block text-sm font-medium text-slate-700">Day of Week</label>
-                        <input type="text" id="editDayOfWeek" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
-                    </div>
-                </div>
-                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancelEditBtn" class="action-btn secondary">Cancel</button>
-                    <button type="submit" class="action-btn">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-  
-<script src="app.js"></script>
-<script type="module" src="firebase.js"></script>
 
-<!-- ✅ then your normal JS files / inline script -->
-<script>
-  loadState();
-  updateButtonStates();
-  recheckConflicts();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <!-- Edit Row Modal -->
+  <div id="editModal" class="hidden fixed inset-0 z-[10000] items-center justify-center">
+    <div class="modal-overlay fixed inset-0 bg-black/30"></div>
+    <div class="relative max-w-lg w-11/12 my-10 mx-auto bg-white rounded-lg p-6 shadow-xl z-[10001]">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">Edit Schedule Entry</h3>
+        <button id="closeEditModalBtn" class="text-2xl text-slate-500 hover:text-slate-800">&times;</button>
+      </div>
+      <form id="editForm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="editEmployeeNo" class="block text-sm font-medium text-slate-700">Employee No.</label>
+            <input type="text" id="editEmployeeNo" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="editName" class="block text-sm font-medium text-slate-700">Name</label>
+            <input type="text" id="editName" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="editPosition" class="block text-sm font-medium text-slate-700">Position</label>
+            <input type="text" id="editPosition" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="editDate" class="block text-sm font-medium text-slate-700">Date</label>
+            <input type="text" id="editDate" placeholder="MM/DD/YYYY" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+          </div>
+          <div id="editShiftCodeWrapper">
+            <label for="editShiftCode" class="block text-sm font-medium text-slate-700">Shift Code</label>
+            <input type="text" id="editShiftCode" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="editDayOfWeek" class="block text-sm font-medium text-slate-700">Day of Week</label>
+            <input type="text" id="editDayOfWeek" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button" id="cancelEditBtn" class="action-btn secondary">Cancel</button>
+          <button type="submit" class="action-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script type="module" src="firebase.js"></script>
+
+  <script>
+    loadState();
+    updateButtonStates();
+    recheckConflicts();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
+
 </html>
