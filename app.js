@@ -448,6 +448,105 @@ function generateFile(data, fileNamePrefix) {
            updateButtonStates();
        }
 
+       /* ===========================
+   MONITORING DASHBOARD FIXES
+   — Load, Export, Auto-Month
+=========================== */
+
+// ✅ Firestore imports (already available via firebase.js)
+import { getFirestore, collection, getDocs } from "./firebase.js";
+const db = getFirestore();
+
+// --- Auto-select current month/year when page opens ---
+window.addEventListener("DOMContentLoaded", () => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getFullYear();
+
+  const monthPicker = document.getElementById("monthPicker");
+  const yearPicker = document.getElementById("yearPicker");
+
+  if (monthPicker && yearPicker) {
+    monthPicker.value = month;
+    yearPicker.value = year;
+    // Automatically load data for current month
+    document.getElementById("loadMonthData")?.click();
+  }
+});
+
+// --- Load Data button ---
+document.getElementById("loadMonthData")?.addEventListener("click", async () => {
+  const month = document.getElementById("monthPicker").value;
+  const year = document.getElementById("yearPicker").value;
+
+  try {
+    const monitoringRef = collection(db, "monitoring");
+    const snapshot = await getDocs(monitoringRef);
+    const tableBody = document.getElementById("monitoringTableBody");
+    tableBody.innerHTML = "";
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.month === month && data.year === year) {
+        const row = `
+          <tr>
+            <td>${data.posCode || ""}</td>
+            <td>${data.branchName || ""}</td>
+            <td>${data.sapCode || ""}</td>
+            <td class="text-center">${data.uploaded ? "✅" : "❌"}</td>
+            <td>${data.uploadedBy || ""}</td>
+            <td>${data.uploadedDate || ""}</td>
+            <td><button class="action-btn danger" data-id="${doc.id}">🗑️ Delete</button></td>
+          </tr>
+        `;
+        tableBody.insertAdjacentHTML("beforeend", row);
+      }
+    });
+
+    updateMonitoringProgress();
+  } catch (err) {
+    console.error("Error loading monitoring data:", err);
+  }
+});
+
+// --- Export button ---
+document.getElementById("exportExcel")?.addEventListener("click", () => {
+  const tableBody = document.getElementById("monitoringTableBody");
+  const rows = tableBody?.rows;
+  if (!rows || !rows.length) {
+    alert("No data to export!");
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+  const data = [["POS Code", "Branch Name", "SAP Code", "Uploaded", "Uploaded By", "Uploaded Date"]];
+  Array.from(rows).forEach((row) => {
+    const cells = Array.from(row.cells).map((c) => c.innerText);
+    data.push(cells);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, "Monitoring");
+  XLSX.writeFile(wb, "MonitoringData.xlsx");
+});
+
+// --- Progress bar update helper ---
+function updateMonitoringProgress() {
+  const rows = document.querySelectorAll("#monitoringTableBody tr");
+  if (!rows.length) return;
+
+  const total = rows.length;
+  const completed = [...rows].filter((r) => r.cells[3].innerText === "✅").length;
+  const percent = Math.round((completed / total) * 100);
+
+  const bar = document.getElementById("monitoringProgressBar");
+  const text = document.getElementById("monitoringProgressText");
+  if (bar && text) {
+    bar.style.width = `${percent}%`;
+    text.textContent = `${percent}%`;
+  }
+}
+
         /*********************************\
         * MONITORING DASHBOARD (REALTIME) *
         \*********************************/
