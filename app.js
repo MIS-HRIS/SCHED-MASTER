@@ -93,85 +93,91 @@ generateRestFileBtn.addEventListener('click', () => {
       /*************************\
        * CORE FUNCTIONS      *
       \*************************/
-      function handlePaste(event) {
-        event.preventDefault();
-        const text = (event.clipboardData || window.clipboardData).getData('text');
-        const isWork = event.target.id === 'workScheduleInput';
-        const type = isWork ? 'work' : 'rest';
-        
-        saveUndoState(type);
-        
-        const rows = text.split('\n').map(row => row.split('\t'));
-        const { mapping, headerRow } = detectColumnMapping(rows, isWork);
-        
-        const data = rows.slice(headerRow + 1)
-          .map(row => {
-            const entry = {};
-            for (const key in mapping) {
-                if(mapping[key] !== null && row[mapping[key]] !== undefined) {
-                   entry[key] = row[mapping[key]].trim();
-                } else {
-                   entry[key] = '';
-                }
-            }
-            return entry;
-          })
-          .filter(entry => entry.employeeNo && entry.name && entry.date);
+function handlePaste(event) {
+  event.preventDefault();
+  const text = (event.clipboardData || window.clipboardData).getData('text');
+  const isWork = event.target.id === 'workScheduleInput';
+  const type = isWork ? 'work' : 'rest';
 
-        if (isWork) {
-          workScheduleData = data.map(d => ({...d, date: excelDateToJS(d.date) }));
+  saveUndoState(type);
+
+  const rows = text.split('\n').map(row => row.split('\t'));
+  const { mapping, headerRow } = detectColumnMapping(rows, isWork);
+
+  const data = rows.slice(headerRow + 1)
+    .map(row => {
+      const entry = {};
+      for (const key in mapping) {
+        if (mapping[key] !== null && row[mapping[key]] !== undefined) {
+          entry[key] = row[mapping[key]].trim();
         } else {
-          restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+          entry[key] = '';
         }
-        recheckConflicts();
-updateButtonStates();
-renderWorkTable();
-renderRestTable();
-
-// ✅ After rendering, wait a tiny bit, then scroll down smoothly
-setTimeout(() => {
-  const target = document.getElementById('summary');
-  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}, 300);
-      
-      function detectColumnMapping(rows, isWork) {
-          let headerRow = -1;
-          let mapping = {};
-          const MAX_ROWS_TO_CHECK = 10;
-          
-          const potentialHeaders = {
-              employeeNo: ['employee no.', 'emp no', 'employee number'],
-              name: ['name', 'employee name'],
-              position: ['position'],
-              date: isWork ? ['work date', 'date'] : ['rest day date', 'date', 'rest day'],
-              shiftCode: ['shift code', 'shift'],
-              dayOfWeek: ['day of week', 'day']
-          };
-
-          for(let i=0; i < Math.min(rows.length, MAX_ROWS_TO_CHECK); i++) {
-              const row = rows[i].map(h => h.toLowerCase().trim().replace(':', ''));
-              let tempMapping = {};
-              for(const key in potentialHeaders) {
-                  const index = row.findIndex(header => potentialHeaders[key].includes(header));
-                  tempMapping[key] = index !== -1 ? index : null;
-              }
-              if(tempMapping.employeeNo !== null && tempMapping.name !== null && tempMapping.date !== null) {
-                  headerRow = i;
-                  mapping = tempMapping;
-                  break;
-              }
-          }
-          
-          if(headerRow === -1){
-              showWarning("No headers detected. Assuming standard column order.");
-              mapping = {
-                  employeeNo: 0, name: 1, date: 2, shiftCode: isWork ? 3 : null,
-                  dayOfWeek: isWork ? 4 : 3, position: isWork ? 5 : 4,
-              };
-              headerRow = -1;
-          }
-          return { mapping, headerRow };
       }
+      return entry;
+    })
+    .filter(entry => entry.employeeNo && entry.name && entry.date);
+
+  if (isWork) {
+    workScheduleData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+  } else {
+    restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+  }
+
+  recheckConflicts();
+  updateButtonStates();
+  renderWorkTable();
+  renderRestTable();
+
+  // ✅ Wait until DOM finishes rendering before scrolling
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const summary = document.getElementById('summary');
+      if (summary) {
+        summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 300);
+  });
+} // 👈 CLOSE THE FUNCTION PROPERLY HERE
+
+function detectColumnMapping(rows, isWork) {
+  let headerRow = -1;
+  let mapping = {};
+  const MAX_ROWS_TO_CHECK = 10;
+
+  const potentialHeaders = {
+    employeeNo: ['employee no.', 'emp no', 'employee number'],
+    name: ['name', 'employee name'],
+    position: ['position'],
+    date: isWork ? ['work date', 'date'] : ['rest day date', 'date', 'rest day'],
+    shiftCode: ['shift code', 'shift'],
+    dayOfWeek: ['day of week', 'day']
+  };
+
+  for (let i = 0; i < Math.min(rows.length, MAX_ROWS_TO_CHECK); i++) {
+    const row = rows[i].map(h => h.toLowerCase().trim().replace(':', ''));
+    let tempMapping = {};
+    for (const key in potentialHeaders) {
+      const index = row.findIndex(header => potentialHeaders[key].includes(header));
+      tempMapping[key] = index !== -1 ? index : null;
+    }
+    if (tempMapping.employeeNo !== null && tempMapping.name !== null && tempMapping.date !== null) {
+      headerRow = i;
+      mapping = tempMapping;
+      break;
+    }
+  }
+
+  if (headerRow === -1) {
+    showWarning("No headers detected. Assuming standard column order.");
+    mapping = {
+      employeeNo: 0, name: 1, date: 2, shiftCode: isWork ? 3 : null,
+      dayOfWeek: isWork ? 4 : 3, position: isWork ? 5 : 4,
+    };
+    headerRow = -1;
+  }
+  return { mapping, headerRow };
+}
 
       function recheckConflicts() {
           const scheduleMap = new Map();
