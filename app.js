@@ -94,6 +94,30 @@ generateRestFileBtn.addEventListener('click', () => {
        * CORE FUNCTIONS      *
       \*************************/
 
+function detectColumnMapping(rows, isWork) {
+  const headerRow = 0;
+  const headers = rows[headerRow].map(h => h.trim().toLowerCase());
+
+  const mapping = {
+    employeeNo: headers.findIndex(h =>
+      h.includes('emp') && (h.includes('no') || h.includes('#'))
+    ),
+    name: headers.findIndex(h => h.includes('name')),
+    position: headers.findIndex(h => h.includes('pos')),
+    date: headers.findIndex(h => h.includes('date')),
+    dayOfWeek: headers.findIndex(h => h.includes('day')),
+    shiftCode: isWork ? headers.findIndex(h => h.includes('shift')) : null
+  };
+
+  // ✅ If Excel headers missing or lowercased weirdly — fallback by index
+  if (mapping.employeeNo === -1) mapping.employeeNo = 0;
+  if (mapping.name === -1) mapping.name = 1;
+  if (mapping.position === -1) mapping.position = 2;
+  if (mapping.date === -1) mapping.date = 3;
+
+  return { mapping, headerRow };
+}
+
 function handlePaste(event) {
   event.preventDefault();
 
