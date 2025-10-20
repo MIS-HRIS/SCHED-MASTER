@@ -196,9 +196,6 @@ function generateFile(data, fileNamePrefix) {
     // Determine WS/RD suffix for both header and filename
     const schedType = fileNamePrefix === 'WorkSchedule' ? 'WS' : 'RD';
 
-    // Construct header text (top row)
-    const headerText = `${branchName}_${schedType}_${month}`;
-
     // ✅ Create header row
     const headerRow = [[headerText]];
 
