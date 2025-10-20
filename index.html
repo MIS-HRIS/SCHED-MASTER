@@ -113,6 +113,60 @@
           </div>
         </div>
 
+                <!-- Summary & Conflicts Section -->
+        <div id="summary" class="dashboard-card mt-8">
+          <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
+          <p id="summaryText">No data pasted yet.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <!-- Work Schedule Table -->
+          <div class="dashboard-card">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Emp. No</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Date</th>
+                    <th>Shift Code</th>
+                    <th>Day of Week</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="workTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rest Day Schedule Table -->
+          <div class="dashboard-card">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full data-table">
+                <thead>
+                  <tr>
+                    <th>Conflict</th>
+                    <th>#</th>
+                    <th>Emp. No</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Date</th>
+                    <th>Day of Week</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="restTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       <!-- Monitoring Dashboard View -->
       <div id="view-monitoring" class="hidden">
         <div class="dashboard-card">
