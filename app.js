@@ -212,7 +212,7 @@ function generateFile(data, fileNamePrefix) {
         }));
     } else {
         formattedData = data.map(row => ({
-            'Employee Number': row.employeeNo,
+            'Employee No': row.employeeNo,
             'Rest Day Date': new Date(row.date),
         }));
     }
