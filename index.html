@@ -49,38 +49,51 @@
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
             <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
-            <div class="mt-4 flex flex-wrap gap-3">
-              <button id="generateWorkFile" class="action-btn" disabled>
-                <div class="mt-2">
-  <label for="branchNameInput" class="block text-sm font-semibold text-slate-700 mb-1">Branch Name:</label>
-  <input type="text" id="branchNameInput" class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter Branch Name..." />
+            <div class="mt-4 flex flex-wrap items-end gap-3">
+  <div class="flex items-center gap-3 flex-wrap">
+    <label for="branchNameInput" class="text-sm font-semibold text-slate-700">Branch Name:</label>
+    <input
+      type="text"
+      id="branchNameInput"
+      class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+      placeholder="Enter Branch Name..."
+    />
+    <button id="generateWorkFile" class="action-btn flex items-center gap-2" disabled>
+      <ion-icon name="download-outline"></ion-icon>
+      Generate Work File
+    </button>
+  </div>
+  <div class="flex gap-3">
+    <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
+    <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
+    <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
+  </div>
 </div>
-                <ion-icon name="download-outline"></ion-icon>
-                Generate Work File</button>
-              <button id="undoWork" class="action-btn secondary" disabled>↩️ Undo</button>
-              <button id="redoWork" class="action-btn secondary" disabled>↪️ Redo</button>
-              <button id="clearWorkData" class="action-btn danger" disabled>🗑️ Clear</button>
-            </div>
-          </div>
 
           <!-- Rest Day Schedule Section -->
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Rest Day Schedule</h2>
             <textarea id="restScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your rest day schedule data here..."></textarea>
-            <div class="mt-4 flex flex-wrap gap-3">
-              <div class="mt-2">
-  <label for="branchNameInput" class="block text-sm font-semibold text-slate-700 mb-1">Branch Name:</label>
-  <input type="text" id="branchNameInput" class="w-full rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter Branch Name..." />
+<div class="mt-4 flex flex-wrap items-end gap-3">
+  <div class="flex items-center gap-3 flex-wrap">
+    <label for="branchNameRestInput" class="text-sm font-semibold text-slate-700">Branch Name:</label>
+    <input
+      type="text"
+      id="branchNameRestInput"
+      class="rounded-md border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+      placeholder="Enter Branch Name..."
+    />
+    <button id="generateRestFile" class="action-btn flex items-center gap-2" disabled>
+      <ion-icon name="download-outline"></ion-icon>
+      Generate Rest Day File
+    </button>
+  </div>
+  <div class="flex gap-3">
+    <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
+    <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
+    <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
+  </div>
 </div>
-              <button id="generateRestFile" class="action-btn" disabled>
-                <ion-icon name="download-outline"></ion-icon>
-                Generate Rest Day File</button>
-              <button id="undoRest" class="action-btn secondary" disabled>↩️ Undo</button>
-              <button id="redoRest" class="action-btn secondary" disabled>↪️ Redo</button>
-              <button id="clearRestData" class="action-btn danger" disabled>🗑️ Clear</button>
-            </div>
-          </div>
-        </div>
 
         <!-- Summary & Conflicts Section -->
         <div id="summary" class="dashboard-card mt-8">
