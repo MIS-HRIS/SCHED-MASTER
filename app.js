@@ -46,9 +46,7 @@
       /*************************\
        * EVENT LISTENERS     *
       \*************************/
-      workInput.addEventListener('paste', handlePaste);
-      restInput.addEventListener('paste', handlePaste);
-
+      
 generateWorkFileBtn.addEventListener('click', () => {
   const branchName = document.getElementById('branchNameInput')?.value.trim();
   if (!branchName) {
@@ -770,3 +768,16 @@ function updateMonitoringProgress() {
         particleContainer.appendChild(particle);
         gsap.to(particle, { x: (Math.random()-0.5)*200, y: (Math.random()-0.5)*200, duration: Math.random()*20+15, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
+// ✅ Ensure paste events are active after everything loads
+document.addEventListener("DOMContentLoaded", () => {
+  const workInput = document.getElementById("workScheduleInput");
+  const restInput = document.getElementById("restScheduleInput");
+
+  if (workInput && restInput) {
+    workInput.addEventListener("paste", handlePaste);
+    restInput.addEventListener("paste", handlePaste);
+    console.log("✅ Paste listeners attached!");
+  } else {
+    console.warn("⚠️ Inputs not found for paste listeners!");
+  }
+});
