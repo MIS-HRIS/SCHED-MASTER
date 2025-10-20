@@ -201,9 +201,12 @@ function generateFile(data, fileNamePrefix) {
         branchInput = document.getElementById('branchNameRestInput'); // for RD
     }
 
-    const branchName = branchInput && branchInput.value.trim()
-        ? branchInput.value.trim()
-        : 'UnnamedBranch';
+    let branchName = '';
+if (isWorkSchedule) {
+  branchName = document.getElementById('branchNameInput').value || 'UnnamedBranch';
+} else {
+  branchName = document.getElementById('branchNameRestInput').value || 'UnnamedBranch';
+}
 
     // ✅ Headers
     const headers = isWorkSchedule
@@ -227,7 +230,7 @@ function generateFile(data, fileNamePrefix) {
     });
 
     // ✅ Convert to sheet (no header row like “UnnamedBranch_RD_October”)
-    const sheet = XLSX.utils.json_to_sheet(formattedData, { header: headers });
+    const sheet = XLSX.utils.json_to_sheet(formattedData);
 
     // ✅ Date formatting
     Object.keys(sheet).forEach(cell => {
