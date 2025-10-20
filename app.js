@@ -9,38 +9,48 @@ const redoStack = { work: [], rest: [] };
 const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
 
 /***** Element refs *****/
-const workInput = document.getElementById('workScheduleInput');
-const restInput = document.getElementById('restScheduleInput');
-const workTableBody = document.getElementById('workTableBody');
-const restTableBody = document.getElementById('restTableBody');
-const summaryEl = document.getElementById('summary');
-const warningBanner = document.getElementById('warning-banner');
-const successMsg = document.getElementById('success-message');
-const generateWorkFileBtn = document.getElementById('generateWorkFile');
-const generateRestFileBtn = document.getElementById('generateRestFile');
-const clearWorkBtn = document.getElementById('clearWorkData');
-const clearRestBtn = document.getElementById('clearRestData');
-const undoWorkBtn = document.getElementById('undoWork');
-const redoWorkBtn = document.getElementById('redoWork');
-const undoRestBtn = document.getElementById('undoRest');
-const redoRestBtn = document.getElementById('redoRest');
-const backToTopBtn = document.getElementById('backToTopBtn');
+let workInput, restInput, workTableBody, restTableBody, summaryEl, warningBanner, successMsg;
+let generateWorkFileBtn, generateRestFileBtn, clearWorkBtn, clearRestBtn;
+let undoWorkBtn, redoWorkBtn, undoRestBtn, redoRestBtn;
+let backToTopBtn, tabSchedule, tabMonitoring, viewSchedule, viewMonitoring;
+let monitoringTableBody, addMonitoringRowBtn, monitoringProgressBar, monitoringProgressText;
+let editModal, closeEditModalBtn, cancelEditBtn, editForm, editShiftCodeWrapper;
 
-const tabSchedule = document.getElementById('tab-schedule');
-const tabMonitoring = document.getElementById('tab-monitoring');
-const viewSchedule = document.getElementById('view-schedule');
-const viewMonitoring = document.getElementById('view-monitoring');
+// Wait until DOM is fully ready to assign these
+window.addEventListener("load", () => {
+  workInput = document.getElementById('workScheduleInput');
+  restInput = document.getElementById('restScheduleInput');
+  workTableBody = document.getElementById('workTableBody');
+  restTableBody = document.getElementById('restTableBody');
+  summaryEl = document.getElementById('summary');
+  warningBanner = document.getElementById('warning-banner');
+  successMsg = document.getElementById('success-message');
+  generateWorkFileBtn = document.getElementById('generateWorkFile');
+  generateRestFileBtn = document.getElementById('generateRestFile');
+  clearWorkBtn = document.getElementById('clearWorkData');
+  clearRestBtn = document.getElementById('clearRestData');
+  undoWorkBtn = document.getElementById('undoWork');
+  redoWorkBtn = document.getElementById('redoWork');
+  undoRestBtn = document.getElementById('undoRest');
+  redoRestBtn = document.getElementById('redoRest');
+  backToTopBtn = document.getElementById('backToTopBtn');
 
-const monitoringTableBody = document.getElementById('monitoringTableBody');
-const addMonitoringRowBtn = document.getElementById('addMonitoringRowBtn');
-const monitoringProgressBar = document.getElementById('monitoringProgressBar');
-const monitoringProgressText = document.getElementById('monitoringProgressText');
+  tabSchedule = document.getElementById('tab-schedule');
+  tabMonitoring = document.getElementById('tab-monitoring');
+  viewSchedule = document.getElementById('view-schedule');
+  viewMonitoring = document.getElementById('view-monitoring');
 
-const editModal = document.getElementById('editModal');
-const closeEditModalBtn = document.getElementById('closeEditModalBtn');
-const cancelEditBtn = document.getElementById('cancelEditBtn');
-const editForm = document.getElementById('editForm');
-const editShiftCodeWrapper = document.getElementById('editShiftCodeWrapper');
+  monitoringTableBody = document.getElementById('monitoringTableBody');
+  addMonitoringRowBtn = document.getElementById('addMonitoringRowBtn');
+  monitoringProgressBar = document.getElementById('monitoringProgressBar');
+  monitoringProgressText = document.getElementById('monitoringProgressText');
+
+  editModal = document.getElementById('editModal');
+  closeEditModalBtn = document.getElementById('closeEditModalBtn');
+  cancelEditBtn = document.getElementById('cancelEditBtn');
+  editForm = document.getElementById('editForm');
+  editShiftCodeWrapper = document.getElementById('editShiftCodeWrapper');
+});
 
 /*************************\
  * EVENT LISTENERS     *
