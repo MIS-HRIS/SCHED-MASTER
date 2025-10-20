@@ -781,3 +781,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("⚠️ Inputs not found for paste listeners!");
   }
 });
+
+// expose init helpers to other module scripts
+export { loadState, updateButtonStates, recheckConflicts };
