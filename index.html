@@ -282,10 +282,11 @@
 
 <!-- ✅ then your normal JS files / inline script -->
 <script>
-  loadState();
-  updateButtonStates();
-  recheckConflicts();
+  document.addEventListener("DOMContentLoaded", () => {
+    loadState();
+    updateButtonStates();
+    recheckConflicts();
+  });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>

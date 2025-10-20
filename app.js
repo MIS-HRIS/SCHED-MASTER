@@ -124,7 +124,12 @@ generateRestFileBtn.addEventListener('click', () => {
           restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
         }
         recheckConflicts();
-        updateButtonStates();
+updateButtonStates();
+renderWorkTable();
+renderRestTable();
+
+// 🧭 Automatically scroll to summary area after pasting
+document.getElementById('summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       
       function detectColumnMapping(rows, isWork) {
