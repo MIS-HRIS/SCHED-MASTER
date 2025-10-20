@@ -251,9 +251,102 @@ function detectColumnMapping(rows, isWork) {
 //////////////////////
 // HANDLE PASTE     //
 //////////////////////
-//////////////////////
-// HANDLE PASTE     //
-//////////////////////
+
+// Replace previous paste/parser with the user's working implementation
+const HEADER_ALIASES = {
+  empNo: ['emp. no', 'emp no', 'employee no', 'emp #', 'employee number', 'id'],
+  name: ['name', 'employee name', 'full name'],
+  position: ['position', 'title', 'job title'],
+  date: ['date', 'schedule date'],
+  dayOfWeek: ['day', 'day of week'],
+  shiftCode: ['shift code', 'shift', 'code']
+};
+
+function findColumnIndex(headerColumns, aliases) {
+  const simplifiedHeaders = headerColumns.map(h => (h || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+  for (const alias of aliases) {
+    const simplifiedAlias = alias.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const index = simplifiedHeaders.findIndex(h => h.includes(simplifiedAlias));
+    if (index !== -1) return index;
+  }
+  return -1;
+}
+
+function showWarningFromParser(message) {
+  // reuse existing showWarning if present, otherwise console.warn
+  if (typeof showWarning === 'function') return showWarning(message);
+  console.warn(message);
+}
+
+function parsePastedData(pastedText, type) {
+  if (!pastedText) return [];
+
+  const rows = pastedText.trim().split(/\r?\n/).map(r => r.replace(/\r/g, '')).filter(row => row.trim() !== '');
+  if (rows.length < 2) {
+    showWarningFromParser("Pasted data must contain a header row and at least one data row.");
+    return [];
+  }
+
+  // Find header row that contains at least EmpNo and Date
+  const headerRowIndex = rows.findIndex(row => {
+    const lowerRow = row.toLowerCase();
+    const hasEmpNo = HEADER_ALIASES.empNo.some(alias => lowerRow.includes(alias));
+    const hasDate = HEADER_ALIASES.date.some(alias => lowerRow.includes(alias));
+    return hasEmpNo && hasDate;
+  });
+
+  if (headerRowIndex === -1) {
+    showWarningFromParser("Could not find a valid header row. Ensure headers include at least 'Emp. No.' and 'Date'.");
+    return [];
+  }
+
+  // Prefer tab-split headers (works well for Excel/Sheets copy); fallback to multiple spaces
+  const headerColumns = rows[headerRowIndex].includes('\t')
+    ? rows[headerRowIndex].split('\t').map(h => h.trim())
+    : rows[headerRowIndex].split(/\s{2,}/).map(h => h.trim());
+
+  const columnIndexMap = {
+    empNo: findColumnIndex(headerColumns, HEADER_ALIASES.empNo),
+    name: findColumnIndex(headerColumns, HEADER_ALIASES.name),
+    position: findColumnIndex(headerColumns, HEADER_ALIASES.position),
+    date: findColumnIndex(headerColumns, HEADER_ALIASES.date),
+    dayOfWeek: findColumnIndex(headerColumns, HEADER_ALIASES.dayOfWeek),
+    shiftCode: type === 'work' ? findColumnIndex(headerColumns, HEADER_ALIASES.shiftCode) : -1,
+  };
+
+  if (columnIndexMap.empNo === -1 || columnIndexMap.date === -1) {
+    showWarningFromParser("Pasted data is missing essential columns. Could not map 'Emp. No.' or 'Date'.");
+    return [];
+  }
+
+  const dataRows = rows.slice(headerRowIndex + 1);
+
+  return dataRows.map((row, index) => {
+    // Use tab-splitting first, fallback to multi-space or single-space
+    const values = row.includes('\t') ? row.split('\t') :
+                   (/\s{2,}/.test(row) ? row.split(/\s{2,}/) : row.split(/\s+/));
+
+    const item = {
+      id: `${type}-${Date.now()}-${index}`,
+      empNo: values[columnIndexMap.empNo]?.trim() || '',
+      name: columnIndexMap.name !== -1 ? (values[columnIndexMap.name]?.trim() || '') : '',
+      position: columnIndexMap.position !== -1 ? (values[columnIndexMap.position]?.trim() || '') : '',
+      date: values[columnIndexMap.date]?.trim() || '',
+      dayOfWeek: columnIndexMap.dayOfWeek !== -1 ? (values[columnIndexMap.dayOfWeek]?.trim() || '') : '',
+      conflict: false,
+      conflictReason: ''
+    };
+
+    if (type === 'work') {
+      item.shiftCode = columnIndexMap.shiftCode !== -1 ? (values[columnIndexMap.shiftCode]?.trim() || '') : '';
+    }
+
+    // Only include rows with essential data
+    if (item.empNo && item.date) return item;
+    return null;
+  }).filter(Boolean);
+}
+
 function handlePaste(event) {
   try {
     event.preventDefault();
@@ -264,30 +357,24 @@ function handlePaste(event) {
     const parsedData = parsePastedData(pastedText, type);
 
     if (type === 'work') {
-      // replace or append? original behavior appended; user's snippet replaced.
-      // Keep replace behavior to match the provided working handler:
       workScheduleData = parsedData.map(d => ({
         ...d,
-        // ensure both shapes are present
-        employeeNo: d.employeeNo || d.empNo,
-        empNo: d.empNo || d.employeeNo
+        employeeNo: d.empNo || d.employeeNo
       }));
       if (workInput) workInput.value = '';
+      renderWorkTable();
     } else {
       restDayData = parsedData.map(d => ({
         ...d,
-        employeeNo: d.employeeNo || d.empNo,
-        empNo: d.empNo || d.employeeNo
+        employeeNo: d.empNo || d.employeeNo
       }));
       if (restInput) restInput.value = '';
+      renderRestTable();
     }
 
     recheckConflicts();
     saveState();
     updateButtonStates();
-    // re-render tables
-    renderWorkTable();
-    renderRestTable();
   } catch (err) {
     console.error("Error in paste handler:", err);
   }
@@ -298,50 +385,50 @@ function handlePaste(event) {
 \*************************/
 
 // Helper: parse pasted text into data array (returns array compatible with existing state)
-function parsePastedData(pastedText, type) {
-  if (!pastedText) return [];
+// function parsePastedData(pastedText, type) {
+//   if (!pastedText) return [];
 
-  const lines = pastedText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-  if (lines.length === 0) return [];
+//   const lines = pastedText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+//   if (lines.length === 0) return [];
 
-  const rows = lines.map(line => {
-    if (line.includes('\t')) return line.split('\t').map(c => c.trim());
-    if (/\s{2,}/.test(line)) return line.split(/\s{2,}/).map(c => c.trim());
-    if (line.includes(',')) return line.split(',').map(c => c.trim());
-    return line.split(/\s+/).map(c => c.trim());
-  });
+//   const rows = lines.map(line => {
+//     if (line.includes('\t')) return line.split('\t').map(c => c.trim());
+//     if (/\s{2,}/.test(line)) return line.split(/\s{2,}/).map(c => c.trim());
+//     if (line.includes(',')) return line.split(',').map(c => c.trim());
+//     return line.split(/\s+/).map(c => c.trim());
+//   });
 
-  const { mapping, headerRow } = detectColumnMapping(rows, type === 'work');
+//   const { mapping, headerRow } = detectColumnMapping(rows, type === 'work');
 
-  const parsed = rows.slice(headerRow + 1).map((row, idx) => {
-    const entry = {};
-    // map fields both to user's expected keys (empNo) and existing keys (employeeNo)
-    const emp = mapping.employeeNo;
-    const nameIdx = mapping.name;
-    const posIdx = mapping.position;
-    const dateIdx = mapping.date;
-    const dayIdx = mapping.dayOfWeek;
-    const shiftIdx = mapping.shiftCode;
+//   const parsed = rows.slice(headerRow + 1).map((row, idx) => {
+//     const entry = {};
+//     // map fields both to user's expected keys (empNo) and existing keys (employeeNo)
+//     const emp = mapping.employeeNo;
+//     const nameIdx = mapping.name;
+//     const posIdx = mapping.position;
+//     const dateIdx = mapping.date;
+//     const dayIdx = mapping.dayOfWeek;
+//     const shiftIdx = mapping.shiftCode;
 
-    const rawDate = (row[dateIdx] !== undefined) ? row[dateIdx] : '';
-    const dateVal = excelDateToJS(rawDate);
+//     const rawDate = (row[dateIdx] !== undefined) ? row[dateIdx] : '';
+//     const dateVal = excelDateToJS(rawDate);
 
-    entry.id = `${Date.now()}_${idx}`; // lightweight unique id for later edits/deletes
-    entry.empNo = (row[emp] || '').trim();
-    entry.employeeNo = entry.empNo;
-    entry.name = (row[nameIdx] || '').trim();
-    entry.position = (row[posIdx] || '').trim();
-    entry.date = dateVal;
-    entry.dayOfWeek = (row[dayIdx] || '').trim();
-    if (type === 'work') entry.shiftCode = (row[shiftIdx] || '').trim();
-    entry.conflict = false;
-    entry.conflictReason = '';
+//     entry.id = `${Date.now()}_${idx}`; // lightweight unique id for later edits/deletes
+//     entry.empNo = (row[emp] || '').trim();
+//     entry.employeeNo = entry.empNo;
+//     entry.name = (row[nameIdx] || '').trim();
+//     entry.position = (row[posIdx] || '').trim();
+//     entry.date = dateVal;
+//     entry.dayOfWeek = (row[dayIdx] || '').trim();
+//     if (type === 'work') entry.shiftCode = (row[shiftIdx] || '').trim();
+//     entry.conflict = false;
+//     entry.conflictReason = '';
 
-    return entry;
-  }).filter(e => e.empNo && e.name && e.date);
+//     return entry;
+//   }).filter(e => e.empNo && e.name && e.date);
 
-  return parsed;
-}
+//   return parsed;
+// }
 
 // Small wrapper so the user's generateExcel can coexist and call existing generator
 function generateExcel(type) {
