@@ -192,7 +192,6 @@ function generateFile(data, fileNamePrefix) {
     // 🏷️ Get branch name and month
     const branchName = document.getElementById('branchNameInput')?.value.trim() || 'UnnamedBranch';
     const month = "October"; // <-- you can make this dynamic later
-    const formattedDate = "10-01-25"; // still used for file name
 
     // Determine WS/RD suffix for both header and filename
     const schedType = fileNamePrefix === 'WorkSchedule' ? 'WS' : 'RD';
@@ -208,19 +207,13 @@ function generateFile(data, fileNamePrefix) {
     if (fileNamePrefix === 'WorkSchedule') {
         formattedData = data.map(row => ({
             'Employee Number': row.employeeNo,
-            'Name': row.name,
-            'Position': row.position,
             'Work Date': new Date(row.date),
             'Shift Code': row.shiftCode,
-            'Day of Week': row.dayOfWeek
         }));
     } else {
         formattedData = data.map(row => ({
             'Employee Number': row.employeeNo,
-            'Name': row.name,
-            'Position': row.position,
             'Rest Day Date': new Date(row.date),
-            'Day of Week': row.dayOfWeek
         }));
     }
 
@@ -255,7 +248,7 @@ function generateFile(data, fileNamePrefix) {
     XLSX.utils.book_append_sheet(workbook, headerSheet, "Sheet1");
 
     // 💾 File name pattern: Makati_WS_10-01-25.xlsx
-    XLSX.writeFile(workbook, `${branchName}_${schedType}_${formattedDate}.xlsx`);
+    XLSX.writeFile(workbook, `${branchName}_${schedType}.xlsx`);
 
     showSuccess('File generated successfully!');
 }
