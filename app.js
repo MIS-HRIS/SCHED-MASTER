@@ -189,52 +189,73 @@ function generateFile(data, fileNamePrefix) {
         return;
     }
 
-    // 🏷️ Get branch name and set fixed display date
+    // 🏷️ Get branch name and month
     const branchName = document.getElementById('branchNameInput')?.value.trim() || 'UnnamedBranch';
-    const formattedDate = "10-01-25"; // your fixed export date
+    const month = "October"; // <-- you can make this dynamic later
+    const formattedDate = "10-01-25"; // still used for file name
 
+    // Determine WS/RD suffix for both header and filename
+    const schedType = fileNamePrefix === 'WorkSchedule' ? 'WS' : 'RD';
+
+    // Construct header text (top row)
+    const headerText = `${branchName}_${schedType}_${month}`;
+
+    // ✅ Create header row
+    const headerRow = [[headerText]];
+
+    // 🧾 Format your data
     let formattedData;
-
     if (fileNamePrefix === 'WorkSchedule') {
         formattedData = data.map(row => ({
             'Employee Number': row.employeeNo,
-            'Work Date': new Date(row.date), // store as real JS Date
+            'Name': row.name,
+            'Position': row.position,
+            'Work Date': new Date(row.date),
             'Shift Code': row.shiftCode,
-        }));
-    } else if (fileNamePrefix === 'RestDaySchedule') {
-        formattedData = data.map(row => ({
-            'Employee No': row.employeeNo,
-            'Rest Day Date': new Date(row.date),
+            'Day of Week': row.dayOfWeek
         }));
     } else {
-        formattedData = data.map(row => {
-            const newRow = { ...row };
-            delete newRow.conflict;
-            delete newRow.conflictReason;
-            newRow.date = new Date(newRow.date);
-            return newRow;
-        });
+        formattedData = data.map(row => ({
+            'Employee Number': row.employeeNo,
+            'Name': row.name,
+            'Position': row.position,
+            'Rest Day Date': new Date(row.date),
+            'Day of Week': row.dayOfWeek
+        }));
     }
 
-    // 🧾 Create Excel worksheet
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    // 🧩 Convert data into sheet
+    const dataSheet = XLSX.utils.json_to_sheet(formattedData, { origin: "A2" });
 
-    // ✅ Format Excel Date Column
-    Object.keys(worksheet).forEach(cell => {
-        if (cell[0] === "!" || !worksheet[cell].v) return;
-        const val = worksheet[cell].v;
+    // 🧾 Create header sheet manually (top line)
+    const headerSheet = XLSX.utils.aoa_to_sheet(headerRow);
+
+    // Merge headerSheet and dataSheet
+    Object.keys(dataSheet).forEach(cell => {
+        if (cell.startsWith('!')) return; // skip metadata
+        headerSheet[cell] = dataSheet[cell];
+    });
+    headerSheet['!ref'] = XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: XLSX.utils.decode_range(dataSheet['!ref']).e
+    });
+
+    // ✅ Format date cells
+    Object.keys(headerSheet).forEach(cell => {
+        if (cell[0] === "!" || !headerSheet[cell].v) return;
+        const val = headerSheet[cell].v;
         if (val instanceof Date || /^\d{4}-\d{2}-\d{2}/.test(val)) {
-            worksheet[cell].t = "d";
-            worksheet[cell].z = "mm/dd/yy"; // Display format MM/DD/YY
+            headerSheet[cell].t = "d";
+            headerSheet[cell].z = "mm/dd/yy";
         }
     });
 
-    // 📘 Finalize workbook
+    // 📘 Create and export workbook
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    XLSX.utils.book_append_sheet(workbook, headerSheet, "Sheet1");
 
-    // 💾 Save file with branch name and fixed date
-    XLSX.writeFile(workbook, `${fileNamePrefix}_${branchName}_${formattedDate}.xlsx`);
+    // 💾 File name pattern: Makati_WS_10-01-25.xlsx
+    XLSX.writeFile(workbook, `${branchName}_${schedType}_${formattedDate}.xlsx`);
 
     showSuccess('File generated successfully!');
 }
