@@ -49,8 +49,23 @@
       workInput.addEventListener('paste', handlePaste);
       restInput.addEventListener('paste', handlePaste);
 
-      generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
-      generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
+generateWorkFileBtn.addEventListener('click', () => {
+  const branchName = document.getElementById('branchNameInput')?.value.trim();
+  if (!branchName) {
+    alert('⚠️ Please enter the Branch Name before generating the Work File.');
+    return;
+  }
+  generateFile(workScheduleData, 'WorkSchedule');
+});
+
+generateRestFileBtn.addEventListener('click', () => {
+  const branchName = document.getElementById('branchNameInput')?.value.trim();
+  if (!branchName) {
+    alert('⚠️ Please enter the Branch Name before generating the Rest Day File.');
+    return;
+  }
+  generateFile(restDayData, 'RestDaySchedule');
+});
       
       clearWorkBtn.addEventListener('click', () => clearData('work'));
       clearRestBtn.addEventListener('click', () => clearData('rest'));
@@ -454,8 +469,11 @@ function generateFile(data, fileNamePrefix) {
 =========================== */
 
 // ✅ Firestore imports (already available via firebase.js)
-import { getFirestore, collection, getDocs } from "./firebase.js";
+import { getFirestore, collection, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "./firebase.js";
 const db = getFirestore();
+
+const monitoringCollectionRef = collection(db, "monitoring");
+
 
 // --- Auto-select current month/year when page opens ---
 window.addEventListener("DOMContentLoaded", () => {
@@ -590,7 +608,7 @@ function updateMonitoringProgress() {
             monitoringTableBody.querySelectorAll('.delete-icon').forEach(button => {
                  button.addEventListener('click', (e) => deleteMonitoringBranch(e.target.dataset.id));
             });
-            updateMonitoringProgress();
+            updateMonitoringProgressRealtime();
         }
 
         async function addMonitoringBranch() {
