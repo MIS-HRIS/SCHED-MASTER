@@ -93,8 +93,21 @@ generateRestFileBtn.addEventListener('click', () => {
       /*************************\
        * CORE FUNCTIONS      *
       \*************************/
+
+/*************************\
+ * CORE FUNCTIONS      *
+\*************************/
+
 function handlePaste(event) {
   event.preventDefault();
+
+  // ✅ Require branch name before pasting
+  const branchName = document.getElementById('branchNameInput')?.value.trim();
+  if (!branchName) {
+    alert('⚠️ Please enter the Branch Name before pasting schedule data.');
+    return;
+  }
+
   const text = (event.clipboardData || window.clipboardData).getData('text');
   const isWork = event.target.id === 'workScheduleInput';
   const type = isWork ? 'work' : 'rest';
@@ -129,55 +142,16 @@ function handlePaste(event) {
   renderWorkTable();
   renderRestTable();
 
-  // ✅ Wait until DOM finishes rendering before scrolling
+  // ✅ Smooth scroll after paste
   requestAnimationFrame(() => {
     setTimeout(() => {
       const summary = document.getElementById('summary');
       if (summary) {
-        summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 300);
   });
-} // 👈 CLOSE THE FUNCTION PROPERLY HERE
-
-function detectColumnMapping(rows, isWork) {
-  let headerRow = -1;
-  let mapping = {};
-  const MAX_ROWS_TO_CHECK = 10;
-
-  const potentialHeaders = {
-    employeeNo: ['employee no.', 'emp no', 'employee number'],
-    name: ['name', 'employee name'],
-    position: ['position'],
-    date: isWork ? ['work date', 'date'] : ['rest day date', 'date', 'rest day'],
-    shiftCode: ['shift code', 'shift'],
-    dayOfWeek: ['day of week', 'day']
-  };
-
-  for (let i = 0; i < Math.min(rows.length, MAX_ROWS_TO_CHECK); i++) {
-    const row = rows[i].map(h => h.toLowerCase().trim().replace(':', ''));
-    let tempMapping = {};
-    for (const key in potentialHeaders) {
-      const index = row.findIndex(header => potentialHeaders[key].includes(header));
-      tempMapping[key] = index !== -1 ? index : null;
-    }
-    if (tempMapping.employeeNo !== null && tempMapping.name !== null && tempMapping.date !== null) {
-      headerRow = i;
-      mapping = tempMapping;
-      break;
-    }
-  }
-
-  if (headerRow === -1) {
-    showWarning("No headers detected. Assuming standard column order.");
-    mapping = {
-      employeeNo: 0, name: 1, date: 2, shiftCode: isWork ? 3 : null,
-      dayOfWeek: isWork ? 4 : 3, position: isWork ? 5 : 4,
-    };
-    headerRow = -1;
-  }
-  return { mapping, headerRow };
-}
+} // 👈 Close function properly
 
       function recheckConflicts() {
           const scheduleMap = new Map();
