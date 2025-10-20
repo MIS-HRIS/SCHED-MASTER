@@ -191,7 +191,6 @@ function generateFile(data, fileNamePrefix) {
 
     // 🏷️ Get branch name and month
     const branchName = document.getElementById('branchNameInput')?.value.trim() || 'UnnamedBranch';
-    const month = "October"; // <-- you can make this dynamic later
 
     // Determine WS/RD suffix for both header and filename
     const schedType = fileNamePrefix === 'WorkSchedule' ? 'WS' : 'RD';
