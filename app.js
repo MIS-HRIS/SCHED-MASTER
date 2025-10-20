@@ -1,52 +1,51 @@
 /***** State *****/
-      let workScheduleData = [];
-      let restDayData = [];
-      let monitoringData = []; // This will be managed by Firestore
-      let currentlyEditing = { type: null, index: null };
-      let unsubscribeMonitoring = () => {};
-      const undoStack = { work: [], rest: [] };
-      const redoStack = { work: [], rest: [] };
-      const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
+let workScheduleData = [];
+let restDayData = [];
+let monitoringData = []; // This will be managed by Firestore
+let currentlyEditing = { type: null, index: null };
+let unsubscribeMonitoring = () => {};
+const undoStack = { work: [], rest: [] };
+const redoStack = { work: [], rest: [] };
+const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
 
-      /***** Element refs *****/
-      const workInput = document.getElementById('workScheduleInput');
-      const restInput = document.getElementById('restScheduleInput');
-      const workTableBody = document.getElementById('workTableBody');
-      const restTableBody = document.getElementById('restTableBody');
-      const summaryEl = document.getElementById('summary');
-      const warningBanner = document.getElementById('warning-banner');
-      const successMsg = document.getElementById('success-message');
-      const generateWorkFileBtn = document.getElementById('generateWorkFile');
-      const generateRestFileBtn = document.getElementById('generateRestFile');
-      const clearWorkBtn = document.getElementById('clearWorkData');
-      const clearRestBtn = document.getElementById('clearRestData');
-      const undoWorkBtn = document.getElementById('undoWork');
-      const redoWorkBtn = document.getElementById('redoWork');
-      const undoRestBtn = document.getElementById('undoRest');
-      const redoRestBtn = document.getElementById('redoRest');
-      const backToTopBtn = document.getElementById('backToTopBtn');
-      
-      const tabSchedule = document.getElementById('tab-schedule');
-      const tabMonitoring = document.getElementById('tab-monitoring');
-      const viewSchedule = document.getElementById('view-schedule');
-      const viewMonitoring = document.getElementById('view-monitoring');
-      
-      const monitoringTableBody = document.getElementById('monitoringTableBody');
-      const addMonitoringRowBtn = document.getElementById('addMonitoringRowBtn');
-      const monitoringProgressBar = document.getElementById('monitoringProgressBar');
-      const monitoringProgressText = document.getElementById('monitoringProgressText');
-      
-      const editModal = document.getElementById('editModal');
-      const closeEditModalBtn = document.getElementById('closeEditModalBtn');
-      const cancelEditBtn = document.getElementById('cancelEditBtn');
-      const editForm = document.getElementById('editForm');
-      const editShiftCodeWrapper = document.getElementById('editShiftCodeWrapper');
+/***** Element refs *****/
+const workInput = document.getElementById('workScheduleInput');
+const restInput = document.getElementById('restScheduleInput');
+const workTableBody = document.getElementById('workTableBody');
+const restTableBody = document.getElementById('restTableBody');
+const summaryEl = document.getElementById('summary');
+const warningBanner = document.getElementById('warning-banner');
+const successMsg = document.getElementById('success-message');
+const generateWorkFileBtn = document.getElementById('generateWorkFile');
+const generateRestFileBtn = document.getElementById('generateRestFile');
+const clearWorkBtn = document.getElementById('clearWorkData');
+const clearRestBtn = document.getElementById('clearRestData');
+const undoWorkBtn = document.getElementById('undoWork');
+const redoWorkBtn = document.getElementById('redoWork');
+const undoRestBtn = document.getElementById('undoRest');
+const redoRestBtn = document.getElementById('redoRest');
+const backToTopBtn = document.getElementById('backToTopBtn');
 
+const tabSchedule = document.getElementById('tab-schedule');
+const tabMonitoring = document.getElementById('tab-monitoring');
+const viewSchedule = document.getElementById('view-schedule');
+const viewMonitoring = document.getElementById('view-monitoring');
 
-      /*************************\
-       * EVENT LISTENERS     *
-      \*************************/
-      
+const monitoringTableBody = document.getElementById('monitoringTableBody');
+const addMonitoringRowBtn = document.getElementById('addMonitoringRowBtn');
+const monitoringProgressBar = document.getElementById('monitoringProgressBar');
+const monitoringProgressText = document.getElementById('monitoringProgressText');
+
+const editModal = document.getElementById('editModal');
+const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const editForm = document.getElementById('editForm');
+const editShiftCodeWrapper = document.getElementById('editShiftCodeWrapper');
+
+/*************************\
+ * EVENT LISTENERS     *
+\*************************/
+
 generateWorkFileBtn.addEventListener('click', () => {
   const branchName = document.getElementById('branchNameInput')?.value.trim();
   if (!branchName) {
@@ -64,33 +63,32 @@ generateRestFileBtn.addEventListener('click', () => {
   }
   generateFile(restDayData, 'RestDaySchedule');
 });
-      
-      clearWorkBtn.addEventListener('click', () => clearData('work'));
-      clearRestBtn.addEventListener('click', () => clearData('rest'));
 
-      undoWorkBtn.addEventListener('click', () => undo('work'));
-      redoWorkBtn.addEventListener('click', () => redo('work'));
-      undoRestBtn.addEventListener('click', () => undo('rest'));
-      redoRestBtn.addEventListener('click', () => redo('rest'));
+clearWorkBtn.addEventListener('click', () => clearData('work'));
+clearRestBtn.addEventListener('click', () => clearData('rest'));
 
-      tabSchedule.addEventListener('click', () => switchTab('schedule'));
-      tabMonitoring.addEventListener('click', () => switchTab('monitoring'));
-      
-      addMonitoringRowBtn.addEventListener('click', addMonitoringBranch);
-      
-      closeEditModalBtn.addEventListener('click', hideEditModal);
-      cancelEditBtn.addEventListener('click', hideEditModal);
-      editForm.addEventListener('submit', handleSaveEdit);
-      editModal.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-overlay')) {
-            hideEditModal();
-        }
-      });
+undoWorkBtn.addEventListener('click', () => undo('work'));
+redoWorkBtn.addEventListener('click', () => redo('work'));
+undoRestBtn.addEventListener('click', () => undo('rest'));
+redoRestBtn.addEventListener('click', () => redo('rest'));
 
+tabSchedule.addEventListener('click', () => switchTab('schedule'));
+tabMonitoring.addEventListener('click', () => switchTab('monitoring'));
 
-      /*************************\
-       * CORE FUNCTIONS      *
-      \*************************/
+addMonitoringRowBtn.addEventListener('click', addMonitoringBranch);
+
+closeEditModalBtn.addEventListener('click', hideEditModal);
+cancelEditBtn.addEventListener('click', hideEditModal);
+editForm.addEventListener('submit', handleSaveEdit);
+editModal.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    hideEditModal();
+  }
+});
+
+/*************************\
+ * CORE FUNCTIONS      *
+\*************************/
 
 function detectColumnMapping(rows, isWork) {
   const headerRow = 0;
@@ -107,7 +105,7 @@ function detectColumnMapping(rows, isWork) {
     shiftCode: isWork ? headers.findIndex(h => h.includes('shift')) : null
   };
 
-  // ✅ If Excel headers missing or lowercased weirdly — fallback by index
+  // fallback if missing headers
   if (mapping.employeeNo === -1) mapping.employeeNo = 0;
   if (mapping.name === -1) mapping.name = 1;
   if (mapping.position === -1) mapping.position = 2;
@@ -119,7 +117,6 @@ function detectColumnMapping(rows, isWork) {
 function handlePaste(event) {
   event.preventDefault();
 
-  // ✅ Require branch name before pasting
   const branchName = document.getElementById("branchNameInput")?.value.trim();
   if (!branchName) {
     alert("⚠️ Please enter the Branch Name before pasting schedule data.");
@@ -133,27 +130,18 @@ function handlePaste(event) {
 
   saveUndoState(type);
 
-  // Normalize newlines and drop empty lines
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
   if (lines.length === 0) {
     console.warn("Paste contained no text.");
     return;
   }
 
-  // Choose best splitter per line:
-  // - Prefer tabs (typical from Excel)
-  // - Then multiple spaces (fixed-width / copied text)
-  // - Then commas
-  // - Fallback to single-space (last resort)
   const parsedRows = lines.map((line) => {
     if (line.includes("\t")) return line.split("\t").map(c => c.trim());
     if (/\s{2,}/.test(line)) return line.split(/\s{2,}/).map(c => c.trim());
     if (line.includes(",")) return line.split(",").map(c => c.trim());
     return line.split(/\s+/).map(c => c.trim());
   });
-
-  // Debug help when things don't parse as expected
-  console.debug("Parsed rows count:", parsedRows.length, "Sample row cols:", parsedRows[0].length, parsedRows[0]);
 
   const { mapping, headerRow } = detectColumnMapping(parsedRows, isWork);
 
@@ -184,14 +172,12 @@ function handlePaste(event) {
     }));
   }
 
-  // Update UI + persist
   recheckConflicts();
   updateButtonStates();
   renderWorkTable();
   renderRestTable();
   saveState();
 
-  // ✅ Wait until next frame (DOM updated), then scroll to table
   setTimeout(() => {
     const target = isWork
       ? document.querySelector("#workTableBody")
@@ -202,54 +188,69 @@ function handlePaste(event) {
   }, 300);
 }
 
-      function recheckConflicts() {
-          const scheduleMap = new Map();
-          
-          workScheduleData.forEach(d => d.conflict = false);
-          restDayData.forEach(d => { d.conflict = false; d.conflictReason = ''; });
+// ✅ Attach working paste listeners
+document.addEventListener("DOMContentLoaded", () => {
+  const workInput = document.getElementById("workScheduleInput");
+  const restInput = document.getElementById("restScheduleInput");
+  if (workInput && restInput) {
+    workInput.addEventListener("paste", handlePaste);
+    restInput.addEventListener("paste", handlePaste);
+    console.log("✅ Paste listeners attached!");
+  }
+});
 
-          workScheduleData.forEach((item, index) => {
-              const key = `${item.employeeNo}-${item.date}`;
-              if (!scheduleMap.has(key)) scheduleMap.set(key, { type: 'work', rowNum: index + 1 });
-          });
+/*************************\
+ * CONFLICT CHECKING     *
+\*************************/
+function recheckConflicts() {
+  const scheduleMap = new Map();
 
-          restDayData.forEach(item => {
-              const key = `${item.employeeNo}-${item.date}`;
-              if (scheduleMap.has(key)) {
-                  const workEntry = scheduleMap.get(key);
-                  item.conflict = true;
-                  item.conflictReason = `vs. Work Sched Row #${workEntry.rowNum}`;
-                  
-                  const workItem = workScheduleData.find(d => d.employeeNo === item.employeeNo && d.date === item.date);
-                  if (workItem) workItem.conflict = true;
-              }
-          });
+  workScheduleData.forEach(d => d.conflict = false);
+  restDayData.forEach(d => { d.conflict = false; d.conflictReason = ''; });
 
-          const conflictCount = restDayData.filter(d => d.conflict).length;
-          const leadershipConflict = [...workScheduleData, ...restDayData]
-              .some(d => d.conflict && LEADERSHIP_POSITIONS.includes(d.position));
+  workScheduleData.forEach((item, index) => {
+    const key = `${item.employeeNo}-${item.date}`;
+    if (!scheduleMap.has(key)) scheduleMap.set(key, { type: 'work', rowNum: index + 1 });
+  });
 
-          renderSummary(conflictCount, leadershipConflict);
-          renderWorkTable();
-          renderRestTable();
-      }
-      
+  restDayData.forEach(item => {
+    const key = `${item.employeeNo}-${item.date}`;
+    if (scheduleMap.has(key)) {
+      const workEntry = scheduleMap.get(key);
+      item.conflict = true;
+      item.conflictReason = `vs. Work Sched Row #${workEntry.rowNum}`;
+
+      const workItem = workScheduleData.find(d => d.employeeNo === item.employeeNo && d.date === item.date);
+      if (workItem) workItem.conflict = true;
+    }
+  });
+
+  const conflictCount = restDayData.filter(d => d.conflict).length;
+  const leadershipConflict = [...workScheduleData, ...restDayData]
+    .some(d => d.conflict && LEADERSHIP_POSITIONS.includes(d.position));
+
+  renderSummary(conflictCount, leadershipConflict);
+  renderWorkTable();
+  renderRestTable();
+}
+
+/*************************\
+ * FILE GENERATION      *
+\*************************/
 function generateFile(data, fileNamePrefix) {
   if (data.length === 0) {
     showWarning('No data to generate file.');
     return;
   }
 
-  // 🏷️ Require branch name first
   const branchName = document.getElementById('branchNameInput')?.value.trim();
   if (!branchName) {
     alert('⚠️ Please enter the Branch Name before generating the file.');
     return;
   }
 
-  // 🗓️ Auto month + year
   const now = new Date();
-  const month = now.toLocaleString('default', { month: 'short' }); // e.g., Oct
+  const month = now.toLocaleString('default', { month: 'short' });
   const year = now.getFullYear();
 
   let formattedData;
@@ -275,10 +276,7 @@ function generateFile(data, fileNamePrefix) {
     });
   }
 
-  // 🧾 Create Excel worksheet
   const worksheet = XLSX.utils.json_to_sheet(formattedData);
-
-  // ✅ Format Excel date column
   Object.keys(worksheet).forEach(cell => {
     if (cell[0] === "!" || !worksheet[cell].v) return;
     const val = worksheet[cell].v;
@@ -288,12 +286,10 @@ function generateFile(data, fileNamePrefix) {
     }
   });
 
-  // 📘 Finalize workbook
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-  // 💾 Filename format → BranchName_FileType_MonthYear.xlsx
-  const safeBranch = branchName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_'); // sanitize
+  const safeBranch = branchName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
   const fileName = `${safeBranch}_${fileNamePrefix}_${month}${year}.xlsx`;
 
   XLSX.writeFile(workbook, fileName);
