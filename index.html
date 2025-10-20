@@ -277,18 +277,21 @@
         </div>
     </div>
   
-<script src="app.js"></script>
-<script type="module" src="firebase.js"></script>
+ <!-- ✅ Firebase and App JS (as modules so imports work) -->
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="app.js"></script>
 
-
-
-<!-- ✅ then your normal JS files / inline script -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    loadState();
-    updateButtonStates();
-    recheckConflicts();
-  });
-</script>
+  <!-- ✅ Then run initialization AFTER app.js is loaded -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      if (typeof loadState === "function") {
+        loadState();
+        updateButtonStates();
+        recheckConflicts();
+      } else {
+        console.warn("⚠️ app.js not yet loaded — loadState not found");
+      }
+    });
+  </script>
 </body>
 </html>
