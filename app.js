@@ -8,92 +8,50 @@ const undoStack = { work: [], rest: [] };
 const redoStack = { work: [], rest: [] };
 const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
 
-/***** Element refs *****/
-let workInput, restInput, workTableBody, restTableBody, summaryEl, warningBanner, successMsg;
-let generateWorkFileBtn, generateRestFileBtn, clearWorkBtn, clearRestBtn;
-let undoWorkBtn, redoWorkBtn, undoRestBtn, redoRestBtn;
-let backToTopBtn, tabSchedule, tabMonitoring, viewSchedule, viewMonitoring;
-let monitoringTableBody, addMonitoringRowBtn, monitoringProgressBar, monitoringProgressText;
-let editModal, closeEditModalBtn, cancelEditBtn, editForm, editShiftCodeWrapper;
-
-// Wait until DOM is fully ready to assign these
-window.addEventListener("load", () => {
-  workInput = document.getElementById('workScheduleInput');
-  restInput = document.getElementById('restScheduleInput');
-  workTableBody = document.getElementById('workTableBody');
-  restTableBody = document.getElementById('restTableBody');
-  summaryEl = document.getElementById('summary');
-  warningBanner = document.getElementById('warning-banner');
-  successMsg = document.getElementById('success-message');
-  generateWorkFileBtn = document.getElementById('generateWorkFile');
-  generateRestFileBtn = document.getElementById('generateRestFile');
-  clearWorkBtn = document.getElementById('clearWorkData');
-  clearRestBtn = document.getElementById('clearRestData');
-  undoWorkBtn = document.getElementById('undoWork');
-  redoWorkBtn = document.getElementById('redoWork');
-  undoRestBtn = document.getElementById('undoRest');
-  redoRestBtn = document.getElementById('redoRest');
-  backToTopBtn = document.getElementById('backToTopBtn');
-
-  tabSchedule = document.getElementById('tab-schedule');
-  tabMonitoring = document.getElementById('tab-monitoring');
-  viewSchedule = document.getElementById('view-schedule');
-  viewMonitoring = document.getElementById('view-monitoring');
-
-  monitoringTableBody = document.getElementById('monitoringTableBody');
-  addMonitoringRowBtn = document.getElementById('addMonitoringRowBtn');
-  monitoringProgressBar = document.getElementById('monitoringProgressBar');
-  monitoringProgressText = document.getElementById('monitoringProgressText');
-
-  editModal = document.getElementById('editModal');
-  closeEditModalBtn = document.getElementById('closeEditModalBtn');
-  cancelEditBtn = document.getElementById('cancelEditBtn');
-  editForm = document.getElementById('editForm');
-  editShiftCodeWrapper = document.getElementById('editShiftCodeWrapper');
-});
-
 /*************************\
  * EVENT LISTENERS     *
 \*************************/
 
-generateWorkFileBtn.addEventListener('click', () => {
-  const branchName = document.getElementById('branchNameInput')?.value.trim();
-  if (!branchName) {
-    alert('⚠️ Please enter the Branch Name before generating the Work File.');
-    return;
-  }
-  generateFile(workScheduleData, 'WorkSchedule');
-});
+window.addEventListener("load", () => {
+  generateWorkFileBtn.addEventListener('click', () => {
+    const branchName = document.getElementById('branchNameInput')?.value.trim();
+    if (!branchName) {
+      alert('⚠️ Please enter the Branch Name before generating the Work File.');
+      return;
+    }
+    generateFile(workScheduleData, 'WorkSchedule');
+  });
 
-generateRestFileBtn.addEventListener('click', () => {
-  const branchName = document.getElementById('branchNameInput')?.value.trim();
-  if (!branchName) {
-    alert('⚠️ Please enter the Branch Name before generating the Rest Day File.');
-    return;
-  }
-  generateFile(restDayData, 'RestDaySchedule');
-});
+  generateRestFileBtn.addEventListener('click', () => {
+    const branchName = document.getElementById('branchNameInput')?.value.trim();
+    if (!branchName) {
+      alert('⚠️ Please enter the Branch Name before generating the Rest Day File.');
+      return;
+    }
+    generateFile(restDayData, 'RestDaySchedule');
+  });
 
-clearWorkBtn.addEventListener('click', () => clearData('work'));
-clearRestBtn.addEventListener('click', () => clearData('rest'));
+  clearWorkBtn.addEventListener('click', () => clearData('work'));
+  clearRestBtn.addEventListener('click', () => clearData('rest'));
 
-undoWorkBtn.addEventListener('click', () => undo('work'));
-redoWorkBtn.addEventListener('click', () => redo('work'));
-undoRestBtn.addEventListener('click', () => undo('rest'));
-redoRestBtn.addEventListener('click', () => redo('rest'));
+  undoWorkBtn.addEventListener('click', () => undo('work'));
+  redoWorkBtn.addEventListener('click', () => redo('work'));
+  undoRestBtn.addEventListener('click', () => undo('rest'));
+  redoRestBtn.addEventListener('click', () => redo('rest'));
 
-tabSchedule.addEventListener('click', () => switchTab('schedule'));
-tabMonitoring.addEventListener('click', () => switchTab('monitoring'));
+  tabSchedule.addEventListener('click', () => switchTab('schedule'));
+  tabMonitoring.addEventListener('click', () => switchTab('monitoring'));
 
-addMonitoringRowBtn.addEventListener('click', addMonitoringBranch);
+  addMonitoringRowBtn.addEventListener('click', addMonitoringBranch);
 
-closeEditModalBtn.addEventListener('click', hideEditModal);
-cancelEditBtn.addEventListener('click', hideEditModal);
-editForm.addEventListener('submit', handleSaveEdit);
-editModal.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal-overlay')) {
-    hideEditModal();
-  }
+  closeEditModalBtn.addEventListener('click', hideEditModal);
+  cancelEditBtn.addEventListener('click', hideEditModal);
+  editForm.addEventListener('submit', handleSaveEdit);
+  editModal.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+      hideEditModal();
+    }
+  });
 });
 
 /*************************\
