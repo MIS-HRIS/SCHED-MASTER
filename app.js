@@ -199,60 +199,71 @@ generateRestFileBtn.addEventListener('click', () => {
       }
       
 function generateFile(data, fileNamePrefix) {
-    if (data.length === 0) {
-        showWarning('No data to generate file.');
-        return;
-    }
+  if (data.length === 0) {
+    showWarning('No data to generate file.');
+    return;
+  }
 
-    // 🏷️ Get branch name and set fixed display date
-    const branchName = document.getElementById('branchNameInput')?.value.trim() || 'UnnamedBranch';
-    const formattedDate = "10-01-25"; // your fixed export date
+  // 🏷️ Require branch name first
+  const branchName = document.getElementById('branchNameInput')?.value.trim();
+  if (!branchName) {
+    alert('⚠️ Please enter the Branch Name before generating the file.');
+    return;
+  }
 
-    let formattedData;
+  // 🗓️ Auto month + year
+  const now = new Date();
+  const month = now.toLocaleString('default', { month: 'short' }); // e.g., Oct
+  const year = now.getFullYear();
 
-    if (fileNamePrefix === 'WorkSchedule') {
-        formattedData = data.map(row => ({
-            'Employee Number': row.employeeNo,
-            'Work Date': new Date(row.date), // store as real JS Date
-            'Shift Code': row.shiftCode,
-        }));
-    } else if (fileNamePrefix === 'RestDaySchedule') {
-        formattedData = data.map(row => ({
-            'Employee No': row.employeeNo,
-            'Rest Day Date': new Date(row.date),
-        }));
-    } else {
-        formattedData = data.map(row => {
-            const newRow = { ...row };
-            delete newRow.conflict;
-            delete newRow.conflictReason;
-            newRow.date = new Date(newRow.date);
-            return newRow;
-        });
-    }
+  let formattedData;
 
-    // 🧾 Create Excel worksheet
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-
-    // ✅ Format Excel Date Column
-    Object.keys(worksheet).forEach(cell => {
-        if (cell[0] === "!" || !worksheet[cell].v) return;
-        const val = worksheet[cell].v;
-        if (val instanceof Date || /^\d{4}-\d{2}-\d{2}/.test(val)) {
-            worksheet[cell].t = "d";
-            worksheet[cell].z = "mm/dd/yy"; // Display format MM/DD/YY
-        }
+  if (fileNamePrefix === 'WorkSchedule') {
+    formattedData = data.map(row => ({
+      'Employee Number': row.employeeNo,
+      'Work Date': new Date(row.date),
+      'Shift Code': row.shiftCode,
+    }));
+  } else if (fileNamePrefix === 'RestDaySchedule') {
+    formattedData = data.map(row => ({
+      'Employee No': row.employeeNo,
+      'Rest Day Date': new Date(row.date),
+    }));
+  } else {
+    formattedData = data.map(row => {
+      const newRow = { ...row };
+      delete newRow.conflict;
+      delete newRow.conflictReason;
+      newRow.date = new Date(newRow.date);
+      return newRow;
     });
+  }
 
-    // 📘 Finalize workbook
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  // 🧾 Create Excel worksheet
+  const worksheet = XLSX.utils.json_to_sheet(formattedData);
 
-    // 💾 Save file with branch name and fixed date
-    XLSX.writeFile(workbook, `${fileNamePrefix}_${branchName}_${formattedDate}.xlsx`);
+  // ✅ Format Excel date column
+  Object.keys(worksheet).forEach(cell => {
+    if (cell[0] === "!" || !worksheet[cell].v) return;
+    const val = worksheet[cell].v;
+    if (val instanceof Date || /^\d{4}-\d{2}-\d{2}/.test(val)) {
+      worksheet[cell].t = "d";
+      worksheet[cell].z = "mm/dd/yy";
+    }
+  });
 
-    showSuccess('File generated successfully!');
+  // 📘 Finalize workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+  // 💾 Filename format → BranchName_FileType_MonthYear.xlsx
+  const safeBranch = branchName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_'); // sanitize
+  const fileName = `${safeBranch}_${fileNamePrefix}_${month}${year}.xlsx`;
+
+  XLSX.writeFile(workbook, fileName);
+  showSuccess(`File generated successfully: ${fileName}`);
 }
+
       /*************************\
        * UI & RENDERING     *
       \*************************/
