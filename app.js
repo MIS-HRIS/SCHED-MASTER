@@ -182,23 +182,29 @@
           renderWorkTable();
           renderRestTable();
       }
-      
-function generateFile(data, fileNamePrefix) {
+
+      function generateFile(data, fileNamePrefix) {
     if (data.length === 0) {
         showWarning('No data to generate file.');
         return;
     }
 
-    // Identify schedule type
+    // 🏷️ Identify schedule type
     const isWorkSchedule = fileNamePrefix === 'WorkSchedule';
     const schedType = isWorkSchedule ? 'WS' : 'RD';
 
-    // ✅ Exact column headers required by your system
-    const columns = isWorkSchedule
+    // ✅ Fetch branch name correctly (use .value directly)
+    const branchInput = document.getElementById('branchNameInput');
+    const branchName = branchInput && branchInput.value
+        ? branchInput.value.trim()
+        : 'UnnamedBranch';
+
+    // ✅ Define exact system headers
+    const headers = isWorkSchedule
         ? ['Employee Number', 'Work Date', 'Shift Code']
         : ['Employee No', 'Rest Day Date'];
 
-    // ✅ Format your data (keep only what’s needed)
+    // ✅ Format your data
     const formattedData = data.map(row => {
         if (isWorkSchedule) {
             return {
@@ -214,10 +220,10 @@ function generateFile(data, fileNamePrefix) {
         }
     });
 
-    // ✅ Convert to sheet (no extra header, no branch name)
-    const sheet = XLSX.utils.json_to_sheet(formattedData, { header: columns });
+    // ✅ Create Excel sheet (headers only, no extra title row)
+    const sheet = XLSX.utils.json_to_sheet(formattedData, { header: headers });
 
-    // ✅ Format date cells properly for Excel (mm/dd/yy)
+    // ✅ Proper date formatting
     Object.keys(sheet).forEach(cell => {
         if (cell[0] === "!" || !sheet[cell].v) return;
         const val = sheet[cell].v;
@@ -231,11 +237,13 @@ function generateFile(data, fileNamePrefix) {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
 
-    // 💾 Clean filename (no date)
-    const branchName = document.getElementById('branchNameInput')?.value.trim() || 'UnnamedBranch';
-    const filename = `${branchName}_${schedType}.xlsx`;
+    // 💾 Exact filename formats
+    const month = 'October'; // static month name per your requirement
+    const filename = isWorkSchedule
+        ? `${branchName}_WS_${month} - Work schedule.xlsx`
+        : `${branchName}_RD_${month} - Rest day.xlsx`;
 
-    // 💾 Export file
+    // 💾 Write file
     XLSX.writeFile(workbook, filename);
 
     showSuccess(`File "${filename}" generated successfully!`);
