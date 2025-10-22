@@ -78,39 +78,52 @@
       /*************************\
        * CORE FUNCTIONS      *
       \*************************/
-      function handlePaste(event) {
-        event.preventDefault();
-        const text = (event.clipboardData || window.clipboardData).getData('text');
-        const isWork = event.target.id === 'workScheduleInput';
-        const type = isWork ? 'work' : 'rest';
-        
-        saveUndoState(type);
-        
-        const rows = text.split('\n').map(row => row.split('\t'));
-        const { mapping, headerRow } = detectColumnMapping(rows, isWork);
-        
-        const data = rows.slice(headerRow + 1)
-          .map(row => {
-            const entry = {};
-            for (const key in mapping) {
-                if(mapping[key] !== null && row[mapping[key]] !== undefined) {
-                   entry[key] = row[mapping[key]].trim();
-                } else {
-                   entry[key] = '';
-                }
-            }
-            return entry;
-          })
-          .filter(entry => entry.employeeNo && entry.name && entry.date);
 
-        if (isWork) {
-          workScheduleData = data.map(d => ({...d, date: excelDateToJS(d.date) }));
+function handlePaste(event) {
+  event.preventDefault();
+  const text = (event.clipboardData || window.clipboardData).getData('text');
+  const isWork = event.target.id === 'workScheduleInput';
+  const type = isWork ? 'work' : 'rest';
+
+  saveUndoState(type);
+
+  const rows = text.split('\n').map(row => row.split('\t'));
+  const { mapping, headerRow } = detectColumnMapping(rows, isWork);
+
+  const data = rows
+    .slice(headerRow + 1)
+    .map(row => {
+      const entry = {};
+      for (const key in mapping) {
+        if (mapping[key] !== null && row[mapping[key]] !== undefined) {
+          entry[key] = row[mapping[key]].trim();
         } else {
-          restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+          entry[key] = '';
         }
-        recheckConflicts();
-        updateButtonStates();
       }
+      return entry;
+    })
+    // ✅ Allow rows that have employee number + at least one other relevant field
+    .filter(entry =>
+      entry.employeeNo &&
+      (entry.date || entry.shiftCode || entry.dayOfWeek || entry.position || entry.name)
+    );
+
+  // ✅ Convert Excel-style dates only if present
+  const processedData = data.map(d => ({
+    ...d,
+    date: d.date ? excelDateToJS(d.date) : ''
+  }));
+
+  if (isWork) {
+    workScheduleData = processedData;
+  } else {
+    restDayData = processedData;
+  }
+
+  recheckConflicts();
+  updateButtonStates();
+}
       
 function detectColumnMapping(rows, isWork) {
   let headerRow = -1;
