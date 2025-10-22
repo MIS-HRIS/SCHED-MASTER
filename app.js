@@ -79,88 +79,93 @@
        * CORE FUNCTIONS      *
       \*************************/
 
-      function handlePaste(event) {
-        event.preventDefault();
-        const text = (event.clipboardData || window.clipboardData).getData('text');
-        const isWork = event.target.id === 'workScheduleInput';
-        const type = isWork ? 'work' : 'rest';
-        
-        saveUndoState(type);
-        
-        const rows = text.split('\n').map(row => {
-  // Split by tab if present, else split by 2+ spaces
-  return row.includes('\t') ? row.split('\t') : row.trim().split(/\s{2,}|\t/);
-});
-        const { mapping, headerRow } = detectColumnMapping(rows, isWork);
-        
-let data;
+function handlePaste(event) {
+  event.preventDefault();
+  const text = (event.clipboardData || window.clipboardData).getData('text');
+  const isWork = event.target.id === 'workScheduleInput';
+  const type = isWork ? 'work' : 'rest';
 
-if (headerRow !== -1) {
-  // Use the detected mapping (normal structured input)
-  data = rows.slice(headerRow + 1).map(row => {
-    const entry = {};
-    for (const key in mapping) {
-      entry[key] = mapping[key] !== null && row[mapping[key]] !== undefined
-        ? row[mapping[key]].trim()
-        : '';
-    }
-    return entry;
-  }).filter(entry => entry.employeeNo || entry.name || entry.date);
-} else {
-  // No header row — use intelligent token detection
-const classifyValue = (v) => {
-  v = v.trim();
+  saveUndoState(type);
 
-  // Date
-  if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
-
-  // Day of week
-  if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
-
-  // Employee number
-  if (/^\d{1,6}$/.test(v)) return "employeeNo";
-
-  // Shift code
-  if (/^[A-Za-z]{3}-\d{3}$/.test(v)) return "shiftCode";
-
-  // Position (known role words)
-  if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|branch\s*head)$/i.test(v)) return "position";
-
-  // Name (multiple alphabetic words allowed)
-  if (/^[A-Za-z]+$/.test(v)) return "namePart";
-
-  return "unknown";
-};
-
-  data = rows.map(rawRow => {
-  const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
-  const entry = { nameParts: [] };
-
-  tokens.forEach(t => {
-    const type = classifyValue(t);
-    if (type === "namePart") {
-      entry.nameParts.push(t);
-    } else if (type !== "unknown") {
-      entry[type] = t;
-    }
+  const rows = text.split('\n').map(row => {
+    // Split by tab if present, else split by 2+ spaces
+    return row.includes('\t') ? row.split('\t') : row.trim().split(/\s{2,}|\t/);
   });
 
-  if (entry.nameParts.length > 0) entry.name = entry.nameParts.join(' ');
-  delete entry.nameParts;
+  const { mapping, headerRow } = detectColumnMapping(rows, isWork);
+  let data;
 
-  return entry;
-}).filter(e => Object.keys(e).length > 0);
-
-
-        if (isWork) {
-          workScheduleData = data.map(d => ({...d, date: excelDateToJS(d.date) }));
-        } else {
-          restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
-        }
-        recheckConflicts();
-        updateButtonStates();
+  if (headerRow !== -1 && Object.values(mapping).some(v => v !== null)) {
+    // ✅ Structured input with headers
+    data = rows.slice(headerRow + 1).map(row => {
+      const entry = {};
+      for (const key in mapping) {
+        entry[key] =
+          mapping[key] !== null && row[mapping[key]] !== undefined
+            ? row[mapping[key]].trim()
+            : '';
       }
-      
+      return entry;
+    }).filter(entry => entry.employeeNo || entry.name || entry.date);
+  } else {
+    // ✅ No header row — use intelligent token detection (flexible mode)
+    const classifyValue = (v) => {
+      v = v.trim();
+
+      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v))
+        return "date"; // Date
+
+      if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v))
+        return "dayOfWeek"; // Day
+
+      if (/^\d{1,6}$/.test(v))
+        return "employeeNo"; // Employee number
+
+      if (/^[A-Za-z]{3}-\d{3}$/.test(v))
+        return "shiftCode"; // Shift code (3 letters + 3 numbers)
+
+      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|branch\s*head)$/i.test(v))
+        return "position"; // Position
+
+      if (/^[A-Za-z]+$/.test(v))
+        return "namePart"; // Name fragment
+
+      return "unknown";
+    };
+
+    data = rows.map(rawRow => {
+      const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
+      const entry = { nameParts: [] };
+
+      tokens.forEach(t => {
+        const type = classifyValue(t);
+        if (type === "namePart") {
+          entry.nameParts.push(t);
+        } else if (type !== "unknown" && !entry[type]) {
+          entry[type] = t;
+        } else if (type === "position" && entry.position) {
+          entry.position += " " + t; // handle multi-word position (e.g. Branch Head)
+        }
+      });
+
+      if (entry.nameParts.length > 0) entry.name = entry.nameParts.join(' ');
+      delete entry.nameParts;
+
+      return entry;
+    }).filter(e => Object.keys(e).length > 0);
+  }
+
+  // ✅ Always apply and refresh
+  if (isWork) {
+    workScheduleData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+  } else {
+    restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+  }
+
+  recheckConflicts();
+  updateButtonStates();
+}
+
 function detectColumnMapping(rows, isWork) {
   let headerRow = -1;
   let mapping = {};
@@ -190,36 +195,21 @@ function detectColumnMapping(rows, isWork) {
     }
   }
 
-  // ✅ Step 2: If no header row found → use pattern recognition
+  // ✅ Step 2: If no header row found → pattern recognition
   if (headerRow === -1) {
     const classifyValue = (v) => {
       v = v.trim();
-
-      // Date
-      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
-
-      // Day of week (short or long)
+      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v)) return "date";
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
-
-      // Employee No (digits only 1–6)
       if (/^\d{1,6}$/.test(v)) return "employeeNo";
-
-      // Shift code (letters + digits)
-      if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9\-]+$/.test(v)) return "shiftCode";
-
-      // Position (specific role words)
+      if (/^[A-Za-z]{3}-\d{3}$/.test(v)) return "shiftCode";
       if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead)$/i.test(v)) return "position";
-
-      // Name (letters + spaces only, no digits or symbols)
       if (/^[A-Za-z\s]+$/.test(v)) return "name";
-
       return "unknown";
     };
 
-    // Take up to first 5 rows to analyze patterns
     const sampleRows = rows.slice(0, 5);
     const colCount = Math.max(...sampleRows.map(r => r.length));
-
     const colTypeScores = Array.from({ length: colCount }, (_, i) => {
       const values = sampleRows.map(r => r[i]?.trim()).filter(Boolean);
       const typeCounts = {};
@@ -228,10 +218,9 @@ function detectColumnMapping(rows, isWork) {
         if (type !== "unknown") typeCounts[type] = (typeCounts[type] || 0) + 1;
       }
       const bestType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "unknown";
-      return { index: i, bestType, typeCounts };
+      return { index: i, bestType };
     });
 
-    // Build mapping by picking the most confident columns
     const findCol = (type) => colTypeScores.find(c => c.bestType === type)?.index ?? null;
 
     mapping = {
@@ -242,6 +231,14 @@ function detectColumnMapping(rows, isWork) {
       shiftCode: isWork ? findCol("shiftCode") : null,
       dayOfWeek: findCol("dayOfWeek")
     };
+
+    // ✅ Fallback trigger for short 1–2 column pastes
+    const nonNullCount = Object.values(mapping).filter(v => v !== null).length;
+    const avgCols = rows.reduce((a, r) => a + r.length, 0) / rows.length;
+    if (nonNullCount <= 1 || avgCols < 3) {
+      mapping = {}; // force fallback mode
+      headerRow = -1;
+    }
   }
 
   return { mapping, headerRow };
