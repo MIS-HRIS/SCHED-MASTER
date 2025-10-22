@@ -486,25 +486,56 @@
 .data-table td:nth-child(8) { width: 55px; text-align: center; }
 
 /* ===============================
-   🌿 Rest Day Columns (realigned to Work Schedule)
+   🌿 Rest Day Columns (aligned + header fixed)
    =============================== */
 #restTable th:nth-child(1),
-#restTable td:nth-child(1) { width: 45px; text-align: center; } /* Conflict */
-#restTable th:nth-child(2),
-#restTable td:nth-child(2) { width: 35px; text-align: center; } /* # */
-#restTable th:nth-child(3),
-#restTable td:nth-child(3) { width: 55px; text-align: center; } /* Emp No */
-#restTable th:nth-child(4),
-#restTable td:nth-child(4) { width: 130px; text-align: left; } /* Name */
-#restTable th:nth-child(5),
-#restTable td:nth-child(5) { width: 85px; text-align: left; } /* Position */
-#restTable th:nth-child(6),
-#restTable td:nth-child(6) { width: 70px; text-align: center; } /* Date */
-#restTable th:nth-child(7),
-#restTable td:nth-child(7) { width: 80px; text-align: center; } /* Day of Week */
-#restTable th:nth-child(8),
-#restTable td:nth-child(8) { width: 55px; text-align: center; } /* Icons */
+#restTable td:nth-child(1) {
+  width: 60px;               /* a bit wider to fit 'Conflict' */
+  text-align: center;
+  white-space: nowrap !important; /* keep in one line */
+}
 
+#restTable th:nth-child(2),
+#restTable td:nth-child(2) { 
+  width: 35px; 
+  text-align: center; 
+} /* # */
+
+#restTable th:nth-child(3),
+#restTable td:nth-child(3) { 
+  width: 55px; 
+  text-align: center; 
+} /* Emp No */
+
+#restTable th:nth-child(4),
+#restTable td:nth-child(4) { 
+  width: 130px; 
+  text-align: left; 
+} /* Name */
+
+#restTable th:nth-child(5),
+#restTable td:nth-child(5) { 
+  width: 85px; 
+  text-align: left; 
+} /* Position */
+
+#restTable th:nth-child(6),
+#restTable td:nth-child(6) { 
+  width: 70px; 
+  text-align: center; 
+} /* Date */
+
+#restTable th:nth-child(7),
+#restTable td:nth-child(7) { 
+  width: 80px; 
+  text-align: center; 
+} /* Day of Week */
+
+#restTable th:nth-child(8),
+#restTable td:nth-child(8) { 
+  width: 55px; 
+  text-align: center; 
+} /* Actions */
 
 /* Hover effect */
 tbody tr:hover {
