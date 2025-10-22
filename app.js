@@ -212,37 +212,93 @@ function detectColumnMapping(rows, isWork) {
 }
 
 
-      function recheckConflicts() {
-          const scheduleMap = new Map();
-          
-          workScheduleData.forEach(d => d.conflict = false);
-          restDayData.forEach(d => { d.conflict = false; d.conflictReason = ''; });
+function recheckConflicts() {
+    const scheduleMap = new Map();
+    
+    // Reset conflicts
+    workScheduleData.forEach(d => d.conflict = false);
+    restDayData.forEach(d => { 
+        d.conflict = false; 
+        d.conflictReason = ''; 
+    });
 
-          workScheduleData.forEach((item, index) => {
-              const key = `${item.employeeNo}-${item.date}`;
-              if (!scheduleMap.has(key)) scheduleMap.set(key, { type: 'work', rowNum: index + 1 });
-          });
+    // Map work schedule entries for conflict detection
+    workScheduleData.forEach((item, index) => {
+        const key = `${item.employeeNo}-${item.date}`;
+        if (!scheduleMap.has(key)) scheduleMap.set(key, { type: 'work', rowNum: index + 1 });
+    });
 
-          restDayData.forEach(item => {
-              const key = `${item.employeeNo}-${item.date}`;
-              if (scheduleMap.has(key)) {
-                  const workEntry = scheduleMap.get(key);
-                  item.conflict = true;
-                  item.conflictReason = `vs. Work Sched Row #${workEntry.rowNum}`;
-                  
-                  const workItem = workScheduleData.find(d => d.employeeNo === item.employeeNo && d.date === item.date);
-                  if (workItem) workItem.conflict = true;
-              }
-          });
+    // Detect same-day conflicts between Work Schedule and Rest Day entries
+    restDayData.forEach(item => {
+        const key = `${item.employeeNo}-${item.date}`;
+        if (scheduleMap.has(key)) {
+            const workEntry = scheduleMap.get(key);
+            item.conflict = true;
+            item.conflictReason = `vs. Work Sched Row #${workEntry.rowNum}`;
+            
+            const workItem = workScheduleData.find(
+                d => d.employeeNo === item.employeeNo && d.date === item.date
+            );
+            if (workItem) workItem.conflict = true;
+        }
+    });
 
-          const conflictCount = restDayData.filter(d => d.conflict).length;
-          const leadershipConflict = [...workScheduleData, ...restDayData]
-              .some(d => d.conflict && LEADERSHIP_POSITIONS.includes(d.position));
+    // Validate that all rest day employees exist in the work schedule
+    const workEmployeeNos = new Set(workScheduleData.map(d => d.employeeNo));
+    restDayData.forEach(item => {
+        if (!workEmployeeNos.has(item.employeeNo)) {
+            item.conflict = true;
+            item.conflictReason = 'Employee not found in Work Schedule';
+        }
+    });
 
-          renderSummary(conflictCount, leadershipConflict);
-          renderWorkTable();
-          renderRestTable();
-      }
+    // Leadership rule: Branch Heads, Site Supervisors, and OICs cannot rest on the same date
+    const leadershipPositions = ['Branch Head', 'Site Supervisor', 'OIC'];
+    const leadershipGroups = restDayData.filter(d => leadershipPositions.includes(d.position));
+    const sameDateLeaderships = leadershipGroups.reduce((acc, curr) => {
+        if (!acc[curr.date]) acc[curr.date] = [];
+        acc[curr.date].push(curr);
+        return acc;
+    }, {});
+
+    Object.entries(sameDateLeaderships).forEach(([date, leaders]) => {
+        if (leaders.length > 1) {
+            leaders.forEach(ld => {
+                ld.conflict = true;
+                ld.conflictReason = 'Multiple leaders on rest day (' + date + ')';
+            });
+        }
+    });
+
+    // Limit: Only maximum of 2 weekend rest days per employee
+    const weekendDays = ['Friday', 'Saturday', 'Sunday'];
+    const weekendCountMap = {};
+
+    restDayData.forEach(d => {
+        const emp = d.employeeNo;
+        const day = new Date(d.date).toLocaleDateString('en-US', { weekday: 'long' });
+        if (!weekendCountMap[emp]) weekendCountMap[emp] = 0;
+        if (weekendDays.includes(day)) weekendCountMap[emp]++;
+    });
+
+    Object.entries(weekendCountMap).forEach(([emp, count]) => {
+        if (count > 2) {
+            restDayData.filter(d => d.employeeNo === emp).forEach(d => {
+                d.conflict = true;
+                d.conflictReason = 'Exceeded maximum of 2 weekend rest days';
+            });
+        }
+    });
+
+    // Final summary
+    const conflictCount = restDayData.filter(d => d.conflict).length;
+    const leadershipConflict = [...workScheduleData, ...restDayData]
+        .some(d => d.conflict && LEADERSHIP_POSITIONS.includes(d.position));
+
+    renderSummary(conflictCount, leadershipConflict);
+    renderWorkTable();
+    renderRestTable();
+}
 
 function generateFile(data, fileNamePrefix) {
     if (data.length === 0) {
