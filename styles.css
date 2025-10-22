@@ -533,96 +533,98 @@
     #restTableBody tr td:nth-child(8) {
       text-align: center;
     }
-/* ✅ Final Unified Table Styling (No Horizontal Scroll) */
+/* ✅ Final — Smart-fit Table, No Scroll */
 .data-view {
   width: 100%;
-  overflow-x: hidden; /* no horizontal scroll */
+  overflow-x: hidden; /* prevent horizontal scroll */
   overflow-y: auto;
   max-height: 70vh;
 }
 
+/* Let table use full available width and fit nicely inside */
 .data-table {
-  width: 100%;
+  width: 100%; /* fill card or container */
   border-collapse: collapse;
-  table-layout: fixed; /* fixes column layout */
+  table-layout: fixed;
+  max-width: 100%; /* prevent overflow on smaller screens */
 }
 
-/* Shared table cell styling */
+/* Adjust column widths just enough to fit */
 .data-table th,
 .data-table td {
-  padding: 0.5rem 0.3rem;
-  font-size: 12px; /* slightly smaller to fit */
+  padding: 0.45rem 0.25rem;
+  font-size: 12px;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
   vertical-align: middle;
 }
 
-/* Column widths tuned to fit full table */
+/* Tighten columns a bit more */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
-  width: 40px;
+  width: 35px;
   text-align: center;
 }
 
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) {
-  width: 65px;
+  width: 55px;
   text-align: center;
 }
 
 .data-table th:nth-child(3),
 .data-table td:nth-child(3) {
-  width: 160px; /* Name column */
+  width: 150px; /* name */
   text-align: left;
 }
 
 .data-table th:nth-child(4),
 .data-table td:nth-child(4) {
-  width: 100px;
+  width: 85px; /* position */
   text-align: left;
 }
 
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) {
-  width: 75px;
+  width: 70px; /* date */
   text-align: center;
 }
 
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
-  width: 75px;
+  width: 70px; /* shift code */
   text-align: center;
 }
 
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) {
-  width: 90px;
+  width: 80px; /* day */
   text-align: center;
 }
 
 .data-table th:nth-child(8),
 .data-table td:nth-child(8) {
-  width: 65px;
+  width: 55px; /* icons */
   text-align: center;
 }
 
-/* Elegant hover effect */
+/* Keep hover effect */
 tbody tr:hover {
   background-color: rgba(209, 250, 229, 0.75);
   box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
 }
 
-/* Responsive fallback for smaller screens */
+/* 📱 Responsive: compress more if smaller window */
 @media (max-width: 1024px) {
   .data-table th,
   .data-table td {
     font-size: 11px;
-    padding: 0.4rem 0.25rem;
+    padding: 0.3rem 0.2rem;
   }
 
   .data-table th:nth-child(3),
   .data-table td:nth-child(3) {
-    width: 140px;
+    width: 130px;
   }
 }
