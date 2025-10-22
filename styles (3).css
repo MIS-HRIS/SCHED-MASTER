@@ -422,3 +422,22 @@ td {
 table tr:hover {
   background-color: #f1f5f9;
 }
+/* 🧩 Just Fit Table Within Screen Width — Nothing Else */
+.data-view {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden !important;
+}
+
+.data-table {
+  width: 100%;
+  table-layout: fixed !important; /* make columns auto-fit screen */
+}
+
+.data-table th,
+.data-table td {
+  white-space: normal !important; /* allow wrapping */
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
