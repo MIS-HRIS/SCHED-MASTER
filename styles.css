@@ -1,430 +1,163 @@
+/* ============================
+ * 🌊 TECH BREEZE LIGHT THEME
+ * Glassmorphic + Animated Edition
+ * — Blue–Teal Premium —
+ * ============================ */
 
-    /* ============================
-     * 🌊 TECH BREEZE LIGHT THEME
-     * Glassmorphic + Animated Edition
-     * — Blue–Teal Premium —
-     * ============================ */
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #f0fdfa, #f9fafb);
-      background-size: 200% 200%;
-      color: #0f172a;
-      min-height: 100vh;
-      overflow-x: hidden;
-      transition: background 1s ease;
-    }
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #f0fdfa, #f9fafb);
+  background-size: 200% 200%;
+  color: #0f172a;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 1s ease;
+}
 
-    /* ✨ Floating Particles Container */
-    #particle-container {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 0;
-    }
+/* ✨ Floating Particles Container */
+#particle-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
 
-    #particle-container .particle {
-      position: absolute;
-      will-change: transform, opacity;
-      z-index: 0;
-      mix-blend-mode: screen;
-    }
+#particle-container .particle {
+  position: absolute;
+  will-change: transform, opacity;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
 
-    /* 🌫️ Glass Cards */
-    .dashboard-card {
-      position: relative;
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(16px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 1rem;
-      box-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
-      padding: 1.5rem;
-      transition: all 0.4s ease;
-      z-index: 1;
-    }
+/* 🌫️ Glass Cards */
+.dashboard-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
+  padding: 1.5rem;
+  transition: all 0.4s ease;
+  z-index: 1;
+}
 
-    .dashboard-card:hover {
+.dashboard-card:hover {
   transform: translateY(-6px) scale(1.02);
   box-shadow: 0 12px 40px rgba(13, 148, 136, 0.25);
 }
 
+/* 🎨 Buttons & Tabs */
+.tab-btn {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  color: #334155;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  z-index: 1;
+}
 
-    /* 🎨 Buttons & Tabs */
-    .tab-btn {
-      position: relative;
-      padding: 0.75rem 1.5rem;
-      border-radius: 9999px;
-      font-weight: 600;
-      color: #334155;
-      transition: all 0.3s ease;
-      overflow: hidden;
-      z-index: 1;
-    }
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #67e8f9, #2dd4bf);
+  transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: -1;
+  border-radius: 9999px;
+}
 
-    .tab-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 0;
-      height: 100%;
-      background: linear-gradient(90deg, #67e8f9, #2dd4bf);
-      transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-      z-index: -1;
-      border-radius: 9999px;
-    }
+.tab-btn.active {
+  color: #fff;
+  transform: scale(1.05);
+}
 
-    .tab-btn.active {
-      color: #fff;
-      transform: scale(1.05);
-    }
+.tab-btn.active::before {
+  width: 100%;
+}
 
-    .tab-btn.active::before {
-      width: 100%;
-    }
+/* 📝 Text Areas */
+textarea {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  min-height: 200px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
 
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1.25rem;
-      border-radius: 0.5rem;
-      font-weight: 500;
-      color: #fff;
-      background: linear-gradient(90deg, #38bdf8, #2dd4bf);
-      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
-      transition: all 0.3s ease;
-      border: none;
-      cursor: pointer;
-    }
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.04);
+  background: white;
+}
 
-    .action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 7px 20px rgba(14, 165, 233, 0.3);
-    }
+/* ⚙️ Data View Container */
+.data-view {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 70vh;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
 
-    .action-btn.secondary {
-      background: #475569;
-      box-shadow: 0 4px 15px rgba(71, 85, 105, 0.2);
-    }
+/* 📊 Table General Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
 
-    .action-btn.secondary:hover {
-      box-shadow: 0 7px 20px rgba(71, 85, 105, 0.3);
-    }
+thead {
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 2px solid #99f6e4;
+}
 
-    .action-btn.danger {
-      background: #f43f5e;
-      box-shadow: 0 4px 15px rgba(244, 63, 94, 0.2);
-    }
+th,
+td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
 
-    .action-btn.danger:hover {
-      box-shadow: 0 7px 20px rgba(244, 63, 94, 0.3);
-    }
+th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #333;
+}
 
-    .action-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
+td {
+  color: #555;
+}
 
-    /* 📝 Text Areas */
-    textarea {
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 0.75rem;
-      padding: 1rem;
-      transition: all 0.3s ease;
-      min-height: 200px;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
-    }
-
-    textarea:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.04);
-      background: white;
-    }
-
-    /* 📊 Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    thead {
-      background: rgba(255, 255, 255, 0.5);
-      border-bottom: 2px solid #99f6e4;
-    }
-
-    th {
-      padding: 0.85rem 1rem;
-      text-align: left;
-      font-weight: 600;
-      color: #0f172a;
-    }
-
-    tbody tr {
-      transition: background-color 0.2s ease;
-      border-bottom: 1px solid #d1faee;
-    }
-
-    tbody tr:last-child {
-      border-bottom: none;
-    }
-
-    tbody tr:hover {
-      background-color: rgba(209, 250, 229, 0.6);
-    }
-
-    td {
-      padding: 0.85rem 1rem;
-    }
-
-    /* ⚠️ Status Indicators & Table Optimizations */
-    .conflict {
-      background-color: #fef2f2 !important;
-      color: #b91c1c;
-      font-weight: 500;
-    }
-
-    .conflict .conflict-reason {
-      font-size: 0.75rem;
-      display: block;
-      color: #991b1b;
-    }
-
-    /* Optional: container for vertical scroll only */
-    .data-view {
-      overflow-x: hidden;
-      overflow-y: auto;
-      max-height: 70vh;
-    }
-
-    .action-icon {
-      cursor: pointer;
-      transition: transform 0.2s ease, color 0.2s ease;
-    }
-
-    .action-icon:hover {
-      transform: scale(1.2);
-    }
-
-    .action-icon.edit-icon:hover {
-      color: #0ea5e9;
-      /* Sky blue */
-    }
-
-    .action-icon.delete-icon:hover {
-      color: #f43f5e;
-      /* Rose red */
-    }
-
-
-    /* 🧭 Floating Back to Top Button */
-    #backToTopBtn {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: linear-gradient(90deg, #38bdf8, #2dd4bf);
-      color: white;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(20px);
-      transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
-      z-index: 1000;
-    }
-
-    #backToTopBtn.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    #backToTopBtn:hover {
-      box-shadow: 0 7px 20px rgba(14, 165, 233, 0.4);
-      transform: translateY(-2px);
-    }
-
-    /* Header Styling */
-    header {
-      background-image: url('https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2070&auto=format&fit=crop');
-      background-size: 110%;
-      background-position: center;
-    }
-
-    /* Monitoring table inputs */
-    .monitoring-table-input {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 0.375rem;
-      background-color: transparent;
-    }
-
-    .monitoring-table-input:focus {
-      outline: 2px solid #38bdf8;
-      background-color: white;
-    }
-
-    /* Styling for the Month and Year Dropdowns */
-    #monthPicker,
-    #yearPicker {
-      padding: 0.5rem;
-      border-radius: 0.375rem;
-      border: 1px solid #d1d5db;
-      font-size: 1rem;
-      background-color: #fff;
-      color: #333;
-      width: 150px;
-      margin-right: 1rem;
-    }
-
-    #monthPicker:focus,
-    #yearPicker:focus {
-      outline: none;
-      border-color: #0d6efd;
-      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-    }
-
-    /* Styling for the buttons */
-    #loadMonthData,
-    #exportExcel {
-      background-color: #0d6efd;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    #loadMonthData:hover,
-    #exportExcel:hover {
-      background-color: #004085;
-    }
-
-    #loadMonthData:disabled,
-    #exportExcel:disabled {
-      background-color: #b0d0ff;
-      cursor: not-allowed;
-    }
-
-    #loadMonthData:focus,
-    #exportExcel:focus {
-      outline: none;
-      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-    }
-
-    /* Styling the Flex container to space out dropdown and buttons */
-    .flex {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    /* General table styling */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    th,
-    td {
-      padding: 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    th {
-      background-color: #f3f4f6;
-      font-weight: 600;
-      color: #333;
-    }
-
-    td {
-      color: #555;
-    }
-
-    /* Input fields inside the table */
-    .monitoring-table-input {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 0.375rem;
-      border: 1px solid #d1d5db;
-      background-color: #fff;
-      font-size: 1rem;
-    }
-
-    .monitoring-table-input:focus {
-      outline: none;
-      border-color: #0d6efd;
-      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-    }
-
-    /* Conflict row styling (for work/rest schedule conflict) */
-    .conflict {
-      background-color: #fff3cd;
-    }
-
-    .conflict .conflict-reason {
-      font-style: italic;
-      color: #856404;
-    }
-
-    /* Table Action Buttons (Edit & Delete) */
-    .action-icon {
-      cursor: pointer;
-      color: #007bff;
-      transition: color 0.3s ease;
-    }
-
-    .action-icon:hover {
-      color: #004085;
-    }
-
-    .action-icon:focus {
-      outline: none;
-      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-    }
-
-    /* Month/Year and Buttons Layout */
-    #monthPicker,
-    #yearPicker {
-      margin-right: 1rem;
-    }
-
-    #loadMonthData,
-    #exportExcel {
-      margin-left: 1rem;
-    }
-
-    /* Hover effect for rows in the monitoring table */
-    .monitoring-table-input:hover {
-      border-color: #0d6efd;
-    }
-
-    tbody tr:hover {
+/* Hover row */
+tbody tr:hover {
   background-color: rgba(209, 250, 229, 0.75);
   box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
+}
+
+/* Conflict row styling */
+.conflict {
+  background-color: #fff3cd;
+}
+
+.conflict .conflict-reason {
+  font-style: italic;
+  color: #856404;
 }
 
 /* ===============================
    🌿 FINAL — WORK + REST TABLE ULTRA FIT
    =============================== */
 
-/* Shared structure for both tables */
 .data-table,
 #restTable {
   width: 100%;
@@ -436,7 +169,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Shared cell styling */
 .data-table th,
 .data-table td,
 #restTable th,
@@ -445,58 +177,34 @@
   vertical-align: middle;
 }
 
-/* Header design */
-.data-table th,
-#restTable th {
-  font-weight: 600;
-  background-color: rgba(255, 255, 255, 0.5);
-  border-bottom: 2px solid #80cbc4;
-  line-height: 1.2;
-  padding-top: 0.6rem;
-  padding-bottom: 0.6rem;
-  white-space: nowrap;
-}
-
-/* Disable horizontal scroll */
-.table-wrapper {
-  overflow-x: hidden !important;
-}
-
-/* ===============================
-   🌿 Work Schedule Columns
-   =============================== */
+/* Work Schedule Columns */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) { width: 35px; text-align: center; }
 
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) { width: 55px; text-align: center; }
 
-/* Center only the header text 'Name' (Work Schedule Data) */
+/* Center "Name" header only */
 .data-table thead th:nth-child(3) {
   text-align: center;
 }
-
-/* Keep employee names left-aligned */
 .data-table tbody td:nth-child(3) {
   text-align: left;
 }
 
+/* Remaining Work Schedule columns */
 .data-table th:nth-child(4),
 .data-table td:nth-child(4) { width: 115px; text-align: left; }
-
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) { width: 75px; text-align: center; }
-
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) { width: 75px; text-align: center; }
-
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) { width: 70px; text-align: center; }
-
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 65px; text-align: center; } /* Actions closer */
+.data-table td:nth-child(8) { width: 65px; text-align: center; }
 
-/* Header typography — identical to Work Schedule */
+/* 🌿 Rest Day Table — perfectly aligned */
 #restTable thead th {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
@@ -507,151 +215,50 @@
   background-color: rgba(255, 255, 255, 0.5);
   border-bottom: 2px solid #80cbc4;
   text-align: left;
-  /* MODIFICATION: Matched horizontal padding to work schedule table */
   padding: 0.6rem 0.25rem;
   white-space: nowrap;
 }
 
-/* Cell styling */
-#restTable td {
-  /* MODIFICATION: Matched padding to work schedule table for a "closer" fit */
-  padding: 0.45rem 0.25rem;
-  vertical-align: middle;
-  color: #334155;
-  font-size: 12.5px;
-}
-
-
+/* FIX: Rest Day Table Column Spacing Alignment */
 #restTable th:nth-child(1),
 #restTable td:nth-child(1) {
-  width: 35px; /* Conflict # */
+  width: 35px;
   text-align: center;
 }
 
 #restTable th:nth-child(2),
 #restTable td:nth-child(2) {
-  width: 55px; /* Emp No (Matches Work Schedule's Emp No) */
+  width: 45px;
   text-align: center;
+  padding-right: 0.2rem;
 }
 
 #restTable th:nth-child(3),
 #restTable td:nth-child(3) {
-  width: 120px; /* Name (Matches Work Schedule's Name) */
-  text-align: center;
+  width: 110px;
+  text-align: left;
+  padding-left: 0.3rem;
 }
 
 #restTable th:nth-child(4),
 #restTable td:nth-child(4) {
-  width: 115px; /* Position (Matches Work Schedule's Position) */
+  width: 115px;
   text-align: left;
 }
 
 #restTable th:nth-child(5),
 #restTable td:nth-child(5) {
-  width: 75px; /* Date (Matches Work Schedule's Date) */
+  width: 75px;
   text-align: center;
 }
 
 #restTable th:nth-child(6),
 #restTable td:nth-child(6) {
-  width: 70px; /* Day of Week (Matches Work Schedule's Day) */
+  width: 70px;
   text-align: center;
 }
 
-#restTable th:nth-child(7),
-#restTable td:nth-child(7) {
-  width: 65px; /* Actions (Matches Work Schedule's Actions) */
-  text-align: center;
-  padding: 0.25rem 0;
-}
-
-/* Compact and clean actions */
-#restTable .action-icon {
-  font-size: 14px;
-  margin: 0 3px;
-  vertical-align: middle;
-  color: #0f172a;
-  opacity: 0.85;
-  transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease;
-}
-
-#restTable .action-icon.edit-icon:hover {
-  color: #0ea5e9;
-  transform: scale(1.15);
-  opacity: 1;
-}
-
-#restTable .action-icon.delete-icon:hover {
-  color: #f43f5e;
-  transform: scale(1.15);
-  opacity: 1;
-}
-
-/* Hover row effect to match Work Schedule */
-#restTable tbody tr:hover {
-  background-color: rgba(209, 250, 229, 0.75);
-  box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
-}
-/* 🌿 FIX: Rest Day Table Column Spacing Alignment */
-#restTable th:nth-child(1),
-#restTable td:nth-child(1) {
-  width: 35px; /* Conflict # */
-  text-align: center;
-}
-
-#restTable th:nth-child(2),
-#restTable td:nth-child(2) {
-  width: 45px; /* Emp No - slightly narrower for closer gap */
-  text-align: center;
-  padding-right: 0.2rem; /* bring closer to next column */
-}
-
-#restTable th:nth-child(3),
-#restTable td:nth-child(3) {
-  width: 110px; /* Name - reduced width for tighter layout */
-  text-align: left;
-  padding-left: 0.3rem; /* gentle left spacing */
-}
-
-#restTable th:nth-child(4),
-#restTable td:nth-child(4) {
-  width: 115px; /* keep Position same */
-}
-
-/* Slightly compact the table visually */
-#restTable td {
-  padding: 0.4rem 0.25rem;
-}
-/* Center only the header text 'Name' */
-#restTable thead th:nth-child(4) {
-  text-align: center;
-}
-
-/* Keep employee names left-aligned */
-#restTable tbody td:nth-child(4) {
-  text-align: left;
-}
-/* Align both Work Schedule and Rest Day data cards perfectly */
-.dashboard-flex {
-  display: flex;
-  align-items: stretch; /* ensures same height alignment */
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-.dashboard-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.data-view {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Center only the "Name" headers — not the data */
+/* Center "Name" header only */
 #workTable thead th:nth-child(3),
 #restTable thead th:nth-child(4) {
   text-align: center;
@@ -661,4 +268,18 @@
 #workTable tbody td:nth-child(3),
 #restTable tbody td:nth-child(4) {
   text-align: left;
+}
+
+/* 🌿 Card Alignment for both tables */
+.dashboard-flex {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.dashboard-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
