@@ -441,3 +441,11 @@ table tr:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* 🧩 Compact first column (#) for better fit */
+.data-table th:first-child,
+.data-table td:first-child {
+  width: 40px;          /* keeps numbering compact */
+  min-width: 40px;
+  text-align: center;   /* keeps numbers centered */
+  padding: 0.3rem 0.4rem;
+}
