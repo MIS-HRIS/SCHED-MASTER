@@ -110,11 +110,11 @@ function handlePaste(event) {
     date: d.date ? excelDateToJS(d.date) : ''
   }));
 
-  if (isWork) {
-    workScheduleData = processedData;
-  } else {
-    restDayData = processedData;
-  }
+if (isWork) {
+  workScheduleData = [...(workScheduleData || []), ...processedData];
+} else {
+  restDayData = [...(restDayData || []), ...processedData];
+}
 
   recheckConflicts();
   updateButtonStates();
