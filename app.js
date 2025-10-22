@@ -87,16 +87,17 @@ function handlePaste(event) {
 
   saveUndoState(type);
 
-  const rows = text.split('\n').map(row => {
-    // Split by tab if present, else split by 2+ spaces
-    return row.includes('\t') ? row.split('\t') : row.trim().split(/\s{2,}|\t/);
-  });
+  const rows = text
+    .split('\n')
+    .map(row => row.trim())
+    .filter(row => row.length > 0)
+    .map(row => (row.includes('\t') ? row.split('\t') : row.split(/\s{2,}|\t/)));
 
   const { mapping, headerRow } = detectColumnMapping(rows, isWork);
   let data;
 
   if (headerRow !== -1 && Object.values(mapping).some(v => v !== null)) {
-    // ✅ Structured input with headers
+    // ✅ Structured header input
     data = rows.slice(headerRow + 1).map(row => {
       const entry = {};
       for (const key in mapping) {
@@ -106,9 +107,9 @@ function handlePaste(event) {
             : '';
       }
       return entry;
-    }).filter(entry => entry.employeeNo || entry.name || entry.date);
+    });
   } else {
-    // ✅ No header row — use intelligent token detection (flexible mode)
+    // ✅ Flexible parsing (no headers)
     const classifyValue = (v) => {
       v = v.trim();
 
@@ -122,10 +123,10 @@ function handlePaste(event) {
         return "employeeNo"; // Employee number
 
       if (/^[A-Za-z]{3}-\d{3}$/.test(v))
-        return "shiftCode"; // Shift code (3 letters + 3 numbers)
+        return "shiftCode"; // Shift code
 
-      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|branch\s*head)$/i.test(v))
-        return "position"; // Position
+      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|branch\s*head)$/i.test(v))
+        return "position"; // Known position words
 
       if (/^[A-Za-z]+$/.test(v))
         return "namePart"; // Name fragment
@@ -135,35 +136,46 @@ function handlePaste(event) {
 
     data = rows.map(rawRow => {
       const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
-      const entry = { nameParts: [] };
+      const entry = { nameParts: [], positionParts: [] };
 
       tokens.forEach(t => {
         const type = classifyValue(t);
         if (type === "namePart") {
           entry.nameParts.push(t);
+        } else if (type === "position") {
+          entry.positionParts.push(t);
         } else if (type !== "unknown" && !entry[type]) {
           entry[type] = t;
-        } else if (type === "position" && entry.position) {
-          entry.position += " " + t; // handle multi-word position (e.g. Branch Head)
         }
       });
 
       if (entry.nameParts.length > 0) entry.name = entry.nameParts.join(' ');
+      if (entry.positionParts.length > 0) entry.position = entry.positionParts.join(' ');
       delete entry.nameParts;
+      delete entry.positionParts;
 
       return entry;
-    }).filter(e => Object.keys(e).length > 0);
+    });
   }
 
-  // ✅ Always apply and refresh
+  // ✅ Ensure data goes into table
   if (isWork) {
-    workScheduleData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+    workScheduleData = data.map(d => ({
+      ...d,
+      date: excelDateToJS(d.date),
+    }));
   } else {
-    restDayData = data.map(d => ({ ...d, date: excelDateToJS(d.date) }));
+    restDayData = data.map(d => ({
+      ...d,
+      date: excelDateToJS(d.date),
+    }));
   }
 
+  // ✅ Always refresh UI
   recheckConflicts();
   updateButtonStates();
+
+  console.log('Parsed data:', data);
 }
 
 function detectColumnMapping(rows, isWork) {
