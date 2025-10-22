@@ -584,4 +584,26 @@ html, body {
   width: 1%;
   white-space: nowrap;
 }
+/* 🚑 Fix: Prevent table headers and short text from breaking vertically */
+.data-table th,
+.data-table td {
+  white-space: nowrap !important;  /* keep text in one line */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* But still allow normal wrapping for long names or positions only */
+.data-table td:nth-child(3),
+.data-table td:nth-child(4),
+.data-table th:nth-child(3),
+.data-table th:nth-child(4) {
+  white-space: normal !important;  /* allow wrap for Name & Position */
+}
+
+/* Compact but stable column layout */
+.data-table {
+  table-layout: auto !important;
+  width: 100%;
+  border-collapse: collapse;
+}
 
