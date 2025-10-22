@@ -507,13 +507,13 @@
 
 #restTable th:nth-child(3),
 #restTable td:nth-child(3) {
-  width: 50px; /* Emp No — slightly narrower */
+  width: 40px; /* Emp No — slightly narrower */
   text-align: center;
 }
 
 #restTable th:nth-child(4),
 #restTable td:nth-child(4) {
-  width: 115px; /* Name — slightly closer to Emp No */
+  width: 130px; /* Name — slightly closer to Emp No */
   text-align: center;
 }
 
