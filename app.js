@@ -78,7 +78,7 @@
       /*************************\
        * CORE FUNCTIONS      *
       \*************************/
-      
+
       function handlePaste(event) {
         event.preventDefault();
         const text = (event.clipboardData || window.clipboardData).getData('text');
@@ -87,7 +87,10 @@
         
         saveUndoState(type);
         
-        const rows = text.split('\n').map(row => row.split('\t'));
+        const rows = text.split('\n').map(row => {
+  // Split by tab if present, else split by 2+ spaces
+  return row.includes('\t') ? row.split('\t') : row.trim().split(/\s{2,}|\t/);
+});
         const { mapping, headerRow } = detectColumnMapping(rows, isWork);
         
         const data = rows.slice(headerRow + 1)
