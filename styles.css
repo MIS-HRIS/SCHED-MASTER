@@ -615,3 +615,15 @@
 #restTable td {
   padding: 0.4rem 0.25rem;
 }
+#restTable th {
+  white-space: nowrap;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+#workTable th {
+  white-space: nowrap;
+  padding: 10px 14px;
+  text-align: left;
+}
+
