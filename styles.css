@@ -631,3 +631,26 @@
 #restTable tbody td:nth-child(4) {
   text-align: left;
 }
+/* Align both Work Schedule and Rest Day data cards visually */
+.dashboard-flex {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.dashboard-flex > .dashboard-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100%;
+}
+
+/* Ensure tables fill equal visual space */
+.data-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
