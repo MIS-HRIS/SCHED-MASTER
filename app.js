@@ -93,19 +93,41 @@
 });
         const { mapping, headerRow } = detectColumnMapping(rows, isWork);
         
-        const data = rows.slice(headerRow + 1)
-          .map(row => {
-            const entry = {};
-            for (const key in mapping) {
-                if(mapping[key] !== null && row[mapping[key]] !== undefined) {
-                   entry[key] = row[mapping[key]].trim();
-                } else {
-                   entry[key] = '';
-                }
-            }
-            return entry;
-          })
-          .filter(entry => entry.employeeNo && entry.name && entry.date);
+let data;
+
+if (headerRow !== -1) {
+  // Use the detected mapping (normal structured input)
+  data = rows.slice(headerRow + 1).map(row => {
+    const entry = {};
+    for (const key in mapping) {
+      entry[key] = mapping[key] !== null && row[mapping[key]] !== undefined
+        ? row[mapping[key]].trim()
+        : '';
+    }
+    return entry;
+  }).filter(entry => entry.employeeNo || entry.name || entry.date);
+} else {
+  // No header row — use intelligent token detection
+  const classifyValue = (v) => {
+    v = v.trim();
+    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
+    if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
+    if (/^\d{1,6}$/.test(v)) return "employeeNo";
+    if (/^[A-Za-z]{3}-\d{3}$/.test(v)) return "shiftCode"; // stricter shift pattern
+    if (/^[A-Za-z\s]+$/.test(v)) return "name";
+    return "unknown";
+  };
+
+  data = rows.map(rawRow => {
+    const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
+    const entry = {};
+    tokens.forEach(t => {
+      const type = classifyValue(t);
+      if (type !== "unknown") entry[type] = t;
+    });
+    return entry;
+  }).filter(e => Object.keys(e).length > 0);
+}
 
         if (isWork) {
           workScheduleData = data.map(d => ({...d, date: excelDateToJS(d.date) }));
