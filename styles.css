@@ -1,4 +1,5 @@
-/* ============================
+
+    /* ============================
      * 🌊 TECH BREEZE LIGHT THEME
      * Glassmorphic + Animated Edition
      * — Blue–Teal Premium —
@@ -21,12 +22,12 @@
       overflow: hidden;
       z-index: 0;
     }
-    
+
     #particle-container .particle {
-        position: absolute;
-        will-change: transform, opacity;
-        z-index: 0;
-        mix-blend-mode: screen;
+      position: absolute;
+      will-change: transform, opacity;
+      z-index: 0;
+      mix-blend-mode: screen;
     }
 
     /* 🌫️ Glass Cards */
@@ -184,41 +185,37 @@
       color: #b91c1c;
       font-weight: 500;
     }
+
     .conflict .conflict-reason {
-        font-size: 0.75rem;
-        display: block;
-        color: #991b1b;
+      font-size: 0.75rem;
+      display: block;
+      color: #991b1b;
     }
-    
 
-/* Optional: give name and position columns slightly wider space */
-.data-table th:nth-child(4), .data-table td:nth-child(4),
-.data-table th:nth-child(5), .data-table td:nth-child(5) {
-  min-width: 140px;
-}
+    /* Optional: container for vertical scroll only */
+    .data-view {
+      overflow-x: hidden;
+      overflow-y: auto;
+      max-height: 70vh;
+    }
 
-/* Optional: container for vertical scroll only */
-.data-view {
-  overflow-x: hidden;
-  overflow-y: auto;
-  max-height: 70vh;
-}
-    
     .action-icon {
-        cursor: pointer;
-        transition: transform 0.2s ease, color 0.2s ease;
+      cursor: pointer;
+      transition: transform 0.2s ease, color 0.2s ease;
     }
 
     .action-icon:hover {
-        transform: scale(1.2);
+      transform: scale(1.2);
     }
 
     .action-icon.edit-icon:hover {
-        color: #0ea5e9; /* Sky blue */
+      color: #0ea5e9;
+      /* Sky blue */
     }
 
     .action-icon.delete-icon:hover {
-        color: #f43f5e; /* Rose red */
+      color: #f43f5e;
+      /* Rose red */
     }
 
 
@@ -258,185 +255,281 @@
 
     /* Header Styling */
     header {
-        background-image: url('https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2070&auto=format&fit=crop');
-        background-size: 110%;
-        background-position: center;
+      background-image: url('https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2070&auto=format&fit=crop');
+      background-size: 110%;
+      background-position: center;
     }
-    
+
     /* Monitoring table inputs */
     .monitoring-table-input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 0.375rem;
-        background-color: transparent;
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.375rem;
+      background-color: transparent;
     }
+
     .monitoring-table-input:focus {
-        outline: 2px solid #38bdf8;
-        background-color: white;
+      outline: 2px solid #38bdf8;
+      background-color: white;
     }
+
     /* Styling for the Month and Year Dropdowns */
-#monthPicker, #yearPicker {
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  border: 1px solid #d1d5db;
-  font-size: 1rem;
-  background-color: #fff;
-  color: #333;
-  width: 150px;
-  margin-right: 1rem;
-}
+    #monthPicker,
+    #yearPicker {
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+      background-color: #fff;
+      color: #333;
+      width: 150px;
+      margin-right: 1rem;
+    }
 
-#monthPicker:focus, #yearPicker:focus {
-  outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-}
+    #monthPicker:focus,
+    #yearPicker:focus {
+      outline: none;
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
+    }
 
-/* Styling for the buttons */
-#loadMonthData, #exportExcel {
-  background-color: #0d6efd;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+    /* Styling for the buttons */
+    #loadMonthData,
+    #exportExcel {
+      background-color: #0d6efd;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
 
-#loadMonthData:hover, #exportExcel:hover {
-  background-color: #004085;
-}
+    #loadMonthData:hover,
+    #exportExcel:hover {
+      background-color: #004085;
+    }
 
-#loadMonthData:disabled, #exportExcel:disabled {
-  background-color: #b0d0ff;
-  cursor: not-allowed;
-}
+    #loadMonthData:disabled,
+    #exportExcel:disabled {
+      background-color: #b0d0ff;
+      cursor: not-allowed;
+    }
 
-#loadMonthData:focus, #exportExcel:focus {
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-}
+    #loadMonthData:focus,
+    #exportExcel:focus {
+      outline: none;
+      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
+    }
 
-/* Styling the Flex container to space out dropdown and buttons */
-.flex {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 1rem;
-}
-/* General table styling */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
+    /* Styling the Flex container to space out dropdown and buttons */
+    .flex {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 1rem;
+    }
 
-th, td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-}
+    /* General table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
 
-th {
-  background-color: #f3f4f6;
-  font-weight: 600;
-  color: #333;
-}
+    th,
+    td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
 
-td {
-  color: #555;
-}
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+      color: #333;
+    }
 
-/* Input fields inside the table */
-.monitoring-table-input {
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  border: 1px solid #d1d5db;
-  background-color: #fff;
-  font-size: 1rem;
-}
+    td {
+      color: #555;
+    }
 
-.monitoring-table-input:focus {
-  outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-}
+    /* Input fields inside the table */
+    .monitoring-table-input {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      background-color: #fff;
+      font-size: 1rem;
+    }
 
-/* Conflict row styling (for work/rest schedule conflict) */
-.conflict {
-  background-color: #fff3cd;
-}
+    .monitoring-table-input:focus {
+      outline: none;
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
+    }
 
-.conflict .conflict-reason {
-  font-style: italic;
-  color: #856404;
-}
+    /* Conflict row styling (for work/rest schedule conflict) */
+    .conflict {
+      background-color: #fff3cd;
+    }
 
-/* Table Action Buttons (Edit & Delete) */
-.action-icon {
-  cursor: pointer;
-  color: #007bff;
-  transition: color 0.3s ease;
-}
+    .conflict .conflict-reason {
+      font-style: italic;
+      color: #856404;
+    }
 
-.action-icon:hover {
-  color: #004085;
-}
+    /* Table Action Buttons (Edit & Delete) */
+    .action-icon {
+      cursor: pointer;
+      color: #007bff;
+      transition: color 0.3s ease;
+    }
 
-.action-icon:focus {
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
-}
-/* Month/Year and Buttons Layout */
-#monthPicker, #yearPicker {
-  margin-right: 1rem;
-}
+    .action-icon:hover {
+      color: #004085;
+    }
 
-#loadMonthData, #exportExcel {
-  margin-left: 1rem;
-}
-/* Hover effect for rows in the monitoring table */
-.monitoring-table-input:hover {
-  border-color: #0d6efd;
-}
+    .action-icon:focus {
+      outline: none;
+      box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
+    }
 
-table tr:hover {
-  background-color: #f1f5f9;
-}
-/* 🧩 Just Fit Table Within Screen Width — Nothing Else */
-.data-view {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden !important;
-}
+    /* Month/Year and Buttons Layout */
+    #monthPicker,
+    #yearPicker {
+      margin-right: 1rem;
+    }
 
-.data-table {
-  width: 100%;
-  table-layout: auto; /* or auto, based on your preference */
-}
+    #loadMonthData,
+    #exportExcel {
+      margin-left: 1rem;
+    }
 
-/* General styles for all cells */
-.data-table th,
-.data-table td {
-  padding: 0.75rem;
-  white-space: normal; /* allow wrapping */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 13px;
-}
+    /* Hover effect for rows in the monitoring table */
+    .monitoring-table-input:hover {
+      border-color: #0d6efd;
+    }
 
-/* Specific styles for first column for multi-line ellipsis */
-.data-table th:first-child,
-.data-table td:first-child {
-  width: auto;
-  max-width: 300px; /* optional */
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 2 lines */
-  -webkit-box-orient: vertical;
-  max-height: 3rem; /* limit height to 2 lines */
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    table tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* 🧩 Table Enhancements: Fit to width and align */
+    .data-table {
+      width: 100%;
+      table-layout: fixed;
+      /* Force table to fit container */
+      border-collapse: collapse;
+      /* Ensure borders are clean */
+    }
+
+    /* General styles for all cells */
+    .data-table th,
+    .data-table td {
+      padding: 0.75rem 0.5rem;
+      /* Reduced horizontal padding */
+      font-size: 13px;
+      white-space: normal;
+      /* Allow wrapping */
+      overflow-wrap: break-word;
+      /* Break long words */
+      vertical-align: middle;
+      /* Align content vertically */
+    }
+
+    /* New alignment styles for headers */
+    .data-table .th-center {
+      text-align: center;
+    }
+
+    .data-table .th-left {
+      text-align: left;
+    }
+
+    /* --- Work Table Body Alignment --- */
+    /* #: center */
+    #workTableBody tr td:nth-child(1) {
+      text-align: center;
+    }
+
+    /* Emp. No: center */
+    #workTableBody tr td:nth-child(2) {
+      text-align: center;
+    }
+
+    /* Name: left */
+    #workTableBody tr td:nth-child(3) {
+      text-align: left;
+    }
+
+    /* Position: left */
+    #workTableBody tr td:nth-child(4) {
+      text-align: left;
+    }
+
+    /* Date: center */
+    #workTableBody tr td:nth-child(5) {
+      text-align: center;
+    }
+
+    /* Shift Code: center */
+    #workTableBody tr td:nth-child(6) {
+      text-align: center;
+    }
+
+    /* Day of Week: left */
+    #workTableBody tr td:nth-child(7) {
+      text-align: left;
+    }
+
+    /* Actions: center */
+    #workTableBody tr td:nth-child(8) {
+      text-align: center;
+    }
+
+    /* --- Rest Table Body Alignment --- */
+    /* Conflict: center */
+    #restTableBody tr td:nth-child(1) {
+      text-align: center;
+    }
+
+    /* #: center */
+    #restTableBody tr td:nth-child(2) {
+      text-align: center;
+    }
+
+    /* Emp. No: center */
+    #restTableBody tr td:nth-child(3) {
+      text-align: center;
+    }
+
+    /* Name: left */
+    #restTableBody tr td:nth-child(4) {
+      text-align: left;
+    }
+
+    /* Position: left */
+    #restTableBody tr td:nth-child(5) {
+      text-align: left;
+    }
+
+    /* Date: center */
+    #restTableBody tr td:nth-child(6) {
+      text-align: center;
+    }
+
+    /* Day of Week: left */
+    #restTableBody tr td:nth-child(7) {
+      text-align: left;
+    }
+
+    /* Actions: center */
+    #restTableBody tr td:nth-child(8) {
+      text-align: center;
+    }
+
+    /* 🧩 End Table Enhancements */
