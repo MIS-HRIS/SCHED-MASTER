@@ -486,7 +486,7 @@
 .data-table td:nth-child(8) { width: 55px; text-align: center; }
 
 /* ===============================
-   🌿 Rest Day Columns (aligned + header fixed)
+   🌿 Rest Day Table — Mirror of Work Schedule
    =============================== */
 #restTable {
   width: 100%;
@@ -495,6 +495,7 @@
   max-width: 100%;
 }
 
+/* Same cell sizing rules as Work Schedule */
 #restTable th,
 #restTable td {
   padding: 0.45rem 0.25rem;
@@ -505,10 +506,10 @@
   vertical-align: middle;
 }
 
-/* ✅ Column widths — aligned visually with Work Schedule */
+/* Columns — identical pattern + 1 extra for Conflict */
 #restTable th:nth-child(1),
 #restTable td:nth-child(1) {
-  width: 60px; /* Conflict */
+  width: 55px; /* Conflict */
   text-align: center;
   white-space: nowrap !important; /* keep header in one line */
 }
@@ -527,7 +528,7 @@
 
 #restTable th:nth-child(4),
 #restTable td:nth-child(4) {
-  width: 130px; /* Name */
+  width: 150px; /* Name */
   text-align: left;
 }
 
