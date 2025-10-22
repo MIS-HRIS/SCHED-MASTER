@@ -449,3 +449,17 @@ table tr:hover {
   text-align: center;   /* keeps numbers centered */
   padding: 0.3rem 0.4rem;
 }
+/* 🧩 Fix: Prevent min-w-full from forcing extra space */
+.data-table {
+  width: 100% !important;
+  min-width: unset !important;  /* disables Tailwind's min-w-full */
+  table-layout: fixed !important;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+  padding: 0.3rem 0.4rem;
+}
