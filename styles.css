@@ -421,13 +421,12 @@
 }
 
 /* ===============================
-   🌿 FINAL UNIFIED TABLE FIX
-   Applies to Work Schedule + Rest Day
-   — No Scroll, No Overflow —
-   — Perfect Column Sync —
+   🌿 FINAL SYNCED TABLE LAYOUT
+   — Rest Day matches Work Schedule —
+   — No scroll, no text cut, perfect fit —
    =============================== */
 
-/* Shared base table styles */
+/* Shared table styles */
 .data-table,
 #restTable {
   width: 100%;
@@ -435,17 +434,16 @@
   table-layout: fixed;
   font-size: 14px;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal; /* allow full text display */
 }
 
-/* Keep consistent padding */
 .data-table th,
 .data-table td,
 #restTable th,
 #restTable td {
   padding: 0.6rem 0.75rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible; /* don’t clip text */
+  text-overflow: unset;
 }
 
 /* Header look */
@@ -456,95 +454,45 @@
   border-bottom: 2px solid #80cbc4;
 }
 
-/* Prevent scrollbars */
 .table-wrapper {
   overflow-x: hidden !important;
 }
 
 /* ===============================
-   🧩 Work Schedule Data Alignment
+   🕓 Work Schedule Column Layout
    =============================== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) {
-  width: 4%; /* # */
-  text-align: center;
-}
-
+.data-table td:nth-child(1) { width: 4%; text-align: center; } /* # */
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) {
-  width: 8%; /* Emp No */
-  text-align: center;
-}
-
+.data-table td:nth-child(2) { width: 8%; text-align: center; } /* Emp No */
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) {
-  width: 20%; /* Name */
-}
-
+.data-table td:nth-child(3) { width: 20%; } /* Name */
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) {
-  width: 18%; /* Position */
-}
-
+.data-table td:nth-child(4) { width: 18%; } /* Position */
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) {
-  width: 14%; /* Date */
-}
-
+.data-table td:nth-child(5) { width: 14%; } /* Date */
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) {
-  width: 14%; /* Shift Code or Day of Week */
-}
-
+.data-table td:nth-child(6) { width: 14%; } /* Shift Code / Day */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) {
-  width: 10%; /* Actions */
-  text-align: center;
-}
+.data-table td:nth-child(7) { width: 10%; text-align: center; } /* Actions */
 
 /* ===============================
-   🌙 Rest Day Data Alignment
+   🌙 Rest Day Column Layout
+   — Aligned to Work Schedule —
    =============================== */
 #restTable th:nth-child(1),
-#restTable td:nth-child(1) {
-  width: 6%; /* Conflict */
-  text-align: center;
-}
-
+#restTable td:nth-child(1) { width: 6%; text-align: center; } /* Conflict */
 #restTable th:nth-child(2),
-#restTable td:nth-child(2) {
-  width: 4%; /* # */
-  text-align: center;
-}
-
+#restTable td:nth-child(2) { width: 4%; text-align: center; } /* # */
 #restTable th:nth-child(3),
-#restTable td:nth-child(3) {
-  width: 8%; /* Emp No */
-  text-align: center;
-}
-
+#restTable td:nth-child(3) { width: 8%; text-align: center; } /* Emp No */
 #restTable th:nth-child(4),
-#restTable td:nth-child(4) {
-  width: 20%; /* Name */
-}
-
+#restTable td:nth-child(4) { width: 20%; } /* Name */
 #restTable th:nth-child(5),
-#restTable td:nth-child(5) {
-  width: 18%; /* Position */
-}
-
+#restTable td:nth-child(5) { width: 18%; } /* Position */
 #restTable th:nth-child(6),
-#restTable td:nth-child(6) {
-  width: 14%; /* Date */
-}
-
+#restTable td:nth-child(6) { width: 14%; } /* Date */
 #restTable th:nth-child(7),
-#restTable td:nth-child(7) {
-  width: 14%; /* Day of Week */
-}
-
+#restTable td:nth-child(7) { width: 14%; } /* Day of Week */
 #restTable th:nth-child(8),
-#restTable td:nth-child(8) {
-  width: 10%; /* Actions */
-  text-align: center;
-}
+#restTable td:nth-child(8) { width: 10%; text-align: center; } /* Actions */
