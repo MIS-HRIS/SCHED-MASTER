@@ -487,7 +487,7 @@
 .data-table td:nth-child(7) { width: 70px; text-align: center; }
 
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 50px; text-align: center; } /* Actions closer */
+.data-table td:nth-child(8) { width: 65px; text-align: center; } /* Actions closer */
 
 /* ===============================
    🌿 Rest Day Columns — Ultra Fit
@@ -507,19 +507,19 @@
 
 #restTable th:nth-child(3),
 #restTable td:nth-child(3) {
-  width: 40px; /* Emp No — slightly narrower */
+  width: 55px; /* Emp No — slightly narrower */
   text-align: center;
 }
 
 #restTable th:nth-child(4),
 #restTable td:nth-child(4) {
-  width: 130px; /* Name — slightly closer to Emp No */
+  width: 120px; /* Name — slightly closer to Emp No */
   text-align: center;
 }
 
 #restTable th:nth-child(5),
 #restTable td:nth-child(5) {
-  width: 110px; /* Position */
+  width: 115px; /* Position */
   text-align: left;
 }
 
@@ -537,7 +537,7 @@
 
 #restTable th:nth-child(8),
 #restTable td:nth-child(8) {
-  width: 50px; /* Actions — compact, fits beside without scroll */
+  width: 65px; /* Actions — compact, fits beside without scroll */
   text-align: center;
 }
 
