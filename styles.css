@@ -542,3 +542,39 @@ tbody tr:hover {
     width: 130px; /* name tighter on smaller screens */
   }
 }
+/* ===========================
+   Rest Day Table Refinements
+   ============================ */
+
+/* Make Emp. No smaller (same as work table) */
+#restTableBody td:nth-child(3),
+#restTableBody th:nth-child(3) {
+  width: 55px !important;  /* match Work Schedule table */
+  text-align: center;
+}
+
+/* Prevent "Conflict" header from breaking */
+#restTableBody td:nth-child(1),
+#restTableBody th:nth-child(1) {
+  width: 60px !important;
+  white-space: nowrap;     /* keeps 'Conflict' on one line */
+  text-align: center;
+}
+
+/* Ensure rest table remains balanced visually */
+#restTableBody td,
+#restTableBody th {
+  font-size: 12px;
+  padding: 0.45rem 0.25rem;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Slightly tighten name column for balance */
+#restTableBody td:nth-child(4),
+#restTableBody th:nth-child(4) {
+  width: 150px !important;
+  text-align: left;
+}
+
