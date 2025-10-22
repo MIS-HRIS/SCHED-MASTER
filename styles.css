@@ -533,10 +533,10 @@
     #restTableBody tr td:nth-child(8) {
       text-align: center;
     }
-/* ✅ Unified Table Styling — No More Overlaps */
+/* ✅ Final Unified Table Styling (No Horizontal Scroll) */
 .data-view {
   width: 100%;
-  overflow-x: auto; /* allows scroll only if really necessary */
+  overflow-x: hidden; /* no horizontal scroll */
   overflow-y: auto;
   max-height: 70vh;
 }
@@ -544,71 +544,85 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* consistent and controlled layout */
+  table-layout: fixed; /* fixes column layout */
 }
 
-/* Shared table cell behavior */
+/* Shared table cell styling */
 .data-table th,
 .data-table td {
-  padding: 0.75rem 0.5rem;
-  font-size: 13px;
+  padding: 0.5rem 0.3rem;
+  font-size: 12px; /* slightly smaller to fit */
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
   vertical-align: middle;
 }
 
-/* Column-specific width balancing */
+/* Column widths tuned to fit full table */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
-  width: 50px; /* index */
+  width: 40px;
   text-align: center;
 }
 
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) {
-  width: 90px; /* employee number */
+  width: 65px;
   text-align: center;
 }
 
 .data-table th:nth-child(3),
 .data-table td:nth-child(3) {
-  width: 220px; /* full name */
+  width: 160px; /* Name column */
   text-align: left;
 }
 
 .data-table th:nth-child(4),
 .data-table td:nth-child(4) {
-  width: 120px; /* position */
+  width: 100px;
   text-align: left;
 }
 
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) {
-  width: 110px; /* date */
+  width: 75px;
   text-align: center;
 }
 
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
-  width: 90px; /* shift/RBT code */
+  width: 75px;
   text-align: center;
 }
 
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) {
-  width: 100px; /* day */
+  width: 90px;
   text-align: center;
 }
 
 .data-table th:nth-child(8),
 .data-table td:nth-child(8) {
-  width: 70px; /* icons */
+  width: 65px;
   text-align: center;
 }
 
-/* Optional hover polish */
+/* Elegant hover effect */
 tbody tr:hover {
   background-color: rgba(209, 250, 229, 0.75);
   box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
+}
+
+/* Responsive fallback for smaller screens */
+@media (max-width: 1024px) {
+  .data-table th,
+  .data-table td {
+    font-size: 11px;
+    padding: 0.4rem 0.25rem;
+  }
+
+  .data-table th:nth-child(3),
+  .data-table td:nth-child(3) {
+    width: 140px;
+  }
 }
