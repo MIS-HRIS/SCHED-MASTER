@@ -103,13 +103,8 @@ function handlePaste(event) {
       }
       return entry;
     })
-    // ✅ Allow rows that have employee number + at least one other relevant field
-    .filter(entry =>
-      entry.employeeNo &&
-      (entry.date || entry.shiftCode || entry.dayOfWeek || entry.position || entry.name)
-    );
+    .filter(entry => entry.employeeNo); // ✅ accept any row with employeeNo
 
-  // ✅ Convert Excel-style dates only if present
   const processedData = data.map(d => ({
     ...d,
     date: d.date ? excelDateToJS(d.date) : ''
@@ -299,6 +294,10 @@ function recheckConflicts() {
     renderWorkTable();
     renderRestTable();
 }
+
+function generateFile(data, fileNamePrefix) {
+  console.log("🧩 generateFile called:", fileNamePrefix, "data length =", data.length, data);
+
 
 function generateFile(data, fileNamePrefix) {
     if (data.length === 0) {
