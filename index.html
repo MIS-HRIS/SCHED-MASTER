@@ -121,51 +121,47 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
 
-<!-- Wrapper for Work & Rest Day Tables -->
-<div class="dashboard-flex mt-8">
-  <!-- Work Schedule Table -->
-  <div class="dashboard-card">
-    <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
-    <div class="overflow-x-auto data-view">
-      <table id="workTable" class="min-w-full data-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Emp. No</th>
-            <th style="text-align: center;">Name</th>
-            <th>Position</th>
-            <th>Date</th>
-            <th>Shift Code</th>
-            <th>Day of Week</th>
-          </tr>
-        </thead>
-        <tbody id="workTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Rest Day Schedule Table -->
-  <div class="dashboard-card">
-    <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
-    <div class="overflow-x-auto data-view">
-      <table id="restTable" class="min-w-full data-table">
-        <thead>
-          <tr>
-            <th style="width: 8%;">Conflict</th>
-            <th style="width: 6%;">#</th>
-            <th style="width: 10%;">Emp. No</th>
-            <th style="width: 18%; text-align: center;">Name</th>
-            <th style="width: 20%;">Position</th>
-            <th style="width: 15%;">Date</th>
-            <th style="width: 15%;">Day of Week</th>
-          </tr>
-        </thead>
-        <tbody id="restTableBody"></tbody>
-      </table>
-    </div>
+<!-- Work Schedule Table -->
+<div class="dashboard-card">
+  <h3 class="text-xl font-bold mb-4 text-slate-700">Work Schedule Data</h3>
+  <div class="overflow-x-auto">
+    <table id="workTable" class="min-w-full data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Emp. No</th>
+          <th style="text-align: center;">Name</th>
+          <th>Position</th>
+          <th>Date</th>
+          <th>Shift Code</th>
+          <th>Day of Week</th>
+        </tr>
+      </thead>
+      <tbody id="workTableBody"></tbody>
+    </table>
   </div>
 </div>
-<!-- End Wrapper -->
+
+<!-- Rest Day Schedule Table -->
+<div class="dashboard-card">
+  <h3 class="text-xl font-bold mb-4 text-slate-700">Rest Day Data</h3>
+  <div class="overflow-x-auto">
+    <table id="restTable" class="min-w-full data-table">
+      <thead>
+        <tr>
+          <th style="width: 8%;">Conflict</th>
+          <th style="width: 6%;">#</th>
+          <th style="width: 10%;">Emp. No</th>
+          <th style="width: 18%; text-align: center;">Name</th>
+          <th style="width: 20%;">Position</th>
+          <th style="width: 15%;">Date</th>
+          <th style="width: 15%;">Day of Week</th>
+        </tr>
+      </thead>
+      <tbody id="restTableBody"></tbody>
+    </table>
+  </div>
+</div>
 
 
 

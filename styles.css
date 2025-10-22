@@ -631,26 +631,34 @@
 #restTable tbody td:nth-child(4) {
   text-align: left;
 }
-/* Align both Work Schedule and Rest Day data cards visually */
+/* Align both Work Schedule and Rest Day data cards perfectly */
 .dashboard-flex {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch; /* ensures same height alignment */
   justify-content: space-between;
   gap: 1.5rem;
 }
 
-.dashboard-flex > .dashboard-card {
+.dashboard-card {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  min-height: 100%;
 }
 
-/* Ensure tables fill equal visual space */
 .data-view {
-  flex: 1;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+}
+
+/* Center only the "Name" headers — not the data */
+#workTable thead th:nth-child(3),
+#restTable thead th:nth-child(4) {
+  text-align: center;
+}
+
+/* Keep employee names left-aligned */
+#workTable tbody td:nth-child(3),
+#restTable tbody td:nth-child(4) {
+  text-align: left;
 }
