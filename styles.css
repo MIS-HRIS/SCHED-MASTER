@@ -542,39 +542,101 @@ tbody tr:hover {
     width: 130px; /* name tighter on smaller screens */
   }
 }
-/* ===========================
-   Rest Day Table Refinements
-   ============================ */
+/* ===============================
+   🌿 FINAL TABLE ALIGNMENT FIX
+   Applies to Work Schedule + Rest Day
+   — No Scroll, No Overflow —
+   — Pixel-Perfect Column Sync —
+   =============================== */
 
-/* Make Emp. No smaller (same as work table) */
-#restTableBody td:nth-child(3),
-#restTableBody th:nth-child(3) {
-  width: 55px !important;  /* match Work Schedule table */
-  text-align: center;
-}
-
-/* Prevent "Conflict" header from breaking */
-#restTableBody td:nth-child(1),
-#restTableBody th:nth-child(1) {
-  width: 60px !important;
-  white-space: nowrap;     /* keeps 'Conflict' on one line */
-  text-align: center;
-}
-
-/* Ensure rest table remains balanced visually */
-#restTableBody td,
-#restTableBody th {
-  font-size: 12px;
-  padding: 0.45rem 0.25rem;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-/* Slightly tighten name column for balance */
-#restTableBody td:nth-child(4),
-#restTableBody th:nth-child(4) {
-  width: 150px !important;
+/* Shared table rules */
+.data-table,
+#restTable {
+  table-layout: fixed;
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
   text-align: left;
+  white-space: nowrap;
 }
 
+/* Prevent any scrollbars */
+.table-wrapper {
+  overflow-x: hidden !important;
+}
+
+/* Keep cells compact but readable */
+.data-table th,
+.data-table td,
+#restTable th,
+#restTable td {
+  padding: 0.55rem 0.75rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* =========================
+   🧩 Work Schedule Alignment
+   ========================= */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  width: 45px !important; /* # */
+  text-align: center;
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  width: 65px !important; /* Emp No */
+  text-align: center;
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+  width: 180px !important; /* Name */
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+  width: 150px !important; /* Position */
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+  width: 110px !important; /* Date */
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+  width: 95px !important; /* Shift Code */
+}
+
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) {
+  width: 110px !important; /* Day of Week */
+}
+
+/* =========================
+   🌙 Rest Day Alignment
+   ========================= */
+#restTable thead th:nth-child(1),
+#restTableBody td:nth-child(1) {
+  width: 60px !important; /* Conflict */
+  text-align: center;
+  white-space: nowrap;
+}
+
+#restTable thead th:nth-child(2),
+#restTableBody td:nth-child(2) {
+  width: 45px !important; /* # */
+  text-align: center;
+}
+
+#restTable thead th:nth-child(3),
+#restTableBody td:nth-child(3) {
+  width: 65px !important; /* Emp No */
+  text-align: center;
+}
+
+#restTable thead th:nth-child(4),
+#restTableBody td:nt
