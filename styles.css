@@ -415,32 +415,28 @@ table tr:hover {
 
 .data-table {
   width: 100%;
-  table-layout: fixed !important; /* make columns auto-fit screen */
+  table-layout: auto; /* or auto, based on your preference */
 }
 
+/* General styles for all cells */
 .data-table th,
 .data-table td {
-  white-space: normal !important; /* allow wrapping */
-  word-wrap: break-word;
+  padding: 0.75rem;
+  white-space: normal; /* allow wrapping */
   overflow: hidden;
   text-overflow: ellipsis;
-}
-/* Set table-layout to auto for flexible columns */
-.data-table {
-  width: 100%;
-  table-layout: auto !important; /* Make columns resize based on content */
+  font-size: 13px;
 }
 
-/* Allow the first column to be wide enough for names, but limit max width */
+/* Specific styles for first column for multi-line ellipsis */
 .data-table th:first-child,
 .data-table td:first-child {
   width: auto;
   max-width: 300px; /* optional */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  /* Remove white-space: nowrap; to allow wrapping for multi-line clamp */
   display: -webkit-box;
   -webkit-line-clamp: 2; /* 2 lines */
   -webkit-box-orient: vertical;
-  max-height: 3rem; /* or adjust based on line height */
+  max-height: 3rem; /* limit height to 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
