@@ -533,54 +533,35 @@
     #restTableBody tr td:nth-child(8) {
       text-align: center;
     }
-    /* Prevent table overflow while allowing wrapping */
+/* ✅ Unified Table Styling — No More Overlaps */
 .data-view {
   width: 100%;
-  overflow-x: auto; /* enables horizontal scroll if absolutely needed */
+  overflow-x: auto; /* allows scroll only if really necessary */
   overflow-y: auto;
   max-height: 70vh;
 }
 
-/* Ensure table fits inside its parent container */
-.data-table {
-  width: 100%;
-  max-width: 100%;
-  table-layout: auto; /* switch from fixed to auto for flexible columns */
-}
-
-/* Wrap long names properly */
-.data-table td,
-.data-table th {
-  white-space: normal !important;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-/* Limit name column width gently */
-#workTableBody td:nth-child(3),
-#restTableBody td:nth-child(4) {
-  max-width: 220px;
-  white-space: normal;
-  word-break: break-word;
-}
-/* Lock predictable columns and let names wrap freely */
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* restore fixed table layout for control */
+  table-layout: fixed; /* consistent and controlled layout */
 }
 
-/* General cell wrapping fix */
-.data-table td,
-.data-table th {
+/* Shared table cell behavior */
+.data-table th,
+.data-table td {
+  padding: 0.75rem 0.5rem;
+  font-size: 13px;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
+  vertical-align: middle;
 }
 
-/* Column-specific sizing for balance */
+/* Column-specific width balancing */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
-  width: 50px; /* index number */
+  width: 50px; /* index */
   text-align: center;
 }
 
@@ -592,12 +573,14 @@
 
 .data-table th:nth-child(3),
 .data-table td:nth-child(3) {
-  width: 220px; /* full name - flexible */
+  width: 220px; /* full name */
+  text-align: left;
 }
 
 .data-table th:nth-child(4),
 .data-table td:nth-child(4) {
   width: 120px; /* position */
+  text-align: left;
 }
 
 .data-table th:nth-child(5),
@@ -608,7 +591,7 @@
 
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
-  width: 90px; /* RBT code */
+  width: 90px; /* shift/RBT code */
   text-align: center;
 }
 
@@ -620,6 +603,12 @@
 
 .data-table th:nth-child(8),
 .data-table td:nth-child(8) {
-  width: 70px; /* icons column */
+  width: 70px; /* icons */
   text-align: center;
+}
+
+/* Optional hover polish */
+tbody tr:hover {
+  background-color: rgba(209, 250, 229, 0.75);
+  box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
 }
