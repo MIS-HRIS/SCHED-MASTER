@@ -190,22 +190,6 @@
         color: #991b1b;
     }
     
-/* ✅ Responsive Data Table — fits screen without horizontal scroll */
-.data-table {
-  width: 100%;
-  table-layout: fixed; /* forces columns to auto-fit */
-  border-collapse: collapse;
-  word-wrap: break-word;
-}
-
-.data-table th, .data-table td {
-  text-align: center;
-  white-space: normal;      /* allow wrapping */
-  overflow: hidden;
-  text-overflow: ellipsis;  /* cut off very long text gracefully */
-  padding: 0.4rem 0.6rem;   /* compact for better fit */
-  font-size: 13px;          /* small but readable */
-}
 
 /* Optional: give name and position columns slightly wider space */
 .data-table th:nth-child(4), .data-table td:nth-child(4),
