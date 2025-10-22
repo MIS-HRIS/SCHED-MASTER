@@ -108,26 +108,49 @@ if (headerRow !== -1) {
   }).filter(entry => entry.employeeNo || entry.name || entry.date);
 } else {
   // No header row — use intelligent token detection
-  const classifyValue = (v) => {
-    v = v.trim();
-    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
-    if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
-    if (/^\d{1,6}$/.test(v)) return "employeeNo";
-    if (/^[A-Za-z]{3}-\d{3}$/.test(v)) return "shiftCode"; // stricter shift pattern
-    if (/^[A-Za-z\s]+$/.test(v)) return "name";
-    return "unknown";
-  };
+const classifyValue = (v) => {
+  v = v.trim();
+
+  // Date
+  if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
+
+  // Day of week
+  if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
+
+  // Employee number
+  if (/^\d{1,6}$/.test(v)) return "employeeNo";
+
+  // Shift code
+  if (/^[A-Za-z]{3}-\d{3}$/.test(v)) return "shiftCode";
+
+  // Position (known role words)
+  if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|branch\s*head)$/i.test(v)) return "position";
+
+  // Name (multiple alphabetic words allowed)
+  if (/^[A-Za-z]+$/.test(v)) return "namePart";
+
+  return "unknown";
+};
 
   data = rows.map(rawRow => {
-    const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
-    const entry = {};
-    tokens.forEach(t => {
-      const type = classifyValue(t);
-      if (type !== "unknown") entry[type] = t;
-    });
-    return entry;
-  }).filter(e => Object.keys(e).length > 0);
-}
+  const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
+  const entry = { nameParts: [] };
+
+  tokens.forEach(t => {
+    const type = classifyValue(t);
+    if (type === "namePart") {
+      entry.nameParts.push(t);
+    } else if (type !== "unknown") {
+      entry[type] = t;
+    }
+  });
+
+  if (entry.nameParts.length > 0) entry.name = entry.nameParts.join(' ');
+  delete entry.nameParts;
+
+  return entry;
+}).filter(e => Object.keys(e).length > 0);
+
 
         if (isWork) {
           workScheduleData = data.map(d => ({...d, date: excelDateToJS(d.date) }));
