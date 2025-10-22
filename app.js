@@ -115,9 +115,9 @@
 function detectColumnMapping(rows, isWork) {
   let headerRow = -1;
   let mapping = {};
-  const MAX_ROWS_TO_CHECK = 10;
+  const MAX_ROWS_TO_CHECK = 20;
 
-  // ✅ Step 1: Try to detect header row normally (as before)
+  // ✅ Step 1: Try detecting header row first
   const potentialHeaders = {
     employeeNo: ['employee no.', 'emp no', 'employee number', 'id'],
     name: ['name', 'employee name', 'fullname'],
@@ -141,50 +141,57 @@ function detectColumnMapping(rows, isWork) {
     }
   }
 
-  // ✅ Step 2: If no header found, guess columns automatically
+  // ✅ Step 2: If no header row found → use pattern recognition
   if (headerRow === -1) {
+    const classifyValue = (v) => {
+      v = v.trim();
+
+      // Date
+      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
+
+      // Day of week (short or long)
+      if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
+
+      // Employee No (digits only 1–6)
+      if (/^\d{1,6}$/.test(v)) return "employeeNo";
+
+      // Shift code (letters + digits)
+      if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9\-]+$/.test(v)) return "shiftCode";
+
+      // Position (specific role words)
+      if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead)$/i.test(v)) return "position";
+
+      // Name (letters + spaces only, no digits or symbols)
+      if (/^[A-Za-z\s]+$/.test(v)) return "name";
+
+      return "unknown";
+    };
+
+    // Take up to first 5 rows to analyze patterns
     const sampleRows = rows.slice(0, 5);
     const colCount = Math.max(...sampleRows.map(r => r.length));
 
-    const colProfiles = Array.from({ length: colCount }, (_, i) => {
+    const colTypeScores = Array.from({ length: colCount }, (_, i) => {
       const values = sampleRows.map(r => r[i]?.trim()).filter(Boolean);
-      return {
-        index: i,
-        values,
-        numericCount: values.filter(v => /^\d+$/.test(v)).length,
-        dateCount: values.filter(v => /\d{1,2}\/\d{1,2}\/\d{2,4}|-\d{2,4}/.test(v)).length,
-        textLength: values.reduce((sum, v) => sum + v.length, 0) / (values.length || 1)
-      };
+      const typeCounts = {};
+      for (const val of values) {
+        const type = classifyValue(val);
+        if (type !== "unknown") typeCounts[type] = (typeCounts[type] || 0) + 1;
+      }
+      const bestType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "unknown";
+      return { index: i, bestType, typeCounts };
     });
 
-    // 📊 Step 3: Intelligent guessing
-    let employeeNoCol = colProfiles.find(c => c.numericCount >= 2 && c.textLength < 8)?.index ?? 0;
-    let dateCol = colProfiles.find(c => c.dateCount >= 2)?.index ?? 2;
-    let nameCol = colProfiles.find(c => c.textLength > 10 && c.numericCount === 0 && c.dateCount === 0)?.index ?? 1;
-
-    // shift / position / day guessing
-    let shiftCodeCol = isWork
-      ? colProfiles.find(c => c.index !== employeeNoCol && c.index !== dateCol && c.index !== nameCol && c.textLength < 6)?.index ?? 3
-      : null;
-
-    let positionCol = colProfiles.find(c =>
-      c.index !== employeeNoCol &&
-      c.index !== dateCol &&
-      c.index !== nameCol &&
-      c.index !== shiftCodeCol &&
-      c.textLength > 4)?.index ?? (isWork ? 4 : 3);
-
-    let dayCol = colProfiles.find(c =>
-      ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].some(d => c.values.some(v => v.toLowerCase().includes(d)))
-    )?.index ?? (isWork ? 5 : 4);
+    // Build mapping by picking the most confident columns
+    const findCol = (type) => colTypeScores.find(c => c.bestType === type)?.index ?? null;
 
     mapping = {
-      employeeNo: employeeNoCol,
-      name: nameCol,
-      position: positionCol,
-      date: dateCol,
-      shiftCode: shiftCodeCol,
-      dayOfWeek: dayCol
+      employeeNo: findCol("employeeNo"),
+      name: findCol("name"),
+      position: findCol("position"),
+      date: findCol("date"),
+      shiftCode: isWork ? findCol("shiftCode") : null,
+      dayOfWeek: findCol("dayOfWeek")
     };
   }
 
