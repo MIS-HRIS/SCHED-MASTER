@@ -421,7 +421,7 @@
 }
 
 /* ===============================
-   🌿 FINAL — WORK + REST TABLE FIT
+   🌿 FINAL — WORK + REST TABLE FIT (Aligned + No Scroll)
    =============================== */
 
 /* Shared structure for both tables */
@@ -429,7 +429,7 @@
 #restTable {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: fixed; /* consistent sizing */
   font-size: 12px;
   white-space: normal;
   word-break: break-word;
@@ -451,6 +451,7 @@
   font-weight: 600;
   background-color: rgba(255, 255, 255, 0.5);
   border-bottom: 2px solid #80cbc4;
+  white-space: nowrap;
 }
 
 /* Disable horizontal scroll */
@@ -486,13 +487,13 @@
 .data-table td:nth-child(8) { width: 55px; text-align: center; }
 
 /* ===============================
-   🌿 Rest Day Columns (aligned + header fixed)
+   🌿 Rest Day Columns (perfectly aligned + header fixed)
    =============================== */
 #restTable th:nth-child(1),
 #restTable td:nth-child(1) {
-  width: 60px;               /* a bit wider to fit 'Conflict' */
+  width: 65px;                 /* make slightly wider */
   text-align: center;
-  white-space: nowrap !important; /* keep in one line */
+  white-space: nowrap !important; /* fix header wrapping */
 }
 
 #restTable th:nth-child(2),
@@ -509,7 +510,7 @@
 
 #restTable th:nth-child(4),
 #restTable td:nth-child(4) { 
-  width: 130px; 
+  width: 150px; 
   text-align: left; 
 } /* Name */
 
@@ -555,8 +556,8 @@ tbody tr:hover {
 
   .data-table th:nth-child(3),
   .data-table td:nth-child(3),
-  #restTable th:nth-child(3),
-  #restTable td:nth-child(3) {
+  #restTable th:nth-child(4),
+  #restTable td:nth-child(4) {
     width: 130px;
   }
 }
