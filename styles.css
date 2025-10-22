@@ -489,20 +489,6 @@
 .data-table th:nth-child(8),
 .data-table td:nth-child(8) { width: 65px; text-align: center; } /* Actions closer */
 
-/* ===============================
-   🌿 Rest Day Columns — Unified Match with Work Schedule
-   =============================== */
-
-#restTable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 12px;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
 /* Header typography — identical to Work Schedule */
 #restTable thead th {
   font-family: 'Inter', sans-serif;
@@ -514,19 +500,21 @@
   background-color: rgba(255, 255, 255, 0.5);
   border-bottom: 2px solid #80cbc4;
   text-align: left;
-  padding: 0.6rem 0.5rem;
+  /* MODIFICATION: Matched horizontal padding to work schedule table */
+  padding: 0.6rem 0.25rem;
   white-space: nowrap;
 }
 
 /* Cell styling */
 #restTable td {
-  padding: 0.5rem 0.5rem;
+  /* MODIFICATION: Matched padding to work schedule table for a "closer" fit */
+  padding: 0.45rem 0.25rem;
   vertical-align: middle;
   color: #334155;
   font-size: 12.5px;
 }
 
-/* Match column proportions and alignment with Work Schedule */
+/* Match column proportions and alignment with Work Schedule (7-Column Fix) */
 #restTable th:nth-child(1),
 #restTable td:nth-child(1) {
   width: 35px; /* Conflict # */
@@ -535,46 +523,42 @@
 
 #restTable th:nth-child(2),
 #restTable td:nth-child(2) {
-  width: 35px; /* # */
+  width: 55px; /* Emp No */
   text-align: center;
 }
 
 #restTable th:nth-child(3),
 #restTable td:nth-child(3) {
-  width: 55px; /* Emp No */
+  width: 120px; /* Name */
   text-align: center;
 }
 
 #restTable th:nth-child(4),
 #restTable td:nth-child(4) {
-  width: 120px; /* Name */
-  text-align: center;
-}
-
-#restTable th:nth-child(5),
-#restTable td:nth-child(5) {
   width: 115px; /* Position */
   text-align: left;
 }
 
+#restTable th:nth-child(5),
+#restTable td:nth-child(5) {
+  width: 75px; /* Date */
+  text-align: center;
+}
+
 #restTable th:nth-child(6),
 #restTable td:nth-child(6) {
-  width: 75px; /* Date */
+  width: 70px; /* Day of Week (Matched work schedule) */
   text-align: center;
 }
 
 #restTable th:nth-child(7),
 #restTable td:nth-child(7) {
-  width: 75px; /* Day of Week */
-  text-align: center;
-}
-
-#restTable th:nth-child(8),
-#restTable td:nth-child(8) {
-  width: 50px; /* Actions */
+  width: 65px; /* Actions (Matched work schedule) */
   text-align: center;
   padding: 0.25rem 0;
 }
+
+/* Removed the nth-child(8) rule as the table has 7 columns */
 
 /* Compact and clean actions */
 #restTable .action-icon {
