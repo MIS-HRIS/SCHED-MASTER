@@ -103,8 +103,13 @@ function handlePaste(event) {
       }
       return entry;
     })
-    .filter(entry => entry.employeeNo); // ✅ accept any row with employeeNo
+    // ✅ Allow rows that have employee number + at least one other relevant field
+    .filter(entry =>
+      entry.employeeNo &&
+      (entry.date || entry.shiftCode || entry.dayOfWeek || entry.position || entry.name)
+    );
 
+  // ✅ Convert Excel-style dates only if present
   const processedData = data.map(d => ({
     ...d,
     date: d.date ? excelDateToJS(d.date) : ''
