@@ -421,7 +421,7 @@
 }
 
 /* ===============================
-   🌿 FINAL — WORK + REST TABLE FIT (Aligned + No Scroll)
+   🌿 FINAL — WORK + REST TABLE FIT
    =============================== */
 
 /* Shared structure for both tables */
@@ -429,7 +429,7 @@
 #restTable {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* consistent sizing */
+  table-layout: fixed;
   font-size: 12px;
   white-space: normal;
   word-break: break-word;
@@ -451,7 +451,6 @@
   font-weight: 600;
   background-color: rgba(255, 255, 255, 0.5);
   border-bottom: 2px solid #80cbc4;
-  white-space: nowrap;
 }
 
 /* Disable horizontal scroll */
@@ -487,56 +486,94 @@
 .data-table td:nth-child(8) { width: 55px; text-align: center; }
 
 /* ===============================
-   🌿 Rest Day Columns (perfectly aligned + header fixed)
+   🌿 Rest Day Columns (aligned + header fixed)
    =============================== */
+#restTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  max-width: 100%;
+}
+
+#restTable th,
+#restTable td {
+  padding: 0.45rem 0.25rem;
+  font-size: 12px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+
+/* ✅ Column widths — aligned visually with Work Schedule */
 #restTable th:nth-child(1),
 #restTable td:nth-child(1) {
-  width: 65px;                 /* make slightly wider */
+  width: 60px; /* Conflict */
   text-align: center;
-  white-space: nowrap !important; /* fix header wrapping */
+  white-space: nowrap !important; /* keep header in one line */
 }
 
 #restTable th:nth-child(2),
-#restTable td:nth-child(2) { 
-  width: 35px; 
-  text-align: center; 
-} /* # */
+#restTable td:nth-child(2) {
+  width: 35px; /* # */
+  text-align: center;
+}
 
 #restTable th:nth-child(3),
-#restTable td:nth-child(3) { 
-  width: 55px; 
-  text-align: center; 
-} /* Emp No */
+#restTable td:nth-child(3) {
+  width: 55px; /* Emp No */
+  text-align: center;
+}
 
 #restTable th:nth-child(4),
-#restTable td:nth-child(4) { 
-  width: 150px; 
-  text-align: left; 
-} /* Name */
+#restTable td:nth-child(4) {
+  width: 130px; /* Name */
+  text-align: left;
+}
 
 #restTable th:nth-child(5),
-#restTable td:nth-child(5) { 
-  width: 85px; 
-  text-align: left; 
-} /* Position */
+#restTable td:nth-child(5) {
+  width: 85px; /* Position */
+  text-align: left;
+}
 
 #restTable th:nth-child(6),
-#restTable td:nth-child(6) { 
-  width: 70px; 
-  text-align: center; 
-} /* Date */
+#restTable td:nth-child(6) {
+  width: 70px; /* Date */
+  text-align: center;
+}
 
 #restTable th:nth-child(7),
-#restTable td:nth-child(7) { 
-  width: 80px; 
-  text-align: center; 
-} /* Day of Week */
+#restTable td:nth-child(7) {
+  width: 80px; /* Day of Week */
+  text-align: center;
+}
 
 #restTable th:nth-child(8),
-#restTable td:nth-child(8) { 
-  width: 55px; 
-  text-align: center; 
-} /* Actions */
+#restTable td:nth-child(8) {
+  width: 55px; /* Icons / Actions */
+  text-align: center;
+}
+
+/* Hover effect (same style as Work Schedule) */
+#restTable tbody tr:hover {
+  background-color: rgba(209, 250, 229, 0.75);
+  box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
+}
+
+/* Responsive tweak */
+@media (max-width: 1024px) {
+  #restTable th,
+  #restTable td {
+    font-size: 11px;
+    padding: 0.3rem 0.2rem;
+  }
+
+  #restTable th:nth-child(4),
+  #restTable td:nth-child(4) {
+    width: 115px; /* Slightly smaller name column */
+  }
+}
 
 /* Hover effect */
 tbody tr:hover {
@@ -556,8 +593,8 @@ tbody tr:hover {
 
   .data-table th:nth-child(3),
   .data-table td:nth-child(3),
-  #restTable th:nth-child(4),
-  #restTable td:nth-child(4) {
+  #restTable th:nth-child(3),
+  #restTable td:nth-child(3) {
     width: 130px;
   }
 }
