@@ -112,44 +112,85 @@
         updateButtonStates();
       }
       
-      function detectColumnMapping(rows, isWork) {
-          let headerRow = -1;
-          let mapping = {};
-          const MAX_ROWS_TO_CHECK = 10;
-          
-          const potentialHeaders = {
-              employeeNo: ['employee no.', 'emp no', 'employee number'],
-              name: ['name', 'employee name'],
-              position: ['position'],
-              date: isWork ? ['work date', 'date'] : ['rest day date', 'date', 'rest day'],
-              shiftCode: ['shift code', 'shift'],
-              dayOfWeek: ['day of week', 'day']
-          };
+function detectColumnMapping(rows, isWork) {
+  let headerRow = -1;
+  let mapping = {};
+  const MAX_ROWS_TO_CHECK = 10;
 
-          for(let i=0; i < Math.min(rows.length, MAX_ROWS_TO_CHECK); i++) {
-              const row = rows[i].map(h => h.toLowerCase().trim().replace(':', ''));
-              let tempMapping = {};
-              for(const key in potentialHeaders) {
-                  const index = row.findIndex(header => potentialHeaders[key].includes(header));
-                  tempMapping[key] = index !== -1 ? index : null;
-              }
-              if(tempMapping.employeeNo !== null && tempMapping.name !== null && tempMapping.date !== null) {
-                  headerRow = i;
-                  mapping = tempMapping;
-                  break;
-              }
-          }
-          
-          if(headerRow === -1){
-              showWarning("No headers detected. Assuming standard column order.");
-              mapping = {
-                  employeeNo: 0, name: 1, date: 2, shiftCode: isWork ? 3 : null,
-                  dayOfWeek: isWork ? 4 : 3, position: isWork ? 5 : 4,
-              };
-              headerRow = -1;
-          }
-          return { mapping, headerRow };
-      }
+  // ✅ Step 1: Try to detect header row normally (as before)
+  const potentialHeaders = {
+    employeeNo: ['employee no.', 'emp no', 'employee number', 'id'],
+    name: ['name', 'employee name', 'fullname'],
+    position: ['position', 'designation', 'role', 'title'],
+    date: isWork ? ['work date', 'date'] : ['rest day date', 'date', 'rest day'],
+    shiftCode: ['shift code', 'shift', 'scode'],
+    dayOfWeek: ['day of week', 'day']
+  };
+
+  for (let i = 0; i < Math.min(rows.length, MAX_ROWS_TO_CHECK); i++) {
+    const row = rows[i].map(h => h.toLowerCase().trim().replace(':', ''));
+    let tempMapping = {};
+    for (const key in potentialHeaders) {
+      const index = row.findIndex(header => potentialHeaders[key].includes(header));
+      tempMapping[key] = index !== -1 ? index : null;
+    }
+    if (tempMapping.employeeNo !== null && tempMapping.name !== null && tempMapping.date !== null) {
+      headerRow = i;
+      mapping = tempMapping;
+      break;
+    }
+  }
+
+  // ✅ Step 2: If no header found, guess columns automatically
+  if (headerRow === -1) {
+    const sampleRows = rows.slice(0, 5);
+    const colCount = Math.max(...sampleRows.map(r => r.length));
+
+    const colProfiles = Array.from({ length: colCount }, (_, i) => {
+      const values = sampleRows.map(r => r[i]?.trim()).filter(Boolean);
+      return {
+        index: i,
+        values,
+        numericCount: values.filter(v => /^\d+$/.test(v)).length,
+        dateCount: values.filter(v => /\d{1,2}\/\d{1,2}\/\d{2,4}|-\d{2,4}/.test(v)).length,
+        textLength: values.reduce((sum, v) => sum + v.length, 0) / (values.length || 1)
+      };
+    });
+
+    // 📊 Step 3: Intelligent guessing
+    let employeeNoCol = colProfiles.find(c => c.numericCount >= 2 && c.textLength < 8)?.index ?? 0;
+    let dateCol = colProfiles.find(c => c.dateCount >= 2)?.index ?? 2;
+    let nameCol = colProfiles.find(c => c.textLength > 10 && c.numericCount === 0 && c.dateCount === 0)?.index ?? 1;
+
+    // shift / position / day guessing
+    let shiftCodeCol = isWork
+      ? colProfiles.find(c => c.index !== employeeNoCol && c.index !== dateCol && c.index !== nameCol && c.textLength < 6)?.index ?? 3
+      : null;
+
+    let positionCol = colProfiles.find(c =>
+      c.index !== employeeNoCol &&
+      c.index !== dateCol &&
+      c.index !== nameCol &&
+      c.index !== shiftCodeCol &&
+      c.textLength > 4)?.index ?? (isWork ? 4 : 3);
+
+    let dayCol = colProfiles.find(c =>
+      ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].some(d => c.values.some(v => v.toLowerCase().includes(d)))
+    )?.index ?? (isWork ? 5 : 4);
+
+    mapping = {
+      employeeNo: employeeNoCol,
+      name: nameCol,
+      position: positionCol,
+      date: dateCol,
+      shiftCode: shiftCodeCol,
+      dayOfWeek: dayCol
+    };
+  }
+
+  return { mapping, headerRow };
+}
+
 
       function recheckConflicts() {
           const scheduleMap = new Map();

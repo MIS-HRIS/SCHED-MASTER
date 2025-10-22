@@ -190,18 +190,35 @@
         color: #991b1b;
     }
     
-    .data-table {
-        table-layout: auto;
-        width: 100%;
-    }
-    .data-table th, .data-table td {
-        white-space: nowrap;
-        padding: 0.6rem 0.8rem;
-    }
-    .data-table th:nth-child(4), .data-table td:nth-child(4), /* Name column */
-    .data-table th:nth-child(5), .data-table td:nth-child(5) { /* Position column */
-        min-width: 160px;
-    }
+/* ✅ Responsive Data Table — fits screen without horizontal scroll */
+.data-table {
+  width: 100%;
+  table-layout: fixed; /* forces columns to auto-fit */
+  border-collapse: collapse;
+  word-wrap: break-word;
+}
+
+.data-table th, .data-table td {
+  text-align: center;
+  white-space: normal;      /* allow wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;  /* cut off very long text gracefully */
+  padding: 0.4rem 0.6rem;   /* compact for better fit */
+  font-size: 13px;          /* small but readable */
+}
+
+/* Optional: give name and position columns slightly wider space */
+.data-table th:nth-child(4), .data-table td:nth-child(4),
+.data-table th:nth-child(5), .data-table td:nth-child(5) {
+  min-width: 140px;
+}
+
+/* Optional: container for vertical scroll only */
+.data-view {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 70vh;
+}
     
     .action-icon {
         cursor: pointer;
