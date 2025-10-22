@@ -449,11 +449,3 @@ table tr:hover {
   text-align: center;
   padding: 0.3rem 0.4rem;
 }
-
-.data-table th:first-child,
-.data-table td:first-child {
-  width: 40px;
-  min-width: 40px;
-  text-align: center;
-  padding: 0.3rem 0.4rem;
-}
