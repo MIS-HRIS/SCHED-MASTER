@@ -441,15 +441,18 @@ table tr:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* 🧩 Flexible first column (#) for dynamic width */
-.data-table th:first-child,
-.data-table td:first-child {
-  width: auto; /* allow width to adjust based on content */
-  min-width: 40px; /* optional: set a minimum width */
-  text-align: center;
-  padding: 0.3rem 0.4rem;
-}
+/* Set table-layout to auto for flexible columns */
 .data-table {
   width: 100%;
-  table-layout: auto !important; /* allow columns to resize based on content */
+  table-layout: auto !important; /* Make columns resize based on content */
+}
+
+/* Allow the first column to be wide enough for names, but limit max width */
+.data-table th:first-child,
+.data-table td:first-child {
+  width: auto; /* Let it resize based on content */
+  max-width: 300px; /* optional: limit maximum width */
+  white-space: nowrap; /* Keep text on one line, or remove if wrapping is desired */
+  overflow: hidden; /* hide overflow if too long */
+  text-overflow: ellipsis; /* add ellipsis for overflowed text */
 }
