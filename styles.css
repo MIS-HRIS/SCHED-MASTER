@@ -441,12 +441,12 @@ table tr:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* 🧩 Compact first column (#) for better fit */
+/* 🧩 Flexible first column (#) for dynamic width */
 .data-table th:first-child,
 .data-table td:first-child {
-  width: 40px;          /* keeps numbering compact */
-  min-width: 40px;
-  text-align: center;   /* keeps numbers centered */
+  width: auto; /* allow width to adjust based on content */
+  min-width: 40px; /* optional: set a minimum width */
+  text-align: center;
   padding: 0.3rem 0.4rem;
 }
 /* 🧩 Fix: Prevent min-w-full from forcing extra space */
