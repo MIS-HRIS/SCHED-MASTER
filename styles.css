@@ -418,14 +418,13 @@
       background-color: #f1f5f9;
     }
 
-    /* 🧩 Table Enhancements: Fit to width and align */
-    .data-table {
-      width: 100%;
-      table-layout: fixed;
-      /* Force table to fit container */
-      border-collapse: collapse;
-      /* Ensure borders are clean */
-    }
+/* --- Table Enhancements: Fit to width and align --- */
+.data-table {
+  width: 90%; /* or 800px */
+  max-width: 1200px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
 
     /* General styles for all cells */
     .data-table th,
