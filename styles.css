@@ -513,11 +513,7 @@
   color: #334155;
   font-size: 12.5px;
 }
-/* ===============================
-   🌿 Rest Day Columns — CORRECTED 7-COLUMN LAYOUT
-   =============================== */
 
-/* Replace all the old #restTable th:nth-child rules with these */
 
 #restTable th:nth-child(1),
 #restTable td:nth-child(1) {
@@ -562,8 +558,6 @@
   padding: 0.25rem 0;
 }
 
-/* Make sure to DELETE any rules for #restTable th:nth-child(8) *
-
 /* Compact and clean actions */
 #restTable .action-icon {
   font-size: 14px;
@@ -590,4 +584,34 @@
 #restTable tbody tr:hover {
   background-color: rgba(209, 250, 229, 0.75);
   box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
+}
+/* 🌿 FIX: Rest Day Table Column Spacing Alignment */
+#restTable th:nth-child(1),
+#restTable td:nth-child(1) {
+  width: 35px; /* Conflict # */
+  text-align: center;
+}
+
+#restTable th:nth-child(2),
+#restTable td:nth-child(2) {
+  width: 45px; /* Emp No - slightly narrower for closer gap */
+  text-align: center;
+  padding-right: 0.2rem; /* bring closer to next column */
+}
+
+#restTable th:nth-child(3),
+#restTable td:nth-child(3) {
+  width: 110px; /* Name - reduced width for tighter layout */
+  text-align: left;
+  padding-left: 0.3rem; /* gentle left spacing */
+}
+
+#restTable th:nth-child(4),
+#restTable td:nth-child(4) {
+  width: 115px; /* keep Position same */
+}
+
+/* Slightly compact the table visually */
+#restTable td {
+  padding: 0.4rem 0.25rem;
 }
