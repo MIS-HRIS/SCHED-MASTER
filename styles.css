@@ -476,3 +476,56 @@ table tr:hover {
   overflow-y: auto;
   box-sizing: border-box;
 }
+/* 🧩 Force Table to Fit Within Screen (No Horizontal Scroll) */
+.dashboard-card,
+.data-view {
+  overflow-x: hidden !important;
+  width: 100%;
+  max-width: 100vw; /* never exceed viewport width */
+  box-sizing: border-box;
+}
+
+/* Force table to auto-resize columns */
+.data-table {
+  display: table;
+  width: 100%;
+  max-width: 100%;
+  table-layout: auto !important; /* let browser decide best fit */
+  border-collapse: collapse;
+  word-wrap: break-word;
+}
+
+/* Wrap text inside cells so they shrink gracefully */
+.data-table th,
+.data-table td {
+  white-space: normal !important;
+  word-break: break-word;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+/* Tighter fit for small screens */
+@media (max-width: 1024px) {
+  .data-table th,
+  .data-table td {
+    font-size: 12px;
+    padding: 0.4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .data-table {
+    font-size: 11px;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.3rem;
+  }
+}
+
+/* Remove inner card padding for full-width tables */
+.dashboard-card:has(.data-table) {
+  padding-inline: 0.5rem !important;
+}
+
