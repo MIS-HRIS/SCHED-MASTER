@@ -127,6 +127,137 @@ td {
   color: #555;
 }
 
+/* Compact, single-line table layout (except Conflict column) */
+.data-table {
+  table-layout: fixed; /* enforce fixed columns so ellipsis works */
+  width: 100%;
+}
+
+/* Base cells: single-line, ellipsis */
+.data-table thead th,
+.data-table tbody td {
+  padding: 0.55rem 0.6rem;
+  vertical-align: middle;
+  white-space: nowrap;          /* keep single-line by default */
+  overflow: hidden;
+  text-overflow: ellipsis;     /* show "..." for overflow */
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+/* Reasonable default min row height, allow growth when conflict wraps */
+.data-table tbody tr {
+  min-height: 56px;
+}
+
+/* Conflict column (first column in restTable) — allow wrapping up to 2 lines */
+#restTable td:first-child,
+#restTable th:first-child {
+  white-space: normal; /* allow wrapping */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;     /* limit to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  padding: 0.6rem;
+  max-width: 220px;
+  text-overflow: clip; /* don't show ellipsis here */
+  vertical-align: middle;
+}
+
+/* Keep other rest table columns single-line and truncating */
+#restTable td:not(:first-child),
+#restTable th:not(:first-child) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ensure work table columns remain single-line */
+#workTable td,
+#workTable th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Actions cell: layout and icon sizing for perfect alignment */
+.data-table td .action-icon,
+.data-table td ion-icon.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 6px;
+  color: #0f172a;
+  background: transparent;
+  margin: 0 4px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* Slight hover affordance for action icons */
+.data-table td .action-icon:hover {
+  background: rgba(15,23,42,0.04);
+  transform: translateY(-1px);
+}
+
+/* Actions cell container: keep icons centered */
+.data-table td:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.4rem 0.6rem;
+  white-space: nowrap;
+}
+
+/* Conflict row visual improvement */
+.data-table tbody tr.conflict {
+  background-color: #fff7ed;
+  border-left: 3px solid #f59e0b;
+}
+
+/* Conflict short label style */
+.conflict-reason {
+  display: inline-block;
+  max-width: 100%;
+  color: #92400e;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+/* Small green dot used when no conflict (no text) */
+.conflict-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(180deg,#10b981,#34d399);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(16,185,129,0.25);
+}
+
+/* Ensure table header text is vertically centered */
+.data-table thead th {
+  vertical-align: middle;
+  padding: 0.65rem 0.6rem;
+  font-size: 0.92rem;
+}
+
+/* Small responsive tweak: on very narrow screens allow conflict column to take more height */
+@media (max-width: 768px) {
+  #restTable td:first-child {
+    -webkit-line-clamp: 3;
+  }
+}
+
 /* Header — equal height + color alignment */
 #workTable thead th,
 #restTable thead th {
