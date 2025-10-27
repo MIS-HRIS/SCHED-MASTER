@@ -109,29 +109,9 @@ textarea:focus {
   flex-direction: column;
 }
 
-/* 📊 Refined Compact Table Styling */
+/* 🌟 Final Compact Table Refinement */
 
-.data-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-  font-size: 0.88rem;
-}
-
-/* Header */
-.data-table thead th {
-  background: linear-gradient(180deg, rgba(240, 249, 255, 0.95), rgba(224, 242, 254, 0.9));
-  border-bottom: 2px solid #99f6e4;
-  color: #0f172a;
-  font-weight: 600;
-  text-align: center;
-  padding: 0.45rem 0.55rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Body Cells: single line, truncating text */
+/* Body Cells: one-liner default */
 .data-table tbody td {
   text-align: center;
   padding: 0.45rem 0.55rem;
@@ -141,44 +121,88 @@ textarea:focus {
   text-overflow: ellipsis;
   vertical-align: middle;
   background: rgba(255, 255, 255, 0.85);
+  line-height: 1.2;
 }
 
-/* Conflict Column — allow up to 2 lines */
-#restTable td:first-child,
-#restTable th:first-child {
-  text-align: left;
+/* Name column — allow up to 2 lines */
+#workTable td:nth-child(3),
+#restTable td:nth-child(4) {
   white-space: normal;
-  overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-align: left;
   word-break: break-word;
-  color: #92400e;
-  background: rgba(255, 248, 229, 0.95);
-  border-left: 3px solid #f59e0b;
-  padding: 0.55rem;
   line-height: 1.25;
 }
 
-/* Compact equal-height rows */
+/* Conflict column — allow wrapping, styled neatly */
+#restTable td:first-child,
+#restTable th:first-child {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-align: left;
+  word-break: break-word;
+  background: rgba(255, 248, 229, 0.95);
+  border-left: 3px solid #f59e0b;
+  padding: 0.55rem 0.6rem;
+  color: #b45309; /* deeper amber for clarity */
+  font-weight: 600;
+  font-size: 0.83rem;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  border-radius: 0.25rem 0 0 0.25rem;
+  vertical-align: middle;
+}
+
+/* Make emoji + text line up perfectly */
+#restTable td:first-child span,
+#restTable td:first-child i,
+#restTable td:first-child svg {
+  vertical-align: middle;
+  font-size: 0.9rem;
+  margin-right: 3px;
+}
+
+/* Optional: subtle ⚠️ emoji prefix */
+#restTable td:first-child::before {
+  content: "⚠️ ";
+  font-size: 0.85rem;
+  opacity: 0.85;
+  vertical-align: middle;
+}
+
+
+/* Make emoji + text line up nicely */
+#restTable td:first-child span,
+#restTable td:first-child i,
+#restTable td:first-child svg {
+  vertical-align: middle;
+}
+
+/* Equal row height for uniformity */
 .data-table tbody tr {
-  height: 42px;
+  height: 44px;
   transition: background 0.2s ease;
 }
 .data-table tbody tr:hover {
   background-color: rgba(13, 148, 136, 0.05);
 }
 
-/* Action icons (edit / remove) */
+/* Compact and aligned icons */
 .data-table td ion-icon.action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   font-size: 15px;
   color: #0f172a;
-  opacity: 0.8;
+  opacity: 0.85;
   cursor: pointer;
   transition: all 0.15s ease;
   vertical-align: middle;
@@ -188,17 +212,17 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
-/* Keep icons centered and tidy */
+/* Center icons perfectly inside cell */
 .data-table td:last-child {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 0.3rem;
   white-space: nowrap;
 }
 
-/* Conflict row background highlight */
+/* Conflict row highlight */
 .data-table tbody tr.conflict {
   background-color: #fff7ed;
   border-left: 3px solid #f59e0b;
