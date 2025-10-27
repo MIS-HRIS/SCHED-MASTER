@@ -581,7 +581,19 @@ if (isWorkSchedule) {
                if (type === 'rest') {
                    const conflictCell = tr.insertCell();
                    if (item.conflict) {
-                       conflictCell.innerHTML = `⚠️ <span class="conflict-reason">${item.conflictReason}</span>`;
+                       const r = (item.conflictReason || '').toLowerCase();
+                       let shortReason = 'Conflict';
+                       if (r.includes('duplicate')) shortReason = 'Duplicate Rest Day';
+                       else if (r.includes('work') && r.includes('rest')) shortReason = 'Overlapping Schedule';
+                       else if (r.includes('work schedule') || r.includes('overlap')) shortReason = 'Overlapping Schedule';
+                       else if (r.includes('leadership') || r.includes('leader') || r.includes('multiple leaders')) shortReason = 'Leadership Conflict';
+                       else if (r.includes('exceed') || r.includes('exceeded') || r.includes('weekend')) shortReason = 'Rest Day Limit';
+                       else if (r.includes('not found') || r.includes('missing')) shortReason = 'Missing in Work';
+
+                       conflictCell.innerHTML = `<span class="conflict-label">⚠️ ${shortReason}</span>`;
+                       conflictCell.title = item.conflictReason || '';
+                   } else {
+                       conflictCell.innerHTML = `<span class="conflict-label ok">✅ OK</span>`;
                    }
                    conflictCell.className = 'text-center';
                }
