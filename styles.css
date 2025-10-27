@@ -109,19 +109,19 @@ textarea:focus {
   flex-direction: column;
 }
 
-/* 🌟 Final Table Layout — full text visible, compact, aligned icons */
+/* 🌟 Finalized Compact Table — Full Text, Aligned Icons, Proper Conflict Wrap */
 
-/* General table layout */
+/* Make all table text smaller but readable */
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem; /* slightly smaller text so all fits */
-  table-layout: auto;
+  font-size: 0.82rem;
+  table-layout: fixed; /* keep consistent column widths */
 }
 
 /* Header */
 .data-table thead th {
-  background: linear-gradient(180deg, rgba(240, 249, 255, 0.95), rgba(224, 242, 254, 0.9));
+  background: linear-gradient(180deg, rgba(240,249,255,0.95), rgba(224,242,254,0.9));
   border-bottom: 2px solid #99f6e4;
   color: #0f172a;
   font-weight: 600;
@@ -131,54 +131,72 @@ textarea:focus {
   white-space: nowrap;
 }
 
-/* Regular cells — show full text, smaller font */
+/* Regular cells — allow wrapping for full text */
 .data-table tbody td {
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 0.55rem;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255,255,255,0.9);
   font-size: 0.8rem;
   color: #1e293b;
-  white-space: normal; /* allow full text */
-  line-height: 1.2;
-  text-align: center;
-}
-
-/* Conflict column — slightly larger, wraps to 2 lines max */
-#restTable td:first-child,
-#restTable th:first-child {
+  line-height: 1.25;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
-  max-width: 200px;
-  background: rgba(255, 248, 229, 0.95);
+  text-align: center;
+}
+
+/* Conflict column — proper horizontal emoji + max 2 lines */
+#restTable td:first-child,
+#restTable th:first-child {
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  width: 160px; /* narrower to prevent overflow */
+  max-width: 160px;
+  line-height: 1.3;
+  background: rgba(255,248,229,0.95);
   border-left: 3px solid #f59e0b;
-  padding: 0.5rem 0.55rem;
+  padding: 0.5rem 0.6rem;
   color: #b45309;
   font-weight: 600;
   font-size: 0.8rem;
-  line-height: 1.3;
   border-radius: 0.25rem 0 0 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-wrap: wrap; /* ✅ this ensures long text breaks nicely on next line */
+  word-spacing: 1px;
 }
 
-/* Add neat ⚠️ prefix for conflicts */
+
+/* Emoji and text horizontally aligned */
 #restTable td:first-child::before {
-  content: "⚠️ ";
-  font-size: 0.8rem;
-  opacity: 0.9;
-  vertical-align: middle;
+  content: "⚠️";
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
-/* Uniform row height */
+/* Keep rows uniform height, auto-adjust if conflict wraps */
 .data-table tbody tr {
   height: auto;
   transition: background 0.2s ease;
 }
 .data-table tbody tr:hover {
-  background-color: rgba(13, 148, 136, 0.05);
+  background-color: rgba(13,148,136,0.05);
 }
 
-/* Action icons — small but aligned */
+/* Ensure conflict text wraps nicely, not stacked vertically */
+#restTable td:first-child span {
+  display: inline;
+  white-space: normal;
+}
+
+
+/* Action icons — fix vertical alignment & full background */
 .data-table td ion-icon.action-icon {
   display: inline-flex;
   align-items: center;
@@ -190,22 +208,24 @@ textarea:focus {
   opacity: 0.85;
   cursor: pointer;
   transition: all 0.15s ease;
-  vertical-align: middle;
 }
 .data-table td ion-icon.action-icon:hover {
   opacity: 1;
   transform: translateY(-1px);
 }
 
-/* Fix icon cell full background & alignment */
+/* Fix half background issue — revert to normal table-cell behavior */
 .data-table td:last-child {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0.25rem 0.35rem;
-  background: rgba(255, 255, 255, 0.9);
+  align-items: center;
+  background: rgba(255,255,255,0.95);
+  padding: 0.35rem 0.4rem;
+  white-space: nowrap;
+  vertical-align: middle;
   height: 100%;
+  gap: 6px;
+  border-left: 1px solid #e5e7eb;
 }
 
 /* Conflict row highlight */
