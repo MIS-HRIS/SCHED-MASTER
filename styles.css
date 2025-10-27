@@ -142,122 +142,6 @@ tbody tr:hover {
   font-style: italic;
   color: #856404;
 }
-
-/* ===============================
-   🌿 FINAL — WORK + REST TABLE ULTRA FIT
-   =============================== */
-
-.data-table,
-#restTable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 13px;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.data-table th,
-.data-table td,
-#restTable th,
-#restTable td {
-  padding: 0.45rem 0.25rem;
-  vertical-align: middle;
-}
-
-/* Work Schedule Columns */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) { width: 35px; text-align: center; }
-
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) { width: 55px; text-align: center; }
-
-/* Center "Name" header only */
-.data-table thead th:nth-child(3) {
-  text-align: center;
-}
-.data-table tbody td:nth-child(3) {
-  text-align: left;
-}
-
-/* Remaining Work Schedule columns */
-.data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 115px; text-align: left; }
-.data-table th:nth-child(5),
-.data-table td:nth-child(5) { width: 75px; text-align: center; }
-.data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 75px; text-align: center; }
-.data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 70px; text-align: center; }
-.data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 65px; text-align: center; }
-
-
-/* FIX: Rest Day Table Column Spacing Alignment */
-#restTable th:nth-child(1),
-#restTable td:nth-child(1) {
-  width: 35px;
-  text-align: center;
-}
-
-#restTable th:nth-child(2),
-#restTable td:nth-child(2) {
-  width: 45px;
-  text-align: center;
-  padding-right: 0.2rem;
-}
-
-#restTable th:nth-child(3),
-#restTable td:nth-child(3) {
-  width: 110px;
-  text-align: left;
-  padding-left: 0.3rem;
-}
-
-#restTable th:nth-child(4),
-#restTable td:nth-child(4) {
-  width: 115px;
-  text-align: left;
-}
-
-#restTable th:nth-child(5),
-#restTable td:nth-child(5) {
-  width: 75px;
-  text-align: center;
-}
-
-#restTable th:nth-child(6),
-#restTable td:nth-child(6) {
-  width: 70px;
-  text-align: center;
-}
-
-/* Center "Name" header only */
-#workTable thead th:nth-child(3),
-#restTable thead th:nth-child(4) {
-  text-align: center;
-}
-
-/* Keep employee names left-aligned */
-#workTable tbody td:nth-child(3),
-#restTable tbody td:nth-child(4) {
-  text-align: left;
-}
-
-/* 🌿 Card Alignment for both tables */
-.dashboard-flex {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-.dashboard-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
 /* 🌿 Work + Rest Tables — Premium Unified Look */
 #workTable,
 #restTable {
@@ -330,3 +214,19 @@ tbody tr:hover {
 #restTable thead {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
+/* 🧩 Perfect vertical alignment between Work & Rest tables */
+#workTable,
+#restTable {
+  table-layout: fixed;
+}
+
+#workTable thead th,
+#restTable thead th {
+  height: 44px;
+}
+
+#workTable td,
+#restTable td {
+  height: 40px;
+}
+
