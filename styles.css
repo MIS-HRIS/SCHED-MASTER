@@ -290,3 +290,145 @@ textarea:focus {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+/* ==========================
+   REST TABLE - FIT + ICONS
+   Paste this at the end of styles.css
+   ========================== */
+
+/* 1) Shrink the whole rest table a bit to gain space */
+#restTable.data-table {
+  font-size: 0.74rem; /* small but readable */
+}
+
+/* make headers smaller and tighter (only for rest table) */
+#restTable thead th {
+  padding: 0.28rem 0.4rem;  /* less vertical padding */
+  font-size: 0.82rem;
+  white-space: nowrap;      /* enforce single-line headers */
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* 2) tighter body cell padding for the rest table */
+#restTable.data-table tbody td {
+  padding: 0.35rem 0.45rem;
+  line-height: 1.15;       /* slightly tighter */
+  font-weight: 500;
+}
+
+/* 3) Conflict column: keep emoji + label inline, clamp visually to 2 lines
+   This uses max-height (line-height * 2) so we don't need extra spans.
+*/
+#restTable td:first-child,
+#restTable th:first-child {
+  /* keep styling you already have but slightly tighter */
+  padding: 0.32rem 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.15;
+}
+
+/* Visual clamp: allow up to 2 lines (line-height * 2), hide rest */
+#restTable td:first-child {
+  max-height: calc(1.15em * 2); /* clip after two lines visually */
+  overflow: hidden;
+  /* keep the box model as table-cell (do not change display) */
+}
+
+/* Keep emoji/icon + text inline and centered vertically */
+#restTable td:first-child > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+  /* allow normal wrapping but the parent's max-height will clip to 2 lines */
+}
+
+/* If there is plain text node (no child span), we still attempt to avoid odd breaks */
+#restTable td:first-child {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* 4) Ensure the left orange stripe and cell background don't increase width */
+#restTable td:first-child {
+  background: rgba(255,248,229,0.95);
+  border-left: 3px solid #f59e0b;
+  box-sizing: border-box;
+}
+
+/* 5) Action icons: unify look (edit/delete in rightmost column)
+   target ion-icon inside the last cell, as well as button>ion-icon */
+#restTable.data-table td:last-child ion-icon,
+#workTable.data-table td:last-child ion-icon,
+#restTable.data-table td:last-child button ion-icon,
+#workTable.data-table td:last-child button ion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  font-size: 14px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(15,23,42,0.07);
+  padding: 2px;
+  color: #0f172a;
+  margin-left: 6px;
+  margin-right: 4px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  z-index: 2;
+}
+
+/* hover lift */
+#restTable.data-table td:last-child ion-icon:hover,
+#workTable.data-table td:last-child ion-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15,23,42,0.09);
+}
+
+/* If your icons are inside buttons, make sure the buttons are compact */
+#restTable.data-table td:last-child button,
+#workTable.data-table td:last-child button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px; /* compact */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* 6) Trim the auto-inserted white panel inset if it's making cells horizontally larger */
+.data-table td:last-child::before {
+  /* slightly reduce inset so it doesn't push into the table width as much */
+  inset: 6px 6px 6px 6px;
+}
+
+/* 7) Slight global shrink for rest table header titles so they don't ellipsize prematurely */
+#restTable.data-table thead th {
+  font-weight: 600;
+  letter-spacing: 0.0px;
+}
+
+/* 8) Reduce the min-width of the rest table conflict column on medium screens */
+@media (max-width: 1280px) {
+  #restTable td:first-child,
+  #restTable th:first-child {
+    min-width: 140px;
+    max-width: 190px;
+  }
+}
+
+/* 9) Very small screens: expand clamp to 3 lines to avoid cutting essential text */
+@media (max-width: 1024px) {
+  #restTable.data-table { font-size: 0.72rem; }
+  #restTable td:first-child { max-height: calc(1.15em * 3); } /* allow 3 lines on small screens */
+}
+
+/* 10) Optional: if you still see header ellipsis, uncomment this line (global table header non-wrapping)
+.data-table thead th { white-space: nowrap; }
+*/
+
+/* End of rest-table & icon adjustments */
