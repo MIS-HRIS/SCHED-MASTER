@@ -115,320 +115,150 @@ textarea:focus {
 
 /* --- Base / stable layout --- */
 .data-table {
+  table-layout: fixed; /* distribute columns within available width */
   width: 100%;
-  border-collapse: collapse;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.82rem;
-  table-layout: fixed; /* enforce consistent widths (critical) */
-  box-sizing: border-box;
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
-/* Header — single line, no wrapping */
-.data-table thead th {
-  background: linear-gradient(180deg, rgba(240,249,255,0.95), rgba(224,242,254,0.9));
-  border-bottom: 2px solid #99f6e4;
-  color: #0f172a;
-  font-weight: 600;
-  text-align: center;
-  padding: 0.45rem 0.5rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
-}
-
-/* Explicit column widths for the Rest Day table — keeps header/body aligned. */
-#restTable { table-layout: fixed; }
-#restTable thead th:nth-child(1),
-#restTable tbody td:nth-child(1) { width: 170px; min-width: 150px; max-width: 220px; } /* Conflict */
-#restTable thead th:nth-child(2),
-#restTable tbody td:nth-child(2) { width: 6%; min-width: 46px; }                /* # */
-#restTable thead th:nth-child(3),
-#restTable tbody td:nth-child(3) { width: 9%; min-width: 68px; }                /* Emp No */
-#restTable thead th:nth-child(4),
-#restTable tbody td:nth-child(4) { width: 28%; }                                 /* Name */
-#restTable thead th:nth-child(5),
-#restTable tbody td:nth-child(5) { width: 18%; }                                 /* Position */
-#restTable thead th:nth-child(6),
-#restTable tbody td:nth-child(6) { width: 13%; }                                 /* Date */
-#restTable thead th:nth-child(7),
-#restTable tbody td:nth-child(7) { width: 12%; }                                 /* Day of Week */
-
-/* Body cells: consistent, allow wrapping where needed but not per-character */
+/* Slightly smaller, compact typography for tables */
+.data-table thead th,
 .data-table tbody td {
-  padding: 0.45rem 0.55rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 0.42rem 0.5rem;
   vertical-align: middle;
-  background: rgba(255,255,255,0.95);
-  color: #1e293b;
-  line-height: 1.25;
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: break-word;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-/* --- Conflict column: stable, emoji + text inline, up to 2 lines --- */
-#restTable td:first-child,
-#restTable th:first-child {
-  display: table-cell;
-  vertical-align: middle;
-  text-align: left;
-  white-space: normal;
-  width: 170px;
-  min-width: 150px;
-  max-width: 220px;
-  padding: 0.45rem 0.6rem;
-  line-height: 1.2;
-  background: rgba(255,248,229,0.95);
-  color: #b45309;
-  font-weight: 600;
-  font-size: 0.82rem;
-  border-left: 3px solid #f59e0b;
-  border-radius: 0.25rem 0 0 0.25rem;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-#restTable td:first-child > * {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  vertical-align: middle;
+  font-size: 0.88rem;
   line-height: 1.15;
   box-sizing: border-box;
-}
-
-#restTable td:first-child { word-break: break-word; letter-spacing: 0; }
-
-#restTable thead th:first-child {
-  white-space: nowrap;
-  text-align: center;
-  vertical-align: middle;
-  padding: 0.45rem 0.5rem;
-}
-
-/* Rows auto height; header and body are now consistent due to fixed layout */
-.data-table tbody tr { height: auto; transition: background 0.12s ease; }
-.data-table tbody tr:hover { background-color: rgba(13,148,136,0.04); }
-
-/* --- Action (last) cell --- */
-.data-table td:last-child {
-  position: relative;
-  padding: 0.25rem 0.35rem;
-  vertical-align: middle;
-  text-align: center;
-  white-space: nowrap;
-  height: 100%;
-  box-sizing: border-box;
-  border-left: none;
-}
-
-.data-table td:last-child::before {
-  content: "";
-  position: absolute;
-  inset: 6px 8px 6px 8px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 6px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.data-table td ion-icon.action-icon {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  min-height: 22px;
-  font-size: 14px;
   color: #0f172a;
-  background: #ffffff;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(15,23,42,0.06);
-  margin: 0 6px;
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-.data-table td ion-icon.action-icon:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(15,23,42,0.08);
+  text-overflow: clip;   /* clip without ellipsis */
+  overflow: hidden;
+  white-space: nowrap;   /* default single-line */
 }
 
-/* Make sure adjacent cell borders don't create extra thin lines */
-.data-table tbody td + td { border-left: none; }
-
-/* Conflict row highlight */
-.data-table tbody tr.conflict { background-color: #fff7ed; border-left: 3px solid #f59e0b; }
-
-/* Small screens: allow horizontal scrolling for the tables */
-@media (max-width: 1024px) {
-  .overflow-x-auto { overflow-x: auto; }
-  #restTable td:first-child, #restTable th:first-child { width: 150px; max-width: 170px; }
-  .data-table { font-size: 0.78rem; }
+/* Header: no ellipsis indicator, center/left align as needed */
+.data-table thead th {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
-/* small green dot used when no conflict */
-.conflict-dot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(180deg,#10b981,#34d399);
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(16,185,129,0.35);
+/* Column widths for Work table (7 columns) - tuned to fit container */
+#workTable th:nth-child(1), #workTable td:nth-child(1) { width: 4%; min-width: 36px; }   /* # */
+#workTable th:nth-child(2), #workTable td:nth-child(2) { width: 8%; min-width: 56px; }   /* Emp No */
+#workTable th:nth-child(3), #workTable td:nth-child(3) { width: 30%; min-width: 160px; } /* Name */
+#workTable th:nth-child(4), #workTable td:nth-child(4) { width: 18%; min-width: 110px; } /* Position */
+#workTable th:nth-child(5), #workTable td:nth-child(5) { width: 12%; min-width: 90px; }  /* Date */
+#workTable th:nth-child(6), #workTable td:nth-child(6) { width: 8%; min-width: 70px; }   /* Shift Code */
+#workTable th:nth-child(7), #workTable td:nth-child(7) { width: 20%; min-width: 100px; } /* Day of Week */
+
+/* Column widths for Rest table - Conflict is first column and may wrap */
+#restTable th:nth-child(1), #restTable td:nth-child(1) { width: 18%; min-width: 140px; } /* Conflict */
+#restTable th:nth-child(2), #restTable td:nth-child(2) { width: 4%; min-width: 36px; }   /* # */
+#restTable th:nth-child(3), #restTable td:nth-child(3) { width: 8%; min-width: 56px; }   /* Emp No */
+#restTable th:nth-child(4), #restTable td:nth-child(4) { width: 30%; min-width: 160px; } /* Name */
+#restTable th:nth-child(5), #restTable td:nth-child(5) { width: 18%; min-width: 110px; } /* Position */
+#restTable th:nth-child(6), #restTable td:nth-child(6) { width: 12%; min-width: 90px; }  /* Date */
+#restTable th:nth-child(7), #restTable td:nth-child(7) { width: 10%; min-width: 80px; }  /* Day of Week */
+
+/* Keep all other columns single-line and clipped (no "...") */
+#restTable td:not(:first-child),
+#restTable th:not(:first-child),
+#workTable td,
+#workTable th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
-.truncate-2-lines {
+/* Conflict column: allow wrapping up to 2 lines (visually compact) */
+#restTable td:first-child,
+#restTable th:first-child {
+  white-space: normal; /* allow wrap */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 2;        /* limit to 2 lines */
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-/* ==========================
-   REST TABLE - FIT + ICONS
-   Paste this at the end of styles.css
-   ========================== */
-
-/* 1) Shrink the whole rest table a bit to gain space */
-#restTable.data-table {
-  font-size: 0.74rem; /* small but readable */
-}
-
-/* make headers smaller and tighter (only for rest table) */
-#restTable thead th {
-  padding: 0.28rem 0.4rem;  /* less vertical padding */
-  font-size: 0.82rem;
-  white-space: nowrap;      /* enforce single-line headers */
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-/* 2) tighter body cell padding for the rest table */
-#restTable.data-table tbody td {
-  padding: 0.35rem 0.45rem;
-  line-height: 1.15;       /* slightly tighter */
-  font-weight: 500;
-}
-
-/* 3) Conflict column: keep emoji + label inline, clamp visually to 2 lines
-   This uses max-height (line-height * 2) so we don't need extra spans.
-*/
-#restTable td:first-child,
-#restTable th:first-child {
-  /* keep styling you already have but slightly tighter */
-  padding: 0.32rem 0.5rem;
-  font-size: 0.78rem;
-  line-height: 1.15;
-}
-
-/* Visual clamp: allow up to 2 lines (line-height * 2), hide rest */
-#restTable td:first-child {
-  max-height: calc(1.15em * 2); /* clip after two lines visually */
-  overflow: hidden;
-  /* keep the box model as table-cell (do not change display) */
-}
-
-/* Keep emoji/icon + text inline and centered vertically */
-#restTable td:first-child > * {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  vertical-align: middle;
-  /* allow normal wrapping but the parent's max-height will clip to 2 lines */
-}
-
-/* If there is plain text node (no child span), we still attempt to avoid odd breaks */
-#restTable td:first-child {
   word-break: break-word;
-  hyphens: auto;
-}
-
-/* 4) Ensure the left orange stripe and cell background don't increase width */
-#restTable td:first-child {
-  background: rgba(255,248,229,0.95);
-  border-left: 3px solid #f59e0b;
-  box-sizing: border-box;
-}
-
-/* 5) Action icons: unify look (edit/delete in rightmost column)
-   target ion-icon inside the last cell, as well as button>ion-icon */
-#restTable.data-table td:last-child ion-icon,
-#workTable.data-table td:last-child ion-icon,
-#restTable.data-table td:last-child button ion-icon,
-#workTable.data-table td:last-child button ion-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  min-height: 26px;
-  font-size: 14px;
-  background: #ffffff;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(15,23,42,0.07);
-  padding: 2px;
-  color: #0f172a;
-  margin-left: 6px;
-  margin-right: 4px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  z-index: 2;
-}
-
-/* hover lift */
-#restTable.data-table td:last-child ion-icon:hover,
-#workTable.data-table td:last-child ion-icon:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(15,23,42,0.09);
-}
-
-/* If your icons are inside buttons, make sure the buttons are compact */
-#restTable.data-table td:last-child button,
-#workTable.data-table td:last-child button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px; /* compact */
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-/* 6) Trim the auto-inserted white panel inset if it's making cells horizontally larger */
-.data-table td:last-child::before {
-  /* slightly reduce inset so it doesn't push into the table width as much */
-  inset: 6px 6px 6px 6px;
-}
-
-/* 7) Slight global shrink for rest table header titles so they don't ellipsize prematurely */
-#restTable.data-table thead th {
+  line-height: 1.15;
+  padding: 0.5rem;
+  color: #C2410C; /* amber-700-ish for visibility */
   font-weight: 600;
-  letter-spacing: 0.0px;
+  vertical-align: middle;
 }
 
-/* 8) Reduce the min-width of the rest table conflict column on medium screens */
-@media (max-width: 1280px) {
-  #restTable td:first-child,
-  #restTable th:first-child {
-    min-width: 140px;
-    max-width: 190px;
-  }
+/* Equal row height baseline; conflict rows can grow slightly */
+.data-table tbody tr {
+  height: 52px;
+  min-height: 52px;
 }
 
-/* 9) Very small screens: expand clamp to 3 lines to avoid cutting essential text */
-@media (max-width: 1024px) {
-  #restTable.data-table { font-size: 0.72rem; }
-  #restTable td:first-child { max-height: calc(1.15em * 3); } /* allow 3 lines on small screens */
+/* Allow conflict rows to expand up to two lines */
+#restTable tbody tr td:first-child {
+  height: auto;
 }
 
-/* 10) Optional: if you still see header ellipsis, uncomment this line (global table header non-wrapping)
-.data-table thead th { white-space: nowrap; }
-*/
+/* Action icons: centered and balanced */
+.data-table td:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-left: 0.4rem;
+  padding-right: 0.6rem;
+  white-space: nowrap;
+}
 
-/* End of rest-table & icon adjustments */
+/* Icon button style for perfect centering */
+.action-icon, .data-table td ion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1;
+  color: #0f172a;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* subtle hover */
+.action-icon:hover {
+  background: rgba(15,23,42,0.04);
+  transform: translateY(-1px);
+}
+
+/* Conflict row highlight */
+.data-table tbody tr.conflict {
+  background-color: #fff7ed;
+  border-left: 3px solid #f59e0b;
+}
+
+/* Remove textual "OK" — keep a compact dot for no-conflict (if using) */
+.conflict-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  background: linear-gradient(180deg,#10b981,#34d399);
+  box-shadow: 0 1px 4px rgba(16,185,129,0.12);
+}
+
+/* Responsive: slightly smaller text for very narrow widths to avoid horizontal scroll */
+@media (max-width: 1100px) {
+  .data-table thead th, .data-table tbody td { font-size: 0.82rem; padding: 0.36rem 0.45rem; }
+  .data-table tbody tr { height: 48px; min-height: 48px; }
+}
+
+/* Final safety: ensure table wrapper doesn't introduce horizontal scroll */
+.overflow-x-auto { overflow-x: hidden !important; }
