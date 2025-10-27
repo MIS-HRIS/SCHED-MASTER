@@ -591,9 +591,15 @@ if (isWorkSchedule) {
                numCell.className = 'text-sm text-slate-600 text-center';
 
                columns.forEach(col => {
-                   const cell = tr.insertCell();
-                   cell.textContent = item[col] || '';
-               });
+    const cell = tr.insertCell();
+    cell.textContent = item[col] || '';
+
+    // 🔴 Highlight weekends (Fri–Sun) in red font
+    if (col === 'dayOfWeek' && /(fri|sat|sun)/i.test(item[col])) {
+        cell.style.color = 'red';
+        cell.style.fontWeight = '600';
+    }
+});
 
                const actionsCell = tr.insertCell();
                actionsCell.className = 'flex items-center justify-center space-x-3';
@@ -616,46 +622,62 @@ if (isWorkSchedule) {
        }
       
 function renderSummary(conflicts = [], conflictCount = 0, leadershipConflict = false) {
+  const summaryEl = document.getElementById("conflictSummary");
   let html = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
 
+  // ✅ No Conflicts
   if (!Array.isArray(conflicts) || conflicts.length === 0) {
-    html += `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" role="alert">
-            <p class="font-bold">No Conflicts Found!</p>
-            <p>All schedules appear to be in order.</p>
-          </div>`;
+    html += `
+      <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" role="alert">
+        <p class="font-bold text-lg">✅ No Conflicts Found</p>
+        <p>Everything looks good — all schedules appear valid and properly assigned.</p>
+      </div>`;
     summaryEl.innerHTML = html;
     return;
   }
 
-  // If conflicts found — list them all
-  html += `<div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">`;
-  html += `<p class="font-bold">Conflicts Detected! (${conflictCount})</p>`;
+  // ⚠️ Conflicts found
+  html += `
+    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
+      <p class="font-bold text-lg">⚠️ ${conflictCount} Conflict${conflictCount > 1 ? 's' : ''} Detected</p>
+      <p class="text-sm mt-1">Please review the list below for details and correct them as needed.</p>`;
+
   if (leadershipConflict) {
-    html += `<p class="mt-2"><strong>Warning:</strong> A conflict involves leadership.</p>`;
+    html += `<p class="mt-2 text-blue-700 font-semibold">⚠️ Note: One or more conflicts involve leadership positions (Branch Head, Site Supervisor, or OIC).</p>`;
   }
 
-  html += `<ul class="mt-3 list-disc pl-5 space-y-2">`;
+  html += `<ul class="mt-3 list-disc pl-5 space-y-2 text-slate-800 leading-relaxed">`;
+
+  // 🧩 List every conflict
   conflicts.forEach(c => {
     let line = '';
+
     if (c.category === 'rest-duplicate') {
-      line = `Duplicate Rest Day: Emp# ${c.employeeNo} ${c.name ? '- ' + c.name : ''} on ${c.date} (rows ${c.rows?.join ? c.rows.join(',') : ''}) — ${c.reason}`;
+      line = `🔁 <strong>Duplicate Rest Day:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} has multiple rest entries on <strong>${c.date}</strong>. (Rows: ${c.rows?.join ? c.rows.join(', ') : ''}) — ${c.reason}`;
+
     } else if (c.category === 'work-duplicate') {
-      line = `Duplicate Work Date: Emp# ${c.employeeNo} ${c.name ? '- ' + c.name : ''} on ${c.date} (rows ${c.rows?.join ? c.rows.join(',') : ''}) — ${c.reason}`;
+      line = `🔁 <strong>Duplicate Work Date:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} has multiple work schedules on <strong>${c.date}</strong>. (Rows: ${c.rows?.join ? c.rows.join(', ') : ''}) — ${c.reason}`;
+
     } else if (c.category === 'work-rest-conflict') {
-      line = `Work vs Rest Conflict: Emp# ${c.employeeNo} ${c.name ? '- ' + c.name : ''} on ${c.date} — ${c.reason}. Work rows: ${c.workRows?.join ? c.workRows.join(',') : 'N/A'}; Rest rows: ${c.restRows?.join ? c.restRows.join(',') : 'N/A'}`;
+      line = `⚔️ <strong>Work has same date as Rest:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} has both work and rest assigned on <strong>${c.date}</strong>. ${c.reason ? `(${c.reason})` : ''} Work rows: ${c.workRows?.join ? c.workRows.join(', ') : 'N/A'}; Rest rows: ${c.restRows?.join ? c.restRows.join(', ') : 'N/A'}`;
+
     } else if (c.category === 'leadership-conflict') {
-      line = `Leadership Conflict: ${c.reason} (rows ${c.rows?.join ? c.rows.join(',') : ''})`;
+      line = `👑 <strong>Leadership Conflict:</strong> ${c.reason}. (Rows: ${c.rows?.join ? c.rows.join(', ') : ''})`;
+
     } else if (c.category === 'weekend-limit') {
-      line = `Weekend Limit Exceeded: Emp# ${c.employeeNo || ''} — ${c.reason}`;
+      line = `🗓️ <strong class="text-red-600">Weekend Limit Exceeded:</strong> Employee #${c.employeeNo || ''} ${c.name ? '- ' + c.name : ''} — ${c.reason}`;
+
     } else if (c.category === 'not-in-work') {
-      line = `Employee Missing in Work Schedule: Emp# ${c.employeeNo} ${c.name ? '- ' + c.name : ''} — ${c.reason} (row ${c.row || ''})`;
+      line = `🚫 <strong>Employee Missing in Work Schedule:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} — ${c.reason}. (Row ${c.row || ''})`;
+
     } else {
-      line = `${c.reason || JSON.stringify(c)}`;
+      line = `❓ ${c.reason || JSON.stringify(c)}`;
     }
+
     html += `<li>${line}</li>`;
   });
-  html += `</ul></div>`;
 
+  html += `</ul></div>`;
   summaryEl.innerHTML = html;
 }
 
