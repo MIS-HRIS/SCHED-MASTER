@@ -150,10 +150,10 @@ textarea:focus {
 /* Column widths for Work table (7 columns) - tuned to fit container */
 #workTable th:nth-child(1), #workTable td:nth-child(1) { width: 4%; min-width: 36px; }   /* # */
 #workTable th:nth-child(2), #workTable td:nth-child(2) { width: 8%; min-width: 56px; }   /* Emp No */
-#workTable th:nth-child(3), #workTable td:nth-child(3) { width: 30%; min-width: 160px; } /* Name */
+#workTable th:nth-child(3), #workTable td:nth-child(3) { width: 28%; min-width: 150px; } /* Name (slightly reduced) */
 #workTable th:nth-child(4), #workTable td:nth-child(4) { width: 18%; min-width: 110px; } /* Position */
 #workTable th:nth-child(5), #workTable td:nth-child(5) { width: 12%; min-width: 90px; }  /* Date */
-#workTable th:nth-child(6), #workTable td:nth-child(6) { width: 8%; min-width: 70px; }   /* Shift Code */
+#workTable th:nth-child(6), #workTable td:nth-child(6) { width: 10%; min-width: 80px; }  /* Shift Code (increased) */
 #workTable th:nth-child(7), #workTable td:nth-child(7) { width: 20%; min-width: 100px; } /* Day of Week */
 
 /* Column widths for Rest table - Conflict is first column and may wrap */
@@ -202,7 +202,8 @@ textarea:focus {
   height: auto;
 }
 
-/* Action icons: centered and balanced */
+/* Action icons: centered and balanced
+   Ensure action cell does not shrink and icons remain visible (prevents being cut off) */
 .data-table td:last-child {
   display: flex;
   align-items: center;
@@ -211,6 +212,11 @@ textarea:focus {
   padding-left: 0.4rem;
   padding-right: 0.6rem;
   white-space: nowrap;
+
+  /* Prevent the action column from shrinking when table gets tight */
+  flex: 0 0 72px;
+  max-width: 72px;
+  overflow: visible; /* ensure icons aren't clipped */
 }
 
 /* Icon button style for perfect centering */
@@ -260,5 +266,5 @@ textarea:focus {
   .data-table tbody tr { height: 48px; min-height: 48px; }
 }
 
-/* Final safety: ensure table wrapper doesn't introduce horizontal scroll */
-.overflow-x-auto { overflow-x: hidden !important; }
+/* Final safety: restore natural horizontal flow (allow scrolling instead of forcibly hiding content) */
+.overflow-x-auto { overflow-x: auto; /* removed !important hidden */ }
