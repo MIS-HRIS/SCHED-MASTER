@@ -578,13 +578,34 @@ if (isWorkSchedule) {
                const tr = tbody.insertRow();
                tr.className = item.conflict ? 'conflict' : '';
 
-               if (type === 'rest') {
-                   const conflictCell = tr.insertCell();
-                   if (item.conflict) {
-                       conflictCell.innerHTML = `⚠️ <span class="conflict-reason">${item.conflictReason}</span>`;
-                   }
-                   conflictCell.className = 'text-center';
-               }
+if (type === 'rest') {
+    const conflictCell = tr.insertCell();
+
+    if (item.conflict) {
+        // use the existing detailed reason but classify a short label for row
+        const r = (item.conflictReason || '').toLowerCase();
+
+        let shortReason = '';
+        if (r.includes('duplicate')) shortReason = 'Duplicate Rest Day';
+        else if (r.includes('work') && r.includes('rest')) shortReason = 'Overlapping Schedule';
+        else if (r.includes('work schedule') || r.includes('overlap')) shortReason = 'Overlapping Schedule';
+        else if (r.includes('leadership') || r.includes('leader') || r.includes('multiple leaders') || r.includes('branch head') || r.includes('oic')) shortReason = 'Leadership Conflict';
+        else if (r.includes('exceed') || r.includes('exceeded') || r.includes('weekend')) shortReason = 'Rest Day Limit';
+        else if (r.includes('not found') || r.includes('missing')) shortReason = 'Missing in Work';
+        else if (r.includes('duplicate work') || r.includes('duplicate work schedule')) shortReason = 'Duplicate Work';
+        else shortReason = 'Other Conflict';
+
+        // create the cell content safely and set full text as hover tooltip
+        conflictCell.textContent = '⚠️ ';
+        const span = document.createElement('span');
+        span.className = 'conflict-reason';
+        span.textContent = shortReason;
+        span.title = item.conflictReason || ''; // full reason available on hover
+        conflictCell.appendChild(span);
+    }
+
+    conflictCell.className = 'text-center';
+}
 
                const numCell = tr.insertCell();
                numCell.textContent = index + 1;
