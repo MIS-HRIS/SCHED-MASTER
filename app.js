@@ -622,7 +622,7 @@ if (isWorkSchedule) {
        }
       
 function renderSummary(conflicts = [], conflictCount = 0, leadershipConflict = false) {
-  const summaryEl = document.getElementById("conflictSummary");
+  const summaryEl = document.getElementById("summary");
   let html = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
 
   // ✅ No Conflicts
