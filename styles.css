@@ -138,8 +138,7 @@ textarea:focus {
   box-sizing: border-box;
 }
 
-/* Explicit column widths for the Rest Day table — keeps header/body aligned.
-   Tweak percentages and px to suit your layout width; these are safe defaults. */
+/* Explicit column widths for the Rest Day table — keeps header/body aligned. */
 #restTable { table-layout: fixed; }
 #restTable thead th:nth-child(1),
 #restTable tbody td:nth-child(1) { width: 170px; min-width: 150px; max-width: 220px; } /* Conflict */
@@ -165,18 +164,16 @@ textarea:focus {
   color: #1e293b;
   line-height: 1.25;
   white-space: normal;
-  word-break: normal;        /* prevent per-character breaks */
+  word-break: normal;
   overflow-wrap: break-word;
   text-align: center;
   box-sizing: border-box;
 }
 
 /* --- Conflict column: stable, emoji + text inline, up to 2 lines --- */
-/* Use table-cell for the column, but ensure cell content is inline-flex so emoji + text
-   remain on the same line and wrap only to a second line. */
 #restTable td:first-child,
 #restTable th:first-child {
-  display: table-cell;      /* keep normal table behavior to align headers and body */
+  display: table-cell;
   vertical-align: middle;
   text-align: left;
   white-space: normal;
@@ -195,23 +192,18 @@ textarea:focus {
   overflow: visible;
 }
 
-/* Ensure the actual content inside the cell (emoji + label) stays inline and wraps sensibly.
-   This targets any elements you insert inside the cell (e.g. <span>, <div>, <ion-icon>, text nodes).
-   If your JS inserts plain text nodes, wrap them in a span or the rule below still helps. */
 #restTable td:first-child > * {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;          /* allow the text to move to a second line only when necessary */
+  flex-wrap: wrap;
   vertical-align: middle;
   line-height: 1.15;
   box-sizing: border-box;
 }
 
-/* If emoji is directly in the text node, ensure it doesn't force weird line-breaks */
 #restTable td:first-child { word-break: break-word; letter-spacing: 0; }
 
-/* Keep header cell horizontal for Conflict */
 #restTable thead th:first-child {
   white-space: nowrap;
   text-align: center;
@@ -223,7 +215,7 @@ textarea:focus {
 .data-table tbody tr { height: auto; transition: background 0.12s ease; }
 .data-table tbody tr:hover { background-color: rgba(13,148,136,0.04); }
 
-/* --- Action (last) cell: full-height white panel + icon pills above it --- */
+/* --- Action (last) cell --- */
 .data-table td:last-child {
   position: relative;
   padding: 0.25rem 0.35rem;
@@ -235,18 +227,16 @@ textarea:focus {
   border-left: none;
 }
 
-/* Create full-panel white background that fills cell visually (keeps same look as other cells) */
 .data-table td:last-child::before {
   content: "";
   position: absolute;
-  inset: 6px 8px 6px 8px; /* small inset so it doesn't touch edges */
+  inset: 6px 8px 6px 8px;
   background: rgba(255,255,255,0.95);
   border-radius: 6px;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Icon pills above the panel */
 .data-table td ion-icon.action-icon {
   position: relative;
   z-index: 1;
@@ -284,10 +274,7 @@ textarea:focus {
   .data-table { font-size: 0.78rem; }
 }
 
-/* remove the ::before that injected emoji (keeps markup controlled by JS) */
-/* #restTable td:nth-child(1)::before { content: "⚠️ "; } */
-
-/* small green dot used when no conflict (removed textual "OK") */
+/* small green dot used when no conflict */
 .conflict-dot {
   display: inline-block;
   width: 12px;
@@ -296,6 +283,7 @@ textarea:focus {
   border-radius: 50%;
   box-shadow: 0 1px 4px rgba(16,185,129,0.35);
 }
+
 .truncate-2-lines {
   display: -webkit-box;
   -webkit-line-clamp: 2;
