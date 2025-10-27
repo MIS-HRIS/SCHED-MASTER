@@ -562,76 +562,119 @@ if (isWorkSchedule) {
       /*************************\
        * UI & RENDERING     *
       \*************************/
-       function renderTable(tbody, data, columns, type) {
-           tbody.innerHTML = '';
-           if (!data || data.length === 0) {
-               const tr = tbody.insertRow();
-               const cell = tr.insertCell();
-               let colspan = columns.length + 2; // # and Actions
-               if (type === 'rest') colspan++; // Add one for Conflict column
-               cell.colSpan = colspan;
-               cell.textContent = 'No data available.';
-               cell.className = 'text-center text-slate-500 py-4';
-               return;
-           }
-           data.forEach((item, index) => {
-               const tr = tbody.insertRow();
-               tr.className = item.conflict ? 'conflict' : '';
 
-if (type === 'rest') {
-    const conflictCell = tr.insertCell();
+      function renderTable(tbody, data, columns, type) {
+  tbody.innerHTML = '';
 
-    if (item.conflict) {
-        // use the existing detailed reason but classify a short label for row
+  if (!data || data.length === 0) {
+    const tr = tbody.insertRow();
+    const cell = tr.insertCell();
+    let colspan = columns.length + 2; // # and Actions
+    if (type === 'rest') colspan++; // Add one for Conflict column
+    cell.colSpan = colspan;
+    cell.textContent = 'No data available.';
+    cell.className = 'text-center text-slate-500 py-4';
+    return;
+  }
+
+  data.forEach((item, index) => {
+    const tr = tbody.insertRow();
+    tr.className = item.conflict ? 'conflict' : '';
+
+    /* =====================
+       🔶 Conflict column
+    ===================== */
+    if (type === 'rest') {
+      const conflictCell = tr.insertCell();
+      conflictCell.className =
+        'text-center align-middle px-2 py-1 whitespace-normal break-words max-w-[160px]';
+
+      if (item.conflict) {
         const r = (item.conflictReason || '').toLowerCase();
-
         let shortReason = '';
         if (r.includes('duplicate')) shortReason = 'Duplicate Rest Day';
-        else if (r.includes('work') && r.includes('rest')) shortReason = 'Overlapping Schedule';
-        else if (r.includes('work schedule') || r.includes('overlap')) shortReason = 'Overlapping Schedule';
-        else if (r.includes('leadership') || r.includes('leader') || r.includes('multiple leaders') || r.includes('branch head') || r.includes('oic')) shortReason = 'Leadership Conflict';
-        else if (r.includes('exceed') || r.includes('exceeded') || r.includes('weekend')) shortReason = 'Rest Day Limit';
-        else if (r.includes('not found') || r.includes('missing')) shortReason = 'Missing in Work';
-        else if (r.includes('duplicate work') || r.includes('duplicate work schedule')) shortReason = 'Duplicate Work';
+        else if (r.includes('work') && r.includes('rest'))
+          shortReason = 'Overlapping Schedule';
+        else if (r.includes('work schedule') || r.includes('overlap'))
+          shortReason = 'Overlapping Schedule';
+        else if (
+          r.includes('leadership') ||
+          r.includes('leader') ||
+          r.includes('multiple leaders') ||
+          r.includes('branch head') ||
+          r.includes('oic')
+        )
+          shortReason = 'Leadership Conflict';
+        else if (
+          r.includes('exceed') ||
+          r.includes('exceeded') ||
+          r.includes('weekend')
+        )
+          shortReason = 'Rest Day Limit';
+        else if (r.includes('not found') || r.includes('missing'))
+          shortReason = 'Missing in Work';
+        else if (
+          r.includes('duplicate work') ||
+          r.includes('duplicate work schedule')
+        )
+          shortReason = 'Duplicate Work';
         else shortReason = 'Other Conflict';
 
-        // create the cell content safely and set full text as hover tooltip
         const span = document.createElement('span');
-        span.className = 'conflict-reason';
+        span.className =
+          'conflict-reason text-sm text-orange-600 font-semibold leading-tight block truncate-2-lines';
         span.textContent = shortReason;
-        span.title = item.conflictReason || ''; // full reason available on hover
+        span.title = item.conflictReason || ''; // show full on hover
         conflictCell.appendChild(span);
+      }
     }
 
-    conflictCell.className = 'text-center';
-}
+    /* =====================
+       🔹 Row number
+    ===================== */
+    const numCell = tr.insertCell();
+    numCell.textContent = index + 1;
+    numCell.className = 'text-sm text-slate-600 text-center px-2';
 
-               const numCell = tr.insertCell();
-               numCell.textContent = index + 1;
-               numCell.className = 'text-sm text-slate-600 text-center';
-
-               columns.forEach(col => {
-    const cell = tr.insertCell();
-    cell.textContent = item[col] || '';
-
-    // 🔴 Highlight weekends (Fri–Sun) in red font
-    if (col === 'dayOfWeek' && /(fri|sat|sun)/i.test(item[col])) {
+    /* =====================
+       🔸 Main columns
+    ===================== */
+    columns.forEach((col) => {
+      const cell = tr.insertCell();
+      cell.textContent = item[col] || '';
+      cell.className =
+        'text-sm text-slate-700 text-center px-2 py-1 truncate max-w-[140px] whitespace-nowrap align-middle';
+      // 🔴 Highlight weekends
+      if (col === 'dayOfWeek' && /(fri|sat|sun)/i.test(item[col])) {
         cell.style.color = 'red';
         cell.style.fontWeight = '600';
-    }
-});
+      }
+    });
 
-               const actionsCell = tr.insertCell();
-               actionsCell.className = 'flex items-center justify-center space-x-3';
-               actionsCell.innerHTML = `
-                <ion-icon name="create-outline" class="action-icon edit-icon text-xl" data-type="${type}" data-index="${index}"></ion-icon>
-                <ion-icon name="trash-outline" class="action-icon delete-icon text-xl" data-type="${type}" data-index="${index}"></ion-icon>
-               `;
-           });
+    /* =====================
+       ⚙️ Actions column
+    ===================== */
+    const actionsCell = tr.insertCell();
+    actionsCell.className =
+      'flex items-center justify-center space-x-2 py-1 align-middle';
+    actionsCell.innerHTML = `
+      <ion-icon name="create-outline" class="action-icon edit-icon text-lg cursor-pointer text-slate-600 hover:text-cyan-600 transition" data-type="${type}" data-index="${index}"></ion-icon>
+      <ion-icon name="trash-outline" class="action-icon delete-icon text-lg cursor-pointer text-slate-600 hover:text-red-600 transition" data-type="${type}" data-index="${index}"></ion-icon>
+    `;
+  });
 
-            tbody.querySelectorAll('.edit-icon').forEach(btn => btn.addEventListener('click', (e) => handleEditRow(e.target.dataset.type, e.target.dataset.index)));
-            tbody.querySelectorAll('.delete-icon').forEach(btn => btn.addEventListener('click', (e) => handleDeleteRow(e.target.dataset.type, e.target.dataset.index)));
-       }
+  // Event listeners for edit/delete
+  tbody.querySelectorAll('.edit-icon').forEach((btn) =>
+    btn.addEventListener('click', (e) =>
+      handleEditRow(e.target.dataset.type, e.target.dataset.index)
+    )
+  );
+  tbody.querySelectorAll('.delete-icon').forEach((btn) =>
+    btn.addEventListener('click', (e) =>
+      handleDeleteRow(e.target.dataset.type, e.target.dataset.index)
+    )
+  );
+}
 
        function renderWorkTable() {
            renderTable(workTableBody, workScheduleData, ['employeeNo', 'name', 'position', 'date', 'shiftCode', 'dayOfWeek'], 'work');
