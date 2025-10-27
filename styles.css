@@ -1,285 +1,496 @@
-/* ============================
- * 🌊 TECH BREEZE LIGHT THEME
- * Glassmorphic + Animated Edition
- * — Blue–Teal Premium —
- * ============================ */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #f0fdfa, #f9fafb);
+      background-size: 200% 200%;
+      color: #0f172a;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 1s ease;
+    }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #e0f7fa, #f0fdfa, #f9fafb);
-  background-size: 200% 200%;
-  color: #0f172a;
-  min-height: 100vh;
-  overflow-x: hidden;
-  transition: background 1s ease;
-}
+    /* ✨ Floating Particles Container */
+    #particle-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
 
-/* ✨ Floating Particles Container */
-#particle-container {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-}
+    #particle-container .particle {
+      position: absolute;
+      will-change: transform, opacity;
+      z-index: 0;
+      mix-blend-mode: screen;
+    }
 
-#particle-container .particle {
-  position: absolute;
-  will-change: transform, opacity;
-  z-index: 0;
-  mix-blend-mode: screen;
-}
+    /* 🌫️ Glass Cards */
+    .dashboard-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
 
-/* 🌫️ Glass Cards */
-.dashboard-card {
-  position: relative;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
-  padding: 1.5rem;
-  transition: all 0.4s ease;
-  z-index: 1;
-}
+    .dashboard-card:hover {
+      box-shadow: 0 12px 40px rgba(13, 148, 136, 0.15);
+      transform: translateY(-2px);
+    }
 
-.dashboard-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(13, 148, 136, 0.25);
-}
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.3);
+    }
 
-/* 🎨 Buttons & Tabs */
-.tab-btn {
-  position: relative;
-  padding: 0.75rem 1.5rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  color: #334155;
-  transition: all 0.3s ease;
-  overflow: hidden;
-  z-index: 1;
-}
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #004d40;
+    }
 
-.tab-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 100%;
-  background: linear-gradient(90deg, #67e8f9, #2dd4bf);
-  transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-  z-index: -1;
-  border-radius: 9999px;
-}
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background-color: #00796b;
+      color: white;
+      border-radius: 9999px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.tab-btn.active {
-  color: #fff;
-  transform: scale(1.05);
-}
+    .card-body {
+      padding: 1.5rem;
+    }
 
-.tab-btn.active::before {
-  width: 100%;
-}
+    /* 🎨 Form & Input Styling */
+    .input-group {
+      position: relative;
+      display: flex;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border-radius: 0.75rem;
+    }
 
-/* 📝 Text Areas */
-textarea {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  transition: all 0.3s ease;
-  min-height: 200px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
-}
+    .input-field {
+      flex-grow: 1;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      padding-left: 2.75rem;
+      font-size: 0.9rem;
+      color: #1e293b;
+      background-color: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+    }
 
-textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.04);
-  background: white;
-}
+    .input-field:focus {
+      outline: none;
+      border-color: #009688;
+      box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.2);
+      z-index: 1;
+    }
 
-/* ⚙️ Data View Container */
-.data-view {
-  overflow-x: hidden;
-  overflow-y: auto;
-  max-height: 70vh;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
+    .input-icon {
+      position: absolute;
+      top: 50%;
+      left: 0.85rem;
+      transform: translateY(-50%);
+      font-size: 1.25rem;
+      color: #64748b;
+      z-index: 2;
+      pointer-events: none;
+    }
 
-/* 📊 Table General Styling */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
+    /* 🚀 Button Styles */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
 
-thead {
-  background: rgba(255, 255, 255, 0.5);
-  border-bottom: 2px solid #99f6e4;
-}
+    .action-btn ion-icon {
+      font-size: 1.1rem;
+      margin-right: 0.5rem;
+    }
 
-th,
-td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-}
+    .action-btn.primary {
+      background-color: #00796b;
+      color: white;
+    }
 
-th {
-  background-color: #f3f4f6;
-  font-weight: 600;
-  color: #333;
-}
+    .action-btn.primary:hover {
+      background-color: #00695c;
+      box-shadow: 0 4px 12px rgba(0, 121, 107, 0.25);
+      transform: translateY(-1px);
+    }
 
-td {
-  color: #555;
-}
+    .action-btn.secondary {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
 
-/* Hover row */
-tbody tr:hover {
-  background-color: rgba(209, 250, 229, 0.75);
-  box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
-}
+    .action-btn.secondary:hover {
+      background-color: #e2e8f0;
+      border-color: #94a3b8;
+      transform: translateY(-1px);
+    }
 
-/* Conflict row styling */
-.conflict {
-  background-color: #fff3cd;
-}
+    .action-btn.danger {
+      background-color: #e53935;
+      color: white;
+    }
 
-.conflict .conflict-reason {
-  font-style: italic;
-  color: #856404;
-}
+    .action-btn.danger:hover {
+      background-color: #d32f2f;
+      box-shadow: 0 4px 12px rgba(229, 57, 53, 0.25);
+      transform: translateY(-1px);
+    }
 
-/* ===============================
-   🌿 FINAL — WORK + REST TABLE ULTRA FIT
-   =============================== */
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
 
-.data-table,
-#restTable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 12px;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
+    /* 📊 Table Styles */
+    .table-container {
+      position: relative;
+      width: 100%;
+      /* --- STYLES MOVED FROM TABLE --- */
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 0.5rem;
+      background-color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      /* Added to clip sticky header to border radius */
+      overflow: hidden;
+    }
 
-.data-table th,
-.data-table td,
-#restTable th,
-#restTable td {
-  padding: 0.45rem 0.25rem;
-  vertical-align: middle;
-}
+    #workTable,
+    #restTable {
+      /* --- STYLES REMOVED --- */
+      /* display: block; */
+      /* max-height: 400px; */
+      /* overflow-y: auto; */
+      /* border-radius: 0.5rem; */
+      /* background-color: rgba(255, 255, 255, 0.6); */
+      /* border: 1px solid rgba(255, 255, 255, 0.2); */
+      /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
 
-/* Work Schedule Columns */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) { width: 35px; text-align: center; }
+      /* --- STYLES ADDED --- */
+      width: 100%;
+      table-layout: fixed;
+    }
 
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) { width: 55px; text-align: center; }
+    #workTable thead,
+    #restTable thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-/* Center "Name" header only */
-.data-table thead th:nth-child(3) {
-  text-align: center;
-}
-.data-table tbody td:nth-child(3) {
-  text-align: left;
-}
+    /* Generic table style */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
 
-/* Remaining Work Schedule columns */
-.data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 115px; text-align: left; }
-.data-table th:nth-child(5),
-.data-table td:nth-child(5) { width: 75px; text-align: center; }
-.data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 75px; text-align: center; }
-.data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 70px; text-align: center; }
-.data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 65px; text-align: center; }
+    /* Base table cell styles */
+    td,
+    th {
+      padding: 0.6rem 0.25rem;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+      line-height: 1.3;
+      /* --- ADDED FIX --- */
+      /* Forces long text (like 'Branch Head') to wrap inside the fixed-width cell */
+      /* instead of overflowing into the next cell. */
+      overflow-wrap: break-word;
+      word-break: break-word;
+      /* Fallback */
+    }
 
-/* 🌿 Rest Day Table — perfectly aligned */
-#restTable thead th {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  color: #0f172a;
-  letter-spacing: 0.2px;
-  font-size: 13px;
-  line-height: 1.2;
-  background-color: rgba(255, 255, 255, 0.5);
-  border-bottom: 2px solid #80cbc4;
-  text-align: left;
-  padding: 0.6rem 0.25rem;
-  white-space: nowrap;
-}
+    /* Table body cell styles */
+    tbody td {
+      font-size: 13.5px;
+      color: #334155;
+      background-color: rgba(255, 255, 255, 0.4);
+      transition: background-color 0.2s;
+    }
 
-/* FIX: Rest Day Table Column Spacing Alignment */
-#restTable th:nth-child(1),
-#restTable td:nth-child(1) {
-  width: 35px;
-  text-align: center;
-}
+    tbody tr:hover td {
+      background-color: rgba(240, 253, 250, 0.8);
+    }
 
-#restTable th:nth-child(2),
-#restTable td:nth-child(2) {
-  width: 45px;
-  text-align: center;
-  padding-right: 0.2rem;
-}
+    /* Table row actions */
+    td.actions {
+      text-align: center;
+      white-space: nowrap;
+    }
 
-#restTable th:nth-child(3),
-#restTable td:nth-child(3) {
-  width: 110px;
-  text-align: left;
-  padding-left: 0.3rem;
-}
+    .action-icon {
+      cursor: pointer;
+      font-size: 1.1rem;
+      margin: 0 0.25rem;
+      padding: 0.25rem;
+      border-radius: 0.25rem;
+      transition: all 0.2s;
+    }
 
-#restTable th:nth-child(4),
-#restTable td:nth-child(4) {
-  width: 115px;
-  text-align: left;
-}
+    .action-icon.edit {
+      color: #00796b;
+    }
 
-#restTable th:nth-child(5),
-#restTable td:nth-child(5) {
-  width: 75px;
-  text-align: center;
-}
+    .action-icon.edit:hover {
+      background-color: #b2dfdb;
+      color: #004d40;
+    }
 
-#restTable th:nth-child(6),
-#restTable td:nth-child(6) {
-  width: 70px;
-  text-align: center;
-}
+    .action-icon.delete {
+      color: #d32f2f;
+    }
 
-/* Center "Name" header only */
-#workTable thead th:nth-child(3),
-#restTable thead th:nth-child(4) {
-  text-align: center;
-}
+    .action-icon.delete:hover {
+      background-color: #ffcdd2;
+      color: #b71c1c;
+    }
 
-/* Keep employee names left-aligned */
-#workTable tbody td:nth-child(3),
-#restTable tbody td:nth-child(4) {
-  text-align: left;
-}
+    /* === Work Schedule Table === */
+    #workTable thead th {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: 0.2px;
+      font-size: 13px;
+      line-height: 1.2;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-bottom: 2px solid #009688;
+      text-align: left;
+      padding: 0.6rem 0.25rem;
+      white-space: nowrap;
+    }
 
-/* 🌿 Card Alignment for both tables */
-.dashboard-flex {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
+    /* FIX: Work Schedule Table Column Spacing Alignment */
+    #workTable th:nth-child(1),
+    #workTable td:nth-child(1) {
+      width: 35px;
+      /* Action */
+      text-align: center;
+    }
 
-.dashboard-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+    #workTable th:nth-child(2),
+    #workTable td:nth-child(2) {
+      width: 45px;
+      /* Emp ID */
+      text-align: center;
+      padding-right: 0.2rem;
+    }
+
+    #workTable th:nth-child(3),
+    #workTable td:nth-child(3) {
+      width: 110px;
+      /* Name */
+      text-align: left;
+      padding-left: 0.3rem;
+    }
+
+    #workTable th:nth-child(4),
+    #workTable td:nth-child(4) {
+      width: 115px;
+      /* Position */
+      text-align: left;
+    }
+
+    #workTable th:nth-child(5),
+    #workTable td:nth-child(5) {
+      width: 60px;
+      /* Date */
+      text-align: center;
+    }
+
+    #workTable th:nth-child(6),
+    #workTable td:nth-child(6) {
+      width: 55px;
+      /* Day */
+      text-align: center;
+    }
+
+    #workTable th:nth-child(7),
+    #workTable td:nth-child(7) {
+      width: 55px;
+      /* Code */
+      text-align: center;
+    }
+
+    /* === Rest Day Table === */
+    #restTable thead th {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: 0.2px;
+      font-size: 13px;
+      line-height: 1.2;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-bottom: 2px solid #80cbc4;
+      text-align: left;
+      padding: 0.6rem 0.25rem;
+      white-space: nowrap;
+    }
+
+    /* FIX: Rest Day Table Column Spacing Alignment */
+    #restTable th:nth-child(1),
+    #restTable td:nth-child(1) {
+      width: 35px;
+      text-align: center;
+    }
+
+    #restTable th:nth-child(2),
+    #restTable td:nth-child(2) {
+      width: 45px;
+      text-align: center;
+      padding-right: 0.2rem;
+    }
+
+    #restTable th:nth-child(3),
+    #restTable td:nth-child(3) {
+      width: 110px;
+      text-align: left;
+      padding-left: 0.3rem;
+    }
+
+    #restTable th:nth-child(4),
+    #restTable td:nth-child(4) {
+      width: 115px;
+      text-align: left;
+    }
+
+    #restTable th:nth-child(5),
+    #restTable td:nth-child(5) {
+      width: 60px;
+      text-align: center;
+    }
+
+    #restTable th:nth-child(6),
+    #restTable td:nth-child(6) {
+      width: 55px;
+      text-align: center;
+    }
+
+    /* === Monitoring Table === */
+    #monitoringTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    #monitoringTable th {
+      background-color: rgba(255, 255, 255, 0.5);
+      border-bottom: 2px solid #009688;
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 13px;
+      padding: 0.75rem 0.5rem;
+      text-align: left;
+    }
+
+    #monitoringTable td {
+      padding: 0.75rem 0.5rem;
+      font-size: 14px;
+    }
+
+    #monitoringTable tbody tr:hover td {
+      background-color: rgba(240, 253, 250, 0.8);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+
+    .status-badge.uploaded {
+      background-color: #e0f2f1;
+      color: #00695c;
+    }
+
+    .status-badge.pending {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+
+    /* alerts and modals */
+    #warning-banner,
+    #success-message {
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    #warning-banner {
+      background-color: #fff3e0;
+      border: 1px solid #ffe0b2;
+      color: #e65100;
+    }
+
+    #success-message {
+      background-color: #e8f5e9;
+      border: 1px solid #c8e6c9;
+      color: #1b5e20;
+    }
+
+    #warning-banner ion-icon,
+    #success-message ion-icon {
+      font-size: 1.5rem;
+      margin-right: 0.75rem;
+    }
+
+    /* Edit Modal */
+    #editModalBackdrop {
+      background-color: rgba(9, 30, 66, 0.54);
+      z-index: 500;
+    }
+
+    #editModal {
+      max-width: 420px;
+      background-color: #f8fafc;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      border-radius: 0.75rem;
+    }
