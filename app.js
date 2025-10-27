@@ -93,19 +93,6 @@ function handlePaste(event) {
     .filter(row => row.length > 0)
     .map(row => (row.includes('\t') ? row.split('\t') : row.split(/\s{2,}|\t/)));
 
-    // 🧠 Smart header filter — prevents headers like "Name", "Emp No" from being read
-const headerKeywords = ['employee', 'emp', 'name', 'position', 'date', 'shift', 'rest', 'work', 'day', 'code'];
-while (rows.length > 0) {
-  const top = rows[0].map(c => (c || '').toString().toLowerCase());
-  const matches = top.reduce((count, cell) => {
-    return count + headerKeywords.some(k => cell.includes(k) || cell === k);
-  }, 0);
-  if (matches >= Math.max(1, Math.floor(top.length / 2))) {
-    rows.shift(); // remove this likely header row
-  } else break;
-}
-
-
   const { mapping, headerRow } = detectColumnMapping(rows, isWork);
   let data;
 
@@ -270,213 +257,106 @@ function detectColumnMapping(rows, isWork) {
 }
 
 function recheckConflicts() {
-    // Guard
+    // Prevent function from running if data isn’t ready
     if (!Array.isArray(workScheduleData) || !Array.isArray(restDayData)) return;
 
-    // clear previous flags
-    workScheduleData.forEach(d => { d.conflict = false; d.conflictReason = ''; d._conflictReasons = []; });
-    restDayData.forEach(d => { d.conflict = false; d.conflictReason = ''; d._conflictReasons = []; });
+    // Leadership positions constant (used for validation)
+    const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
 
-    // Normalize helper
-    const normEmp = (v) => (v || '').toString().trim().replace(/^0+/, '') || ''; // treat '00123' same as '123'
-    const normDate = (v) => {
-        if (!v) return null;
-        const dt = new Date(v);
-        if (isNaN(dt)) return null;
-        // use ISO date string as canonical
-        return dt.toISOString().slice(0,10);
-    };
+    const scheduleMap = new Map();
 
-    // Build quick lookup maps
-    const workMap = new Map(); // key => array of indices in workScheduleData
-    workScheduleData.forEach((w, i) => {
-        const k = `${normEmp(w.employeeNo)}|${normDate(w.date)}`;
-        if (!workMap.has(k)) workMap.set(k, []);
-        workMap.get(k).push(i);
+    // Reset all conflicts
+    workScheduleData.forEach(d => d.conflict = false);
+    restDayData.forEach(d => {
+        d.conflict = false;
+        d.conflictReason = '';
     });
 
-    const restMap = new Map();
-    restDayData.forEach((r, i) => {
-        const k = `${normEmp(r.employeeNo)}|${normDate(r.date)}`;
-        if (!restMap.has(k)) restMap.set(k, []);
-        restMap.get(k).push(i);
+    // Build map of work schedule entries
+    workScheduleData.forEach((item, index) => {
+        if (!item.employeeNo || !item.date) return;
+        const key = `${item.employeeNo}-${item.date}`;
+        if (!scheduleMap.has(key)) scheduleMap.set(key, { type: 'work', rowNum: index + 1 });
     });
 
-    const conflicts = [];
-
-    // 1) Detect duplicates within Rest (same emp, same date, multiple entries)
-    for (const [key, indices] of restMap.entries()) {
-        if (!key.includes('|')) continue;
-        const [emp, date] = key.split('|');
-        if (!emp || !date) continue;
-        if (indices.length > 1) {
-            // duplicate rest entries for same emp/date
-            indices.forEach(idx => {
-                const entry = restDayData[idx];
-                entry.conflict = true;
-                entry._conflictReasons.push('Duplicate rest day entry (same employee & date)');
-                entry.conflictReason = [...new Set(entry._conflictReasons)].join('; ');
-            });
-            conflicts.push({
-                category: 'rest-duplicate',
-                employeeNo: emp,
-                name: restDayData[indices[0]]?.name || '',
-                date,
-                reason: 'Duplicate rest day entry (same employee & date)',
-                rows: indices.map(i=>i+1)
-            });
-        }
-    }
-
-    // 2) Detect duplicates within Work (same emp, same date, multiple entries)
-    for (const [key, indices] of workMap.entries()) {
-        if (!key.includes('|')) continue;
-        const [emp, date] = key.split('|');
-        if (!emp || !date) continue;
-        if (indices.length > 1) {
-            indices.forEach(idx => {
-                const entry = workScheduleData[idx];
-                entry.conflict = true;
-                entry._conflictReasons.push('Duplicate work schedule entry (same employee & date)');
-                entry.conflictReason = [...new Set(entry._conflictReasons)].join('; ');
-            });
-            conflicts.push({
-                category: 'work-duplicate',
-                employeeNo: emp,
-                name: workScheduleData[indices[0]]?.name || '',
-                date,
-                reason: 'Duplicate work schedule entry (same employee & date)',
-                rows: indices.map(i=>i+1)
-            });
-        }
-    }
-
-    // 3) Detect work vs rest conflicts (employee has rest day and also work on same date)
-    // Iterate keys present in both maps
-    for (const [key, restIndices] of restMap.entries()) {
-        if (workMap.has(key)) {
-            const [emp, date] = key.split('|');
-            // mark all matching rest items and work items
-            restIndices.forEach(rIdx => {
-                const r = restDayData[rIdx];
-                r.conflict = true;
-                r._conflictReasons.push(`Rest day conflicts with Work schedule on ${date}`);
-                r.conflictReason = [...new Set(r._conflictReasons)].join('; ');
-            });
-            workMap.get(key).forEach(wIdx => {
-                const w = workScheduleData[wIdx];
-                w.conflict = true;
-                w._conflictReasons.push(`Work schedule conflicts with Rest day on ${date}`);
-                w.conflictReason = [...new Set(w._conflictReasons)].join('; ');
-            });
-
-            conflicts.push({
-                category: 'work-rest-conflict',
-                employeeNo: emp,
-                name: restDayData[restIndices[0]]?.name || workScheduleData[workMap.get(key)[0]]?.name || '',
-                date,
-                reason: `Employee has both Work and Rest on ${date}`,
-                restRows: restIndices.map(i=>i+1),
-                workRows: workMap.get(key).map(i=>i+1)
-            });
-        }
-    }
-
-    // 4) Leadership rule: Branch Head / Site Supervisor / OIC cannot rest on same date
-    const normalizedLeaders = (d) => (d.position || '').toString().toLowerCase().replace(/\s+/g,' ').trim();
-    const leaderPositions = ['branch head','site supervisor','oic'];
-    const leadersByDate = {};
-    restDayData.forEach((r, idx) => {
-        const pos = normalizedLeaders(r);
-        if (leaderPositions.some(lp => pos.includes(lp))) {
-            const date = normDate(r.date);
-            if (!date) return;
-            leadersByDate[date] = leadersByDate[date] || [];
-            leadersByDate[date].push(idx);
+    // Detect conflicts: same employee, same date
+    restDayData.forEach(item => {
+        if (!item.employeeNo || !item.date) return;
+        const key = `${item.employeeNo}-${item.date}`;
+        if (scheduleMap.has(key)) {
+            const workEntry = scheduleMap.get(key);
+            item.conflict = true;
+            item.conflictReason = `vs. Work Sched Row #${workEntry.rowNum}`;
+            const workItem = workScheduleData.find(
+                d => d.employeeNo === item.employeeNo && d.date === item.date
+            );
+            if (workItem) workItem.conflict = true;
         }
     });
-    Object.entries(leadersByDate).forEach(([date, indices]) => {
-        if (indices.length > 1) {
-            indices.forEach(idx => {
-                const r = restDayData[idx];
-                r.conflict = true;
-                r._conflictReasons.push(`Multiple leaders on rest day (${date}) — prohibited`);
-                r.conflictReason = [...new Set(r._conflictReasons)].join('; ');
-            });
-            conflicts.push({
-                category: 'leadership-conflict',
-                date,
-                reason: `Multiple leaders (Branch Head / Site Supervisor / OIC) taking rest on ${date}`,
-                rows: indices.map(i=>i+1)
+
+    // Check if all rest day employees exist in work schedule
+    const workEmployeeNos = new Set(workScheduleData.map(d => d.employeeNo));
+    restDayData.forEach(item => {
+        if (!item.employeeNo) return;
+        if (!workEmployeeNos.has(item.employeeNo)) {
+            item.conflict = true;
+            item.conflictReason = 'Employee not found in Work Schedule';
+        }
+    });
+
+    // Rule: Leadership positions cannot rest on the same date
+    const leadershipGroups = restDayData.filter(d => 
+        d.position && LEADERSHIP_POSITIONS.includes(d.position)
+    );
+    const byDate = leadershipGroups.reduce((acc, curr) => {
+        if (!curr.date) return acc;
+        if (!acc[curr.date]) acc[curr.date] = [];
+        acc[curr.date].push(curr);
+        return acc;
+    }, {});
+    Object.entries(byDate).forEach(([date, leaders]) => {
+        if (leaders.length > 1) {
+            leaders.forEach(ld => {
+                ld.conflict = true;
+                ld.conflictReason = `Multiple leaders on rest day (${date})`;
             });
         }
     });
 
-    // 5) Weekend rest-day limit rule: leader and team member max 2 weekend RDs
-    // Define weekend boundaries as per your rules: treat Fri/Sat/Sun as weekend candidates per earlier code
-    const weekendSet = new Set(['Friday','Saturday','Sunday']);
-    const weekendCounts = {}; // emp => count
-    restDayData.forEach(r => {
-        const emp = normEmp(r.employeeNo);
-        const date = normDate(r.date);
-        if (!emp || !date) return;
-        const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
-        if (weekendSet.has(dayName)) {
-            weekendCounts[emp] = weekendCounts[emp] ? weekendCounts[emp] + 1 : 1;
+    // Rule: Limit to maximum of 2 weekend rest days
+    const weekendDays = ['Friday', 'Saturday', 'Sunday'];
+    const weekendCount = {};
+
+    restDayData.forEach(d => {
+        if (!d.employeeNo || !d.date) return;
+        const dayName = new Date(d.date).toLocaleDateString('en-US', { weekday: 'long' });
+        if (weekendDays.includes(dayName)) {
+            weekendCount[d.employeeNo] = (weekendCount[d.employeeNo] || 0) + 1;
         }
     });
-    Object.entries(weekendCounts).forEach(([emp, cnt]) => {
-        if (cnt > 2) {
-            // flag all weekend entries for this emp
-            restDayData.forEach(r => {
-                if (normEmp(r.employeeNo) === emp) {
-                    const d = normDate(r.date);
-                    const dayName = new Date(d).toLocaleDateString('en-US', { weekday: 'long' });
-                    if (weekendSet.has(dayName)) {
-                        r.conflict = true;
-                        r._conflictReasons.push('Exceeded maximum of 2 weekend rest days');
-                        r.conflictReason = [...new Set(r._conflictReasons)].join('; ');
+
+    Object.entries(weekendCount).forEach(([empNo, count]) => {
+        if (count > 2) {
+            restDayData
+                .filter(d => d.employeeNo === empNo)
+                .forEach(d => {
+                    const dayName = new Date(d.date).toLocaleDateString('en-US', { weekday: 'long' });
+                    if (weekendDays.includes(dayName)) {
+                        d.conflict = true;
+                        d.conflictReason = 'Exceeded maximum of 2 weekend rest days';
                     }
-                }
-            });
-            conflicts.push({
-                category: 'weekend-limit',
-                employeeNo: emp,
-                reason: `Exceeded maximum of 2 weekend rest days (${cnt})`,
-            });
+                });
         }
     });
 
-    // 6) If rest employee not found in work schedule -> mark it (existing rule preserved)
-    const workEmployeeNos = new Set(workScheduleData.map(w => normEmp(w.employeeNo)));
-    restDayData.forEach((r, idx) => {
-        const emp = normEmp(r.employeeNo);
-        if (emp && !workEmployeeNos.has(emp)) {
-            r.conflict = true;
-            r._conflictReasons.push('Employee not found in Work Schedule');
-            r.conflictReason = [...new Set(r._conflictReasons)].join('; ');
-            conflicts.push({
-                category: 'not-in-work',
-                employeeNo: emp,
-                name: r.name || '',
-                reason: 'Employee not found in Work Schedule',
-                row: idx+1
-            });
-        }
-    });
+    // Calculate summary
+    const conflictCount = restDayData.filter(d => d.conflict).length;
+    const leadershipConflict = [...workScheduleData, ...restDayData]
+        .some(d => d.conflict && LEADERSHIP_POSITIONS.includes(d.position));
 
-    // Compose final conflictCount & leadership flag
-    const conflictCount = restDayData.filter(d => d.conflict).length + workScheduleData.filter(d => d.conflict).length;
-    const leadershipConflict = restDayData.concat(workScheduleData).some(d => d.conflict && leaderPositions.some(lp => (d.position || '').toString().toLowerCase().includes(lp)));
-
-    // Convert conflicts to unique list (by category+emp+date+reason)
-    const uniqueConflicts = conflicts.filter((c, i, arr) => {
-        return i === arr.findIndex(x => (x.category === c.category) && (x.employeeNo === c.employeeNo || x.date === c.date || JSON.stringify(x.rows) === JSON.stringify(c.rows)) && x.reason === c.reason);
-    });
-
-    // Render
+    // Safe render calls — won't break if any render function fails
     try {
-        renderSummary(uniqueConflicts, conflictCount, leadershipConflict);
+        renderSummary(conflictCount, leadershipConflict);
         renderWorkTable();
         renderRestTable();
     } catch (err) {
@@ -551,8 +431,8 @@ if (isWorkSchedule) {
     // 💾 File naming
     const month = 'October'; // optional: can make this auto-detect later
     const filename = isWorkSchedule
-        ? `${branchName}_WS_- Work schedule.xlsx`
-        : `${branchName}_RD_- Rest day.xlsx`;
+        ? `${branchName}_WS_${month} - Work schedule.xlsx`
+        : `${branchName}_RD_${month} - Rest day.xlsx`;
 
     // 💾 Export
     XLSX.writeFile(workbook, filename);
@@ -562,119 +442,50 @@ if (isWorkSchedule) {
       /*************************\
        * UI & RENDERING     *
       \*************************/
+       function renderTable(tbody, data, columns, type) {
+           tbody.innerHTML = '';
+           if (!data || data.length === 0) {
+               const tr = tbody.insertRow();
+               const cell = tr.insertCell();
+               let colspan = columns.length + 2; // # and Actions
+               if (type === 'rest') colspan++; // Add one for Conflict column
+               cell.colSpan = colspan;
+               cell.textContent = 'No data available.';
+               cell.className = 'text-center text-slate-500 py-4';
+               return;
+           }
+           data.forEach((item, index) => {
+               const tr = tbody.insertRow();
+               tr.className = item.conflict ? 'conflict' : '';
 
-      function renderTable(tbody, data, columns, type) {
-  tbody.innerHTML = '';
+               if (type === 'rest') {
+                   const conflictCell = tr.insertCell();
+                   if (item.conflict) {
+                       conflictCell.innerHTML = `⚠️ <span class="conflict-reason">${item.conflictReason}</span>`;
+                   }
+                   conflictCell.className = 'text-center';
+               }
 
-  if (!data || data.length === 0) {
-    const tr = tbody.insertRow();
-    const cell = tr.insertCell();
-    let colspan = columns.length + 2; // # and Actions
-    if (type === 'rest') colspan++; // Add one for Conflict column
-    cell.colSpan = colspan;
-    cell.textContent = 'No data available.';
-    cell.className = 'text-center text-slate-500 py-4';
-    return;
-  }
+               const numCell = tr.insertCell();
+               numCell.textContent = index + 1;
+               numCell.className = 'text-sm text-slate-600 text-center';
 
-  data.forEach((item, index) => {
-    const tr = tbody.insertRow();
-    tr.className = item.conflict ? 'conflict' : '';
+               columns.forEach(col => {
+                   const cell = tr.insertCell();
+                   cell.textContent = item[col] || '';
+               });
 
-    /* =====================
-       🔶 Conflict column
-    ===================== */
-    if (type === 'rest') {
-      const conflictCell = tr.insertCell();
-      conflictCell.className =
-        'text-center align-middle px-2 py-1 whitespace-normal break-words max-w-[160px]';
+               const actionsCell = tr.insertCell();
+               actionsCell.className = 'flex items-center justify-center space-x-3';
+               actionsCell.innerHTML = `
+                <ion-icon name="create-outline" class="action-icon edit-icon text-xl" data-type="${type}" data-index="${index}"></ion-icon>
+                <ion-icon name="trash-outline" class="action-icon delete-icon text-xl" data-type="${type}" data-index="${index}"></ion-icon>
+               `;
+           });
 
-      if (item.conflict) {
-        const r = (item.conflictReason || '').toLowerCase();
-        let shortReason = '';
-        if (r.includes('duplicate')) shortReason = 'Duplicate Rest Day';
-        else if (r.includes('work') && r.includes('rest'))
-          shortReason = 'Overlapping Schedule';
-        else if (r.includes('work schedule') || r.includes('overlap'))
-          shortReason = 'Overlapping Schedule';
-        else if (
-          r.includes('leadership') ||
-          r.includes('leader') ||
-          r.includes('multiple leaders') ||
-          r.includes('branch head') ||
-          r.includes('oic')
-        )
-          shortReason = 'Leadership Conflict';
-        else if (
-          r.includes('exceed') ||
-          r.includes('exceeded') ||
-          r.includes('weekend')
-        )
-          shortReason = 'Rest Day Limit';
-        else if (r.includes('not found') || r.includes('missing'))
-          shortReason = 'Missing in Work';
-        else if (
-          r.includes('duplicate work') ||
-          r.includes('duplicate work schedule')
-        )
-          shortReason = 'Duplicate Work';
-        else shortReason = 'Other Conflict';
-
-        const span = document.createElement('span');
-        span.className =
-          'conflict-reason text-sm text-orange-600 font-semibold leading-tight block truncate-2-lines';
-        span.textContent = shortReason;
-        span.title = item.conflictReason || ''; // show full on hover
-        conflictCell.appendChild(span);
-      }
-    }
-
-    /* =====================
-       🔹 Row number
-    ===================== */
-    const numCell = tr.insertCell();
-    numCell.textContent = index + 1;
-    numCell.className = 'text-sm text-slate-600 text-center px-2';
-
-    /* =====================
-       🔸 Main columns
-    ===================== */
-    columns.forEach((col) => {
-      const cell = tr.insertCell();
-      cell.textContent = item[col] || '';
-      cell.className =
-        'text-sm text-slate-700 text-center px-2 py-1 truncate max-w-[140px] whitespace-nowrap align-middle';
-      // 🔴 Highlight weekends
-      if (col === 'dayOfWeek' && /(fri|sat|sun)/i.test(item[col])) {
-        cell.style.color = 'red';
-        cell.style.fontWeight = '600';
-      }
-    });
-
-    /* =====================
-       ⚙️ Actions column
-    ===================== */
-    const actionsCell = tr.insertCell();
-    actionsCell.className =
-      'flex items-center justify-center space-x-2 py-1 align-middle';
-    actionsCell.innerHTML = `
-      <ion-icon name="create-outline" class="action-icon edit-icon text-lg cursor-pointer text-slate-600 hover:text-cyan-600 transition" data-type="${type}" data-index="${index}"></ion-icon>
-      <ion-icon name="trash-outline" class="action-icon delete-icon text-lg cursor-pointer text-slate-600 hover:text-red-600 transition" data-type="${type}" data-index="${index}"></ion-icon>
-    `;
-  });
-
-  // Event listeners for edit/delete
-  tbody.querySelectorAll('.edit-icon').forEach((btn) =>
-    btn.addEventListener('click', (e) =>
-      handleEditRow(e.target.dataset.type, e.target.dataset.index)
-    )
-  );
-  tbody.querySelectorAll('.delete-icon').forEach((btn) =>
-    btn.addEventListener('click', (e) =>
-      handleDeleteRow(e.target.dataset.type, e.target.dataset.index)
-    )
-  );
-}
+            tbody.querySelectorAll('.edit-icon').forEach(btn => btn.addEventListener('click', (e) => handleEditRow(e.target.dataset.type, e.target.dataset.index)));
+            tbody.querySelectorAll('.delete-icon').forEach(btn => btn.addEventListener('click', (e) => handleDeleteRow(e.target.dataset.type, e.target.dataset.index)));
+       }
 
        function renderWorkTable() {
            renderTable(workTableBody, workScheduleData, ['employeeNo', 'name', 'position', 'date', 'shiftCode', 'dayOfWeek'], 'work');
@@ -684,65 +495,26 @@ if (isWorkSchedule) {
            renderTable(restTableBody, restDayData, ['employeeNo', 'name', 'position', 'date', 'dayOfWeek'], 'rest');
        }
       
-function renderSummary(conflicts = [], conflictCount = 0, leadershipConflict = false) {
-  const summaryEl = document.getElementById("summary");
-  let html = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
-
-  // ✅ No Conflicts
-  if (!Array.isArray(conflicts) || conflicts.length === 0) {
-    html += `
-      <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" role="alert">
-        <p class="font-bold text-lg">✅ No Conflicts Found</p>
-        <p>Everything looks good — all schedules appear valid and properly assigned.</p>
-      </div>`;
-    summaryEl.innerHTML = html;
-    return;
-  }
-
-  // ⚠️ Conflicts found
-  html += `
-    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
-      <p class="font-bold text-lg">⚠️ ${conflictCount} Conflict${conflictCount > 1 ? 's' : ''} Detected</p>
-      <p class="text-sm mt-1">Please review the list below for details and correct them as needed.</p>`;
-
-  if (leadershipConflict) {
-    html += `<p class="mt-2 text-blue-700 font-semibold">⚠️ Note: One or more conflicts involve leadership positions (Branch Head, Site Supervisor, or OIC).</p>`;
-  }
-
-  html += `<ul class="mt-3 list-disc pl-5 space-y-2 text-slate-800 leading-relaxed">`;
-
-  // 🧩 List every conflict
-  conflicts.forEach(c => {
-    let line = '';
-
-    if (c.category === 'rest-duplicate') {
-      line = `🔁 <strong>Duplicate Rest Day:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} has multiple rest entries on <strong>${c.date}</strong>. (Rows: ${c.rows?.join ? c.rows.join(', ') : ''}) — ${c.reason}`;
-
-    } else if (c.category === 'work-duplicate') {
-      line = `🔁 <strong>Duplicate Work Date:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} has multiple work schedules on <strong>${c.date}</strong>. (Rows: ${c.rows?.join ? c.rows.join(', ') : ''}) — ${c.reason}`;
-
-    } else if (c.category === 'work-rest-conflict') {
-      line = `⚔️ <strong>Work has same date as Rest:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} has both work and rest assigned on <strong>${c.date}</strong>. ${c.reason ? `(${c.reason})` : ''} Work rows: ${c.workRows?.join ? c.workRows.join(', ') : 'N/A'}; Rest rows: ${c.restRows?.join ? c.restRows.join(', ') : 'N/A'}`;
-
-    } else if (c.category === 'leadership-conflict') {
-      line = `👑 <strong>Leadership Conflict:</strong> ${c.reason}. (Rows: ${c.rows?.join ? c.rows.join(', ') : ''})`;
-
-    } else if (c.category === 'weekend-limit') {
-      line = `🗓️ <strong class="text-red-600">Weekend Limit Exceeded:</strong> Employee #${c.employeeNo || ''} ${c.name ? '- ' + c.name : ''} — ${c.reason}`;
-
-    } else if (c.category === 'not-in-work') {
-      line = `🚫 <strong>Employee Missing in Work Schedule:</strong> Employee #${c.employeeNo} ${c.name ? '- ' + c.name : ''} — ${c.reason}. (Row ${c.row || ''})`;
-
-    } else {
-      line = `❓ ${c.reason || JSON.stringify(c)}`;
-    }
-
-    html += `<li>${line}</li>`;
-  });
-
-  html += `</ul></div>`;
-  summaryEl.innerHTML = html;
-}
+      function renderSummary(conflictCount, leadershipConflict) {
+        if (workScheduleData.length === 0 && restDayData.length === 0) {
+          summaryEl.innerHTML = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2><p id="summaryText">No data pasted yet.</p>`;
+          return;
+        }
+        let summaryHTML = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
+        if (conflictCount > 0) {
+          summaryHTML += `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
+            <p class="font-bold">Conflicts Detected!</p>
+            <p>${conflictCount} employee(s) have a rest day scheduled on a work day. Please review the highlighted rows.</p>
+            ${leadershipConflict ? `<p class="mt-2"><strong>Warning:</strong> A conflict involves leadership.</p>` : ''}
+          </div>`;
+        } else {
+          summaryHTML += `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" role="alert">
+            <p class="font-bold">No Conflicts Found!</p>
+            <p>All schedules appear to be in order.</p>
+          </div>`;
+        }
+        summaryEl.innerHTML = summaryHTML;
+      }
 
       function updateButtonStates() {
         generateWorkFileBtn.disabled = workScheduleData.length === 0;

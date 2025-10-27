@@ -109,162 +109,177 @@ textarea:focus {
   flex-direction: column;
 }
 
-/* 🌟 Finalized Compact Table — Full Text, Aligned Icons, Proper Conflict Wrap
-   FULL REPLACEMENT: paste this from here to EOF (replaces previous table rules).
-*/
-
-/* --- Base / stable layout --- */
-.data-table {
-  table-layout: fixed; /* distribute columns within available width */
+/* 📊 Table General Styling */
+table {
   width: 100%;
-  max-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  border-collapse: collapse;
+  margin-top: 1rem;
 }
 
-/* Slightly smaller, compact typography for tables */
-.data-table thead th,
-.data-table tbody td {
-  padding: 0.42rem 0.5rem;
-  vertical-align: middle;
-  font-size: 0.88rem;
-  line-height: 1.15;
-  box-sizing: border-box;
-  color: #0f172a;
-  text-overflow: clip;   /* clip without ellipsis */
-  overflow: hidden;
-  white-space: nowrap;   /* default single-line */
+thead {
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 2px solid #99f6e4;
 }
 
-/* Header: no ellipsis indicator, center/left align as needed */
-.data-table thead th {
+th,
+td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background-color: #f3f4f6;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  color: #333;
 }
 
-/* Column widths for Work table (7 columns) - tuned to fit container */
-#workTable th:nth-child(1), #workTable td:nth-child(1) { width: 4%; min-width: 36px; }   /* # */
-#workTable th:nth-child(2), #workTable td:nth-child(2) { width: 8%; min-width: 56px; }   /* Emp No */
-#workTable th:nth-child(3), #workTable td:nth-child(3) { width: 28%; min-width: 150px; } /* Name (slightly reduced) */
-#workTable th:nth-child(4), #workTable td:nth-child(4) { width: 18%; min-width: 110px; } /* Position */
-#workTable th:nth-child(5), #workTable td:nth-child(5) { width: 12%; min-width: 90px; }  /* Date */
-#workTable th:nth-child(6), #workTable td:nth-child(6) { width: 10%; min-width: 80px; }  /* Shift Code (increased) */
-#workTable th:nth-child(7), #workTable td:nth-child(7) { width: 20%; min-width: 100px; } /* Day of Week */
-
-/* Column widths for Rest table - Conflict is first column and may wrap */
-#restTable th:nth-child(1), #restTable td:nth-child(1) { width: 18%; min-width: 140px; } /* Conflict */
-#restTable th:nth-child(2), #restTable td:nth-child(2) { width: 4%; min-width: 36px; }   /* # */
-#restTable th:nth-child(3), #restTable td:nth-child(3) { width: 8%; min-width: 56px; }   /* Emp No */
-#restTable th:nth-child(4), #restTable td:nth-child(4) { width: 30%; min-width: 160px; } /* Name */
-#restTable th:nth-child(5), #restTable td:nth-child(5) { width: 18%; min-width: 110px; } /* Position */
-#restTable th:nth-child(6), #restTable td:nth-child(6) { width: 12%; min-width: 90px; }  /* Date */
-#restTable th:nth-child(7), #restTable td:nth-child(7) { width: 10%; min-width: 80px; }  /* Day of Week */
-
-/* Keep all other columns single-line and clipped (no "...") */
-#restTable td:not(:first-child),
-#restTable th:not(:first-child),
-#workTable td,
-#workTable th {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
+td {
+  color: #555;
 }
 
-/* Conflict column: allow wrapping up to 2 lines (visually compact) */
-#restTable td:first-child,
-#restTable th:first-child {
-  white-space: normal; /* allow wrap */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;        /* limit to 2 lines */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Hover row */
+tbody tr:hover {
+  background-color: rgba(209, 250, 229, 0.75);
+  box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
+}
+
+/* Conflict row styling */
+.conflict {
+  background-color: #fff3cd;
+}
+
+.conflict .conflict-reason {
+  font-style: italic;
+  color: #856404;
+}
+
+/* ===============================
+   🌿 FINAL — WORK + REST TABLE ULTRA FIT
+   =============================== */
+
+.data-table,
+#restTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+  white-space: normal;
   word-break: break-word;
-  line-height: 1.15;
-  padding: 0.5rem;
-  color: #C2410C; /* amber-700-ish for visibility */
-  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.data-table th,
+.data-table td,
+#restTable th,
+#restTable td {
+  padding: 0.45rem 0.25rem;
   vertical-align: middle;
 }
 
-/* Equal row height baseline; conflict rows can grow slightly */
-.data-table tbody tr {
-  height: 52px;
-  min-height: 52px;
+/* Work Schedule Columns */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) { width: 35px; text-align: center; }
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) { width: 55px; text-align: center; }
+
+/* Center "Name" header only */
+.data-table thead th:nth-child(3) {
+  text-align: center;
+}
+.data-table tbody td:nth-child(3) {
+  text-align: left;
 }
 
-/* Allow conflict rows to expand up to two lines */
-#restTable tbody tr td:first-child {
-  height: auto;
-}
+/* Remaining Work Schedule columns */
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) { width: 115px; text-align: left; }
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) { width: 75px; text-align: center; }
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) { width: 75px; text-align: center; }
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) { width: 70px; text-align: center; }
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) { width: 65px; text-align: center; }
 
-/* Action icons: centered and balanced
-   Ensure action cell does not shrink and icons remain visible (prevents being cut off) */
-.data-table td:last-child {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding-left: 0.4rem;
-  padding-right: 0.6rem;
-  white-space: nowrap;
-
-  /* Prevent the action column from shrinking when table gets tight */
-  flex: 0 0 72px;
-  max-width: 72px;
-  overflow: visible; /* ensure icons aren't clipped */
-}
-
-/* Icon button style for perfect centering */
-.action-icon, .data-table td ion-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1;
+/* 🌿 Rest Day Table — perfectly aligned */
+#restTable thead th {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
   color: #0f172a;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-  margin: 0;
+  letter-spacing: 0.2px;
+  font-size: 13px;
+  line-height: 1.2;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-bottom: 2px solid #80cbc4;
+  text-align: left;
+  padding: 0.6rem 0.25rem;
+  white-space: nowrap;
 }
 
-/* subtle hover */
-.action-icon:hover {
-  background: rgba(15,23,42,0.04);
-  transform: translateY(-1px);
+/* FIX: Rest Day Table Column Spacing Alignment */
+#restTable th:nth-child(1),
+#restTable td:nth-child(1) {
+  width: 35px;
+  text-align: center;
 }
 
-/* Conflict row highlight */
-.data-table tbody tr.conflict {
-  background-color: #fff7ed;
-  border-left: 3px solid #f59e0b;
+#restTable th:nth-child(2),
+#restTable td:nth-child(2) {
+  width: 45px;
+  text-align: center;
+  padding-right: 0.2rem;
 }
 
-/* Remove textual "OK" — keep a compact dot for no-conflict (if using) */
-.conflict-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-  background: linear-gradient(180deg,#10b981,#34d399);
-  box-shadow: 0 1px 4px rgba(16,185,129,0.12);
+#restTable th:nth-child(3),
+#restTable td:nth-child(3) {
+  width: 110px;
+  text-align: left;
+  padding-left: 0.3rem;
 }
 
-/* Responsive: slightly smaller text for very narrow widths to avoid horizontal scroll */
-@media (max-width: 1100px) {
-  .data-table thead th, .data-table tbody td { font-size: 0.82rem; padding: 0.36rem 0.45rem; }
-  .data-table tbody tr { height: 48px; min-height: 48px; }
+#restTable th:nth-child(4),
+#restTable td:nth-child(4) {
+  width: 115px;
+  text-align: left;
 }
 
-/* Final safety: restore natural horizontal flow (allow scrolling instead of forcibly hiding content) */
-.overflow-x-auto { overflow-x: auto; /* removed !important hidden */ }
+#restTable th:nth-child(5),
+#restTable td:nth-child(5) {
+  width: 75px;
+  text-align: center;
+}
+
+#restTable th:nth-child(6),
+#restTable td:nth-child(6) {
+  width: 70px;
+  text-align: center;
+}
+
+/* Center "Name" header only */
+#workTable thead th:nth-child(3),
+#restTable thead th:nth-child(4) {
+  text-align: center;
+}
+
+/* Keep employee names left-aligned */
+#workTable tbody td:nth-child(3),
+#restTable tbody td:nth-child(4) {
+  text-align: left;
+}
+
+/* 🌿 Card Alignment for both tables */
+.dashboard-flex {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.dashboard-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
