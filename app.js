@@ -596,7 +596,6 @@ if (type === 'rest') {
         else shortReason = 'Other Conflict';
 
         // create the cell content safely and set full text as hover tooltip
-        conflictCell.textContent = '⚠️ ';
         const span = document.createElement('span');
         span.className = 'conflict-reason';
         span.textContent = shortReason;

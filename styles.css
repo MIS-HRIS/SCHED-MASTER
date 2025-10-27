@@ -109,17 +109,20 @@ textarea:focus {
   flex-direction: column;
 }
 
-/* 🌟 Finalized Compact Table — Full Text, Aligned Icons, Proper Conflict Wrap */
+/* 🌟 Finalized Compact Table — Full Text, Aligned Icons, Proper Conflict Wrap
+   REPLACE everything from the comment above to the end of the file with this block.
+*/
 
-/* Make all table text smaller but readable */
+/* Base: consistent table layout & smaller, compact type */
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  font-family: 'Inter', sans-serif;
   font-size: 0.82rem;
-  table-layout: fixed; /* keep consistent column widths */
+  table-layout: fixed; /* stable column widths so headers & rows align */
 }
 
-/* Header */
+/* Header — keep single-line, consistent height */
 .data-table thead th {
   background: linear-gradient(180deg, rgba(240,249,255,0.95), rgba(224,242,254,0.9));
   border-bottom: 2px solid #99f6e4;
@@ -128,100 +131,164 @@ textarea:focus {
   text-align: center;
   padding: 0.45rem 0.5rem;
   line-height: 1.2;
-  white-space: nowrap; /* ✅ keeps “Conflict” horizontal */
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Set explicit column widths for restTable so Conflict column gets dedicated width.
+   Adjust percentages if your table container width differs. */
+#restTable thead th:nth-child(1),
+#restTable tbody td:nth-child(1) { width: 170px; min-width: 150px; max-width: 200px; } /* Conflict column */
+#restTable thead th:nth-child(2),
+#restTable tbody td:nth-child(2) { width: 6%; min-width: 48px; }               /* # */
+#restTable thead th:nth-child(3),
+#restTable tbody td:nth-child(3) { width: 9%; min-width: 70px; }               /* Emp. No */
+#restTable thead th:nth-child(4),
+#restTable tbody td:nth-child(4) { width: 28%; }                                /* Name */
+#restTable thead th:nth-child(5),
+#restTable tbody td:nth-child(5) { width: 18%; }                                /* Position */
+#restTable thead th:nth-child(6),
+#restTable tbody td:nth-child(6) { width: 13%; }                                /* Date */
+#restTable thead th:nth-child(7),
+#restTable tbody td:nth-child(7) { width: 12%; }                                /* Day of Week */
+/* For workTable you can set similar widths if needed (optional) */
 
-/* Regular cells — allow wrapping for full text */
+/* Body cells — allow full text, balanced wrapping */
 .data-table tbody td {
-  padding: 0.4rem 0.55rem;
+  padding: 0.45rem 0.55rem;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
-  background: rgba(255,255,255,0.9);
-  font-size: 0.8rem;
+  background: rgba(255,255,255,0.95);
   color: #1e293b;
   line-height: 1.25;
-  white-space: normal;
+  white-space: normal;          /* allow normal wrapping where needed */
   word-break: break-word;
   overflow-wrap: anywhere;
   text-align: center;
 }
 
-/* Conflict column — proper horizontal emoji + max 2 lines */
+/* -------- Conflict column (final, stable) --------
+   - fixed width above prevents the header & cell collapsing
+   - inline-block + no flex prevents emoji stacking vertically
+   - allow up to 2 lines naturally
+*/
 #restTable td:first-child,
 #restTable th:first-child {
+  display: inline-block;       /* prevent flex wrapping to one-character lines */
+  vertical-align: middle;
   text-align: left;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
-  min-width: 160px;
+  width: 170px;
   max-width: 200px;
-  line-height: 1.25;
-  background: rgba(255, 248, 229, 0.95);
-  border-left: 3px solid #f59e0b;
-  padding: 0.45rem 0.6rem;
+  min-width: 150px;
+  padding: 0.5rem 0.6rem;
+  line-height: 1.2;
   color: #b45309;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  background: rgba(255,248,229,0.95);
+  border-left: 3px solid #f59e0b;
   border-radius: 0.25rem 0 0 0.25rem;
-  display: inline-block; /* ✅ fixes vertical stacking */
   word-spacing: 1px;
-  vertical-align: middle;
 }
 
-/* Keep rows uniform height, auto-adjust if conflict wraps */
+/* If JS injects ⚠️ via content or inside element, we won't add another via CSS.
+   Remove any CSS ::before emoji to avoid duplicates. */
+
+/* If there are emoji characters inside the cell markup, ensure they don't force stacking */
+#restTable td:first-child > * {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  margin-right: 6px;
+}
+
+/* Keep header cell horizontal for Conflict */
+#restTable thead th:first-child {
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.45rem 0.5rem;
+}
+
+/* Rows adjust automatically if conflict wraps to two lines */
 .data-table tbody tr {
   height: auto;
-  transition: background 0.2s ease;
+  transition: background 0.16s ease;
 }
 .data-table tbody tr:hover {
-  background-color: rgba(13,148,136,0.05);
+  background-color: rgba(13,148,136,0.04);
 }
 
-/* Ensure conflict text wraps nicely, not stacked vertically */
-#restTable td:first-child span {
-  display: inline;
-  white-space: normal;
+/* -------- Action (last) cell: full-height visual background --------
+   We create a full-height background using a pseudo-element and keep icons above it.
+   This removes the "narrow strip" look and visually merges with the row.
+*/
+.data-table td:last-child {
+  position: relative;
+  padding: 0.25rem 0.35rem;
+  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  background: transparent; /* transparent base so pseudo fills it */
+  border-left: none;
+  height: 100%;
 }
 
+/* full-height white panel inside the td so it matches other cells */
+.data-table td:last-child::before {
+  content: "";
+  position: absolute;
+  inset: 6px 8px 6px 8px; /* small inset so panel doesn't touch edges */
+  background: rgba(255,255,255,0.95);
+  border-radius: 6px;
+  box-shadow: none;
+  pointer-events: none;
+  z-index: 0;
+}
 
-/* Action icons — fix vertical alignment & full background */
+/* Icon pills sit above that panel */
 .data-table td ion-icon.action-icon {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
   font-size: 14px;
   color: #0f172a;
-  opacity: 0.85;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.06);
+  margin: 0 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .data-table td ion-icon.action-icon:hover {
-  opacity: 1;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(15,23,42,0.08);
 }
 
-/* Fix half background issue — revert to normal table-cell behavior */
-.data-table td:last-child {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #ffffff; /* ✅ matches other cells exactly */
-  padding: 0.35rem 0.4rem;
-  white-space: nowrap;
-  height: 100%;
-  gap: 6px;
-  border-left: 1px solid #e5e7eb;
-}
+/* remove any odd inner borders to visually join columns */
+.data-table tbody td + td { border-left: none; }
 
-/* Conflict row highlight */
+/* Conflict row highlight remains */
 .data-table tbody tr.conflict {
   background-color: #fff7ed;
   border-left: 3px solid #f59e0b;
+}
+
+/* Accessibility: small screens — make tables scroll horizontally */
+@media (max-width: 1024px) {
+  .overflow-x-auto { overflow-x: auto; }
+  #restTable td:first-child, #restTable th:first-child { width: 150px; max-width: 160px; }
+  .data-table { font-size: 0.78rem; }
 }
 
 /* remove the ::before that injected emoji (keeps markup controlled by JS) */
