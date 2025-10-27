@@ -590,10 +590,13 @@ if (isWorkSchedule) {
                        else if (r.includes('exceed') || r.includes('exceeded') || r.includes('weekend')) shortReason = 'Rest Day Limit';
                        else if (r.includes('not found') || r.includes('missing')) shortReason = 'Missing in Work';
 
-                       conflictCell.innerHTML = `<span class="conflict-label">⚠️ ${shortReason}</span>`;
+                       // concise label only (full detail available in Summary)
+                       conflictCell.innerHTML = `<strong>⚠️</strong> <span class="conflict-label">${shortReason}</span>`;
                        conflictCell.title = item.conflictReason || '';
                    } else {
-                       conflictCell.innerHTML = `<span class="conflict-label ok">✅ OK</span>`;
+                       // show a small green dot for no-conflict rows (no "OK" text)
+                       conflictCell.innerHTML = `<span class="conflict-dot" aria-hidden="true"></span>`;
+                       conflictCell.setAttribute('aria-label', 'No conflict');
                    }
                    conflictCell.className = 'text-center';
                }

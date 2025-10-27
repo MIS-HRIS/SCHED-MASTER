@@ -127,33 +127,6 @@ td {
   color: #555;
 }
 
-/* Hover row */
-tbody tr:hover {
-  background-color: rgba(209, 250, 229, 0.75);
-  box-shadow: inset 0 0 10px rgba(45, 212, 191, 0.15);
-}
-
-/* Conflict row styling */
-.conflict {
-  background-color: #fff3cd;
-}
-
-.conflict .conflict-reason {
-  font-style: italic;
-  color: #856404;
-}
-/* 🌿 Work + Rest Tables — Premium Unified Look */
-#workTable,
-#restTable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 13px;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
 /* Header — equal height + color alignment */
 #workTable thead th,
 #restTable thead th {
@@ -163,70 +136,78 @@ tbody tr:hover {
   color: #0f172a;
   font-weight: 600;
   text-align: center;
-  height: 42px; /* force equal header height */
   line-height: 1.2;
   vertical-align: middle;
 }
 
-/* Cells — consistent height */
+/* Cells — allow natural height so wrapped content doesn't overflow */
 #workTable td,
 #restTable td {
   padding: 0.55rem 0.45rem;
   vertical-align: middle;
   background: rgba(255, 255, 255, 0.7);
+  white-space: normal; /* allow wrapping */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
-/* ✅ Conflict Column — fixed width, no overflow */
+/* Hover row — subtler, colored accent + soft inset */
+tbody tr:hover {
+  background-color: rgba(13,148,136,0.04);
+  box-shadow: inset 0 0 0 2px rgba(45,212,191,0.06);
+  transform: translateY(-2px);
+}
+
+/* Conflict row styling */
+.conflict {
+  background-color: #fff7ed;
+  border-left: 4px solid #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.04);
+}
+
+.conflict .conflict-reason {
+  font-style: italic;
+  color: #92400e;
+}
+
+/* ✅ Conflict Column — fixed reasonable width, wrap text, no overflow */
 #restTable td:nth-child(1) {
-  width: 150px !important;
-  background: rgba(255, 248, 229, 0.9);
+  width: 170px;
+  max-width: 220px;
+  background: rgba(255, 248, 229, 0.95);
   border-left: 3px solid #f59e0b;
-  border-radius: 0.4rem;
+  border-radius: 0.35rem;
   white-space: normal !important;
-  word-wrap: break-word;
+  word-break: break-word;
   overflow-wrap: anywhere;
-  line-height: 1.35;
+  line-height: 1.25;
   color: #92400e;
   padding: 0.6rem 0.6rem;
   vertical-align: top;
 }
 
-#restTable td:nth-child(1)::before {
-  content: "⚠️ ";
-  font-weight: bold;
-  margin-right: 3px;
+/* remove the ::before that injected emoji (keeps markup controlled by JS) */
+/* #restTable td:nth-child(1)::before { content: "⚠️ "; } */
+
+/* small green dot used when no conflict (removed textual "OK") */
+.conflict-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(180deg,#10b981,#34d399);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(16,185,129,0.35);
 }
 
-/* Hover Highlight */
-#workTable tbody tr:hover,
-#restTable tbody tr:hover {
-  background-color: rgba(209, 250, 229, 0.7);
-}
-
-/* ✨ Equal row height between tables */
+/* allow tables to grow vertically when cells wrap */
 #workTable tr,
 #restTable tr {
-  height: 38px;
+  height: auto;
 }
 
-/* ✨ Subtle shadow under headers */
-#workTable thead,
-#restTable thead {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-}
-/* 🧩 Perfect vertical alignment between Work & Rest tables */
-#workTable,
-#restTable {
-  table-layout: fixed;
-}
-
+/* remove fixed header/td heights so layout can adjust to wrapped content */
 #workTable thead th,
-#restTable thead th {
-  height: 44px;
-}
-
+#restTable thead th { height: auto; }
 #workTable td,
-#restTable td {
-  height: 40px;
-}
+#restTable td { height: auto; }
 
