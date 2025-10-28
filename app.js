@@ -346,9 +346,9 @@ function recheckConflicts() {
 
 // --- 5️⃣ Smarter Weekend RD Counting ---
 const weekendDays = ['Friday', 'Saturday', 'Sunday'];
-const weekendGroups = {}; // { employeeNo: { 'YYYY-WW': Set of unique weekend pairs } }
+const weekendGroups = {}; // { empNo: { weekKey: [list of weekend-like days] } }
 
-// Helper: get ISO week number
+// Helper: get ISO week key
 function getWeekKey(dateStr) {
   const date = new Date(dateStr);
   const year = date.getFullYear();
@@ -358,65 +358,75 @@ function getWeekKey(dateStr) {
   return `${year}-W${weekNo}`;
 }
 
-// Helper: map day name to number
+// Helper: weekday → index (Sunday = 0)
 function getDayIndex(dayName) {
-  const map = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+  const map = {
+    Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+    Thursday: 4, Friday: 5, Saturday: 6
+  };
   return map[dayName] ?? -1;
 }
 
-// Build weekend groups per employee per week
+// Collect weekend-related days per employee per week
 restDayData.forEach(r => {
   if (!r.employeeNo || !r.date) return;
+  const date = new Date(r.date);
+  if (isNaN(date)) return;
   const weekKey = getWeekKey(r.date);
-  const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
+  const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
   const empNo = r.employeeNo;
 
   if (!weekendGroups[empNo]) weekendGroups[empNo] = {};
   if (!weekendGroups[empNo][weekKey]) weekendGroups[empNo][weekKey] = [];
 
-  // Only consider if it includes Fri/Sat/Sun
-  if (weekendDays.includes(dayName)) {
-    weekendGroups[empNo][weekKey].push({ dayName, date: r.date });
+  // Track only weekend or adjacent weekdays
+  if (['Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday'].includes(dayName)) {
+    weekendGroups[empNo][weekKey].push({
+      date: r.date,
+      day: dayName,
+      index: getDayIndex(dayName)
+    });
   }
 });
 
-// Compute weekend “sets” per week (e.g., Fri-Sat = 1 weekend)
+// Compute valid weekend groups
 const weekendCount = {};
 
 Object.entries(weekendGroups).forEach(([empNo, weeks]) => {
-  weekendCount[empNo] = 0;
-  Object.entries(weeks).forEach(([weekKey, days]) => {
+  let totalGroups = 0;
+
+  Object.values(weeks).forEach(days => {
     if (days.length === 0) return;
+    days.sort((a, b) => a.index - b.index);
 
-    // Sort by day index
-    const sortedDays = days.sort((a, b) => getDayIndex(a.dayName) - getDayIndex(b.dayName));
+    let group = [];
+    for (let i = 0; i < days.length; i++) {
+      const d = days[i].day;
+      group.push(d);
 
-    let weekendSet = new Set();
-    for (let i = 0; i < sortedDays.length; i++) {
-      const current = getDayIndex(sortedDays[i].dayName);
-      const next = getDayIndex(sortedDays[i + 1]?.dayName);
-      weekendSet.add(sortedDays[i].dayName);
-
-      // If next day is not consecutive (like Sun → Mon), that’s one group done
-      if (next - current > 1 || i === sortedDays.length - 1) {
-        weekendCount[empNo] += 1;
-        weekendSet.clear();
+      // If the group includes Fri/Sat/Sun, it’s a weekend group
+      if (group.some(g => weekendDays.includes(g))) {
+        totalGroups++;
+        group = []; // reset for next possible group
       }
     }
   });
+
+  weekendCount[empNo] = totalGroups;
 });
 
-// Mark conflicts if > 2 weekend RD groups total
+// Flag conflict if > 2 weekend groups
 Object.entries(weekendCount).forEach(([empNo, count]) => {
   if (count > 2) {
     restDayData
       .filter(r => r.employeeNo === empNo)
       .forEach(r => {
         const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
-        if (weekendDays.includes(dayName)) {
+        if (['Friday', 'Saturday', 'Sunday'].includes(dayName)) {
           r.conflict = true;
           r.conflictType ||= 'weekend';
-          r.conflictReasons.push(`Exceeded limit: ${count} weekend RD groups (max 2 allowed)`);
+          r.conflictReason = '⚠️ Too many weekends';
+          r.conflictReasons.push(`Exceeded limit: ${count} weekend rest groups (max 2)`);
         }
       });
   }
