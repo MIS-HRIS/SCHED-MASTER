@@ -283,3 +283,33 @@ tbody tr:hover {
   display: flex;
   flex-direction: column;
 }
+/* === Conflict Highlight Styles === */
+.conflict-samedate {
+  background-color: #fee2e2; /* light red */
+  border-left: 5px solid #ef4444;
+}
+
+.conflict-duplicate {
+  background-color: #fef9c3; /* light yellow */
+  border-left: 5px solid #eab308;
+}
+
+.conflict-leadership {
+  background-color: #fde68a; /* amber */
+  border-left: 5px solid #f59e0b;
+}
+
+.conflict-weekend {
+  background-color: #dbeafe; /* light blue */
+  border-left: 5px solid #3b82f6;
+}
+
+.conflict-missing {
+  background-color: #f3e8ff; /* light purple */
+  border-left: 5px solid #8b5cf6;
+}
+
+.conflict {
+  background-color: #fee2e2; /* fallback red */
+  border-left: 5px solid #ef4444;
+}

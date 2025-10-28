@@ -488,8 +488,32 @@ if (isWorkSchedule) {
                return;
            }
            data.forEach((item, index) => {
-               const tr = tbody.insertRow();
-               tr.className = item.conflict ? 'conflict' : '';
+const tr = tbody.insertRow();
+
+// 🟢 Apply conflict highlight color only once
+let rowClass = '';
+if (item.conflict) {
+  switch (item.conflictType) {
+    case 'sameDate':
+      rowClass = 'conflict-samedate';
+      break;
+    case 'duplicate':
+      rowClass = 'conflict-duplicate';
+      break;
+    case 'leadership':
+      rowClass = 'conflict-leadership';
+      break;
+    case 'weekend':
+      rowClass = 'conflict-weekend';
+      break;
+    case 'missing':
+      rowClass = 'conflict-missing';
+      break;
+    default:
+      rowClass = 'conflict';
+  }
+}
+tr.className = rowClass;
 
                if (type === 'rest') {
                    const conflictCell = tr.insertCell();
