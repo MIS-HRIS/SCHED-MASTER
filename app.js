@@ -464,8 +464,8 @@ if (isWorkSchedule) {
     // 💾 File naming
     const month = 'October'; // optional: can make this auto-detect later
     const filename = isWorkSchedule
-        ? `${branchName}_WS_${month} - Work schedule.xlsx`
-        : `${branchName}_RD_${month} - Rest day.xlsx`;
+        ? `${branchName}_WS - Work schedule.xlsx`
+        : `${branchName}_RD - Rest day.xlsx`;
 
     // 💾 Export
     XLSX.writeFile(workbook, filename);
