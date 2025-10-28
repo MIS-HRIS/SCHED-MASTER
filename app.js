@@ -262,19 +262,19 @@ function recheckConflicts() {
   const LEADERSHIP_POSITIONS = ['Branch Head', 'Site Supervisor', 'OIC'];
   const scheduleMap = new Map();
 
-  // Reset conflicts
+  // Reset all conflicts
   [...workScheduleData, ...restDayData].forEach(d => {
     d.conflict = false;
     d.conflictReasons = [];
+    d.conflictReason = '';
+    d.conflictType = '';
   });
 
-  /**********************
-   * 1️⃣ WS vs RD same date
-   **********************/
+  // --- 1️⃣ Same employee/date across WS and RD ---
   workScheduleData.forEach((w, wIdx) => {
     if (!w.employeeNo || !w.date) return;
     const key = `${w.employeeNo}-${w.date}`;
-    scheduleMap.set(key, { ...w, rowNum: wIdx + 1 });
+    scheduleMap.set(key, { rowNum: wIdx + 1, ...w });
   });
 
   restDayData.forEach((r, rIdx) => {
@@ -283,20 +283,18 @@ function recheckConflicts() {
     if (scheduleMap.has(key)) {
       const w = scheduleMap.get(key);
       r.conflict = true;
-      r.conflictReasons.push(`Has rest day on same date as WS row #${w.rowNum}`);
-      const match = workScheduleData.find(
-        d => d.employeeNo === r.employeeNo && d.date === r.date
-      );
+      r.conflictType = 'sameDate';
+      r.conflictReasons.push(`Has rest day on same date as Work Schedule (WS row #${w.rowNum})`);
+      const match = workScheduleData.find(d => d.employeeNo === r.employeeNo && d.date === r.date);
       if (match) {
         match.conflict = true;
-        match.conflictReasons.push(`Has work schedule on same date as RD row #${rIdx + 1}`);
+        match.conflictType = 'sameDate';
+        match.conflictReasons.push(`Has work schedule on same date as Rest Day (RD row #${rIdx + 1})`);
       }
     }
   });
 
-  /**********************
-   * 2️⃣ Duplicate dates inside WS & RD
-   **********************/
+  // --- 2️⃣ Duplicate dates within WS or RD ---
   const detectDuplicates = (data, label) => {
     const seen = new Map();
     data.forEach((d, idx) => {
@@ -305,11 +303,13 @@ function recheckConflicts() {
       if (seen.has(key)) {
         const other = seen.get(key);
         d.conflict = true;
+        d.conflictType = 'duplicate';
         other.conflict = true;
-        d.conflictReasons.push(`Duplicate date within ${label} (row #${other._rowNum})`);
-        other.conflictReasons.push(`Duplicate date within ${label} (row #${idx + 1})`);
+        other.conflictType = 'duplicate';
+        d.conflictReasons.push(`Duplicate date in ${label} (row #${other._rowNum})`);
+        other.conflictReasons.push(`Duplicate date in ${label} (row #${idx + 1})`);
       } else {
-        d._rowNum = idx + 1; // temp for ref
+        d._rowNum = idx + 1;
         seen.set(key, d);
       }
     });
@@ -317,20 +317,17 @@ function recheckConflicts() {
   detectDuplicates(workScheduleData, 'Work Schedule');
   detectDuplicates(restDayData, 'Rest Day Schedule');
 
-  /**********************
-   * 3️⃣ RD employee not found in WS
-   **********************/
+  // --- 3️⃣ RD employee not found in WS ---
   const workNos = new Set(workScheduleData.map(d => d.employeeNo));
   restDayData.forEach(r => {
     if (r.employeeNo && !workNos.has(r.employeeNo)) {
       r.conflict = true;
+      r.conflictType ||= 'missing';
       r.conflictReasons.push(`Employee not found in Work Schedule`);
     }
   });
 
-  /**********************
-   * 4️⃣ Leadership overlap
-   **********************/
+  // --- 4️⃣ Multiple leaders resting same day ---
   const byDate = {};
   restDayData.forEach(r => {
     if (!r.date || !r.position) return;
@@ -341,14 +338,13 @@ function recheckConflicts() {
     if (list.length > 1) {
       list.forEach(ld => {
         ld.conflict = true;
+        ld.conflictType ||= 'leadership';
         ld.conflictReasons.push(`Multiple leaders resting on ${date}`);
       });
     }
   });
 
-  /**********************
-   * 5️⃣ Exceeded weekend RD limit
-   **********************/
+  // --- 5️⃣ Weekend limit exceeded ---
   const weekendDays = ['Friday', 'Saturday', 'Sunday'];
   const weekendCount = {};
   restDayData.forEach(r => {
@@ -360,43 +356,36 @@ function recheckConflicts() {
   });
   Object.entries(weekendCount).forEach(([empNo, count]) => {
     if (count > 2) {
-      restDayData
-        .filter(r => r.employeeNo === empNo)
-        .forEach(r => {
-          const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
-          if (weekendDays.includes(dayName)) {
-            r.conflict = true;
-            r.conflictReasons.push(`Exceeded weekend limit (${count} total)`);
-          }
-        });
+      restDayData.filter(r => r.employeeNo === empNo).forEach(r => {
+        const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
+        if (weekendDays.includes(dayName)) {
+          r.conflict = true;
+          r.conflictType ||= 'weekend';
+          r.conflictReasons.push(`Exceeded maximum of 2 weekend rest days (has ${count})`);
+        }
+      });
     }
   });
 
-  /**********************
-   * 6️⃣ Build human short row message
-   **********************/
+  // --- 6️⃣ Row short messages (only for display) ---
+  const shortMessage = {
+    sameDate: 'Same date conflict',
+    duplicate: 'Duplicate date',
+    missing: 'Not in WS',
+    leadership: 'Leadership overlap',
+    weekend: 'Too many weekends'
+  };
   [...workScheduleData, ...restDayData].forEach(d => {
-    if (d.conflictReasons?.length) {
-      const reason = d.conflictReasons[0]; // take first only for row display
-      // Simplify wording for row-level display
-      if (reason.includes('same date')) d.conflictReason = 'Same date conflict';
-      else if (reason.includes('Duplicate')) d.conflictReason = 'Duplicate date';
-      else if (reason.includes('Employee not found')) d.conflictReason = 'Not in WS';
-      else if (reason.includes('leaders')) d.conflictReason = 'Leadership overlap';
-      else if (reason.includes('weekend')) d.conflictReason = 'Too many weekends';
-      else d.conflictReason = 'Conflict detected';
+    if (d.conflict) {
+      d.conflictReason = shortMessage[d.conflictType] || 'Conflict detected';
     }
   });
 
-  /**********************
-   * 7️⃣ Build detailed summary
-   **********************/
+  // --- 7️⃣ Summary table (full detail) ---
   const allConflicts = [...workScheduleData, ...restDayData].filter(d => d.conflict);
   const summaryLines = allConflicts.map(d => {
-    const side = workScheduleData.includes(d) ? 'WS' : 'RD';
-    const emp = d.employeeNo || '(No EmpNo)';
-    const name = d.name || '';
-    return `${side}: ${emp} ${name} → ${d.conflictReasons.join('; ')}`;
+    const type = workScheduleData.includes(d) ? 'WS' : 'RD';
+    return `${type} | ${d.employeeNo || '(No EmpNo)'} ${d.name || ''} — ${d.conflictReasons.join('; ')}`;
   });
 
   try {
@@ -539,26 +528,35 @@ if (isWorkSchedule) {
            renderTable(restTableBody, restDayData, ['employeeNo', 'name', 'position', 'date', 'dayOfWeek'], 'rest');
        }
       
-      function renderSummary(conflictCount, leadershipConflict) {
-        if (workScheduleData.length === 0 && restDayData.length === 0) {
-          summaryEl.innerHTML = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2><p id="summaryText">No data pasted yet.</p>`;
-          return;
-        }
-        let summaryHTML = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
-        if (conflictCount > 0) {
-          summaryHTML += `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
-            <p class="font-bold">Conflicts Detected!</p>
-            <p>${conflictCount} employee(s) have a rest day scheduled on a work day. Please review the highlighted rows.</p>
-            ${leadershipConflict ? `<p class="mt-2"><strong>Warning:</strong> A conflict involves leadership.</p>` : ''}
-          </div>`;
-        } else {
-          summaryHTML += `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" role="alert">
-            <p class="font-bold">No Conflicts Found!</p>
-            <p>All schedules appear to be in order.</p>
-          </div>`;
-        }
-        summaryEl.innerHTML = summaryHTML;
-      }
+      function renderSummary(conflictCount, summaryLines) {
+  if (workScheduleData.length === 0 && restDayData.length === 0) {
+    summaryEl.innerHTML = `
+      <h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>
+      <p id="summaryText">No data pasted yet.</p>`;
+    return;
+  }
+
+  let html = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
+
+  if (conflictCount > 0) {
+    html += `
+      <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+        <p class="font-bold mb-1">⚠️ Conflicts Detected (${conflictCount})</p>
+        <p class="mb-2">Review the highlighted rows for issues. Detailed breakdown below:</p>
+        <ul class="list-disc ml-6 text-sm leading-snug space-y-1">
+          ${summaryLines.map(line => `<li>${line}</li>`).join('')}
+        </ul>
+      </div>`;
+  } else {
+    html += `
+      <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg">
+        <p class="font-bold">✅ No Conflicts Found</p>
+        <p>All schedules appear valid.</p>
+      </div>`;
+  }
+
+  summaryEl.innerHTML = html;
+}
 
       function updateButtonStates() {
         generateWorkFileBtn.disabled = workScheduleData.length === 0;
