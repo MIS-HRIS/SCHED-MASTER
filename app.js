@@ -344,28 +344,83 @@ function recheckConflicts() {
     }
   });
 
-  // --- 5️⃣ Weekend limit exceeded ---
-  const weekendDays = ['Friday', 'Saturday', 'Sunday'];
-  const weekendCount = {};
-  restDayData.forEach(r => {
-    if (!r.employeeNo || !r.date) return;
-    const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
-    if (weekendDays.includes(dayName)) {
-      weekendCount[r.employeeNo] = (weekendCount[r.employeeNo] || 0) + 1;
+// --- 5️⃣ Smarter Weekend RD Counting ---
+const weekendDays = ['Friday', 'Saturday', 'Sunday'];
+const weekendGroups = {}; // { employeeNo: { 'YYYY-WW': Set of unique weekend pairs } }
+
+// Helper: get ISO week number
+function getWeekKey(dateStr) {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const firstThursday = new Date(date);
+  firstThursday.setDate(date.getDate() + 4 - (date.getDay() || 7));
+  const weekNo = Math.ceil((((firstThursday - new Date(year, 0, 1)) / 86400000) + 1) / 7);
+  return `${year}-W${weekNo}`;
+}
+
+// Helper: map day name to number
+function getDayIndex(dayName) {
+  const map = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+  return map[dayName] ?? -1;
+}
+
+// Build weekend groups per employee per week
+restDayData.forEach(r => {
+  if (!r.employeeNo || !r.date) return;
+  const weekKey = getWeekKey(r.date);
+  const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
+  const empNo = r.employeeNo;
+
+  if (!weekendGroups[empNo]) weekendGroups[empNo] = {};
+  if (!weekendGroups[empNo][weekKey]) weekendGroups[empNo][weekKey] = [];
+
+  // Only consider if it includes Fri/Sat/Sun
+  if (weekendDays.includes(dayName)) {
+    weekendGroups[empNo][weekKey].push({ dayName, date: r.date });
+  }
+});
+
+// Compute weekend “sets” per week (e.g., Fri-Sat = 1 weekend)
+const weekendCount = {};
+
+Object.entries(weekendGroups).forEach(([empNo, weeks]) => {
+  weekendCount[empNo] = 0;
+  Object.entries(weeks).forEach(([weekKey, days]) => {
+    if (days.length === 0) return;
+
+    // Sort by day index
+    const sortedDays = days.sort((a, b) => getDayIndex(a.dayName) - getDayIndex(b.dayName));
+
+    let weekendSet = new Set();
+    for (let i = 0; i < sortedDays.length; i++) {
+      const current = getDayIndex(sortedDays[i].dayName);
+      const next = getDayIndex(sortedDays[i + 1]?.dayName);
+      weekendSet.add(sortedDays[i].dayName);
+
+      // If next day is not consecutive (like Sun → Mon), that’s one group done
+      if (next - current > 1 || i === sortedDays.length - 1) {
+        weekendCount[empNo] += 1;
+        weekendSet.clear();
+      }
     }
   });
-  Object.entries(weekendCount).forEach(([empNo, count]) => {
-    if (count > 2) {
-      restDayData.filter(r => r.employeeNo === empNo).forEach(r => {
+});
+
+// Mark conflicts if > 2 weekend RD groups total
+Object.entries(weekendCount).forEach(([empNo, count]) => {
+  if (count > 2) {
+    restDayData
+      .filter(r => r.employeeNo === empNo)
+      .forEach(r => {
         const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
         if (weekendDays.includes(dayName)) {
           r.conflict = true;
           r.conflictType ||= 'weekend';
-          r.conflictReasons.push(`Exceeded maximum of 2 weekend rest days (has ${count})`);
+          r.conflictReasons.push(`Exceeded limit: ${count} weekend RD groups (max 2 allowed)`);
         }
       });
-    }
-  });
+  }
+});
 
   // --- 6️⃣ Row short messages (only for display) ---
   const shortMessage = {
@@ -563,13 +618,36 @@ tr.className = rowClass;
   let html = `<h2 class="text-2xl font-bold mb-4 text-slate-800">Summary & Conflicts</h2>`;
 
   if (conflictCount > 0) {
+    // Limit visible conflicts to 6
+    const visibleItems = summaryLines.slice(0, 6);
+    const hiddenItems = summaryLines.slice(6);
+
     html += `
       <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
         <p class="font-bold mb-1">⚠️ Conflicts Detected (${conflictCount})</p>
         <p class="mb-2">Review the highlighted rows for issues. Detailed breakdown below:</p>
-        <ul class="list-disc ml-6 text-sm leading-snug space-y-1">
-          ${summaryLines.map(line => `<li>${line}</li>`).join('')}
-        </ul>
+
+        <div id="summaryListWrapper" class="max-h-60 overflow-y-auto transition-all duration-300">
+          <ul id="summaryList" class="list-disc ml-6 text-sm leading-snug space-y-1">
+            ${visibleItems.map(line => `<li>${line}</li>`).join('')}
+            ${
+              hiddenItems.length > 0
+                ? `<div id="hiddenSummary" class="hidden">
+                    ${hiddenItems.map(line => `<li>${line}</li>`).join('')}
+                   </div>`
+                : ''
+            }
+          </ul>
+        </div>
+
+        ${
+          hiddenItems.length > 0
+            ? `<button id="toggleSummaryBtn"
+                class="mt-3 text-sm font-medium text-cyan-700 hover:text-cyan-900 transition">
+                See more ▼
+              </button>`
+            : ''
+        }
       </div>`;
   } else {
     html += `
@@ -580,6 +658,19 @@ tr.className = rowClass;
   }
 
   summaryEl.innerHTML = html;
+
+  // Handle See More / See Less toggle
+  const toggleBtn = document.getElementById('toggleSummaryBtn');
+  const hiddenSummary = document.getElementById('hiddenSummary');
+
+  if (toggleBtn && hiddenSummary) {
+    let expanded = false;
+    toggleBtn.addEventListener('click', () => {
+      expanded = !expanded;
+      hiddenSummary.classList.toggle('hidden', !expanded);
+      toggleBtn.textContent = expanded ? 'See less ▲' : 'See more ▼';
+    });
+  }
 }
 
       function updateButtonStates() {

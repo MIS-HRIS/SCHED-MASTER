@@ -313,3 +313,13 @@ tbody tr:hover {
   background-color: #fee2e2; /* fallback red */
   border-left: 5px solid #ef4444;
 }
+#summaryListWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+#summaryListWrapper::-webkit-scrollbar-thumb {
+  background-color: #94a3b8; /* slate-400 */
+  border-radius: 3px;
+}
+#summaryListWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b; /* slate-500 */
+}
