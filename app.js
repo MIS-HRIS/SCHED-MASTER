@@ -907,13 +907,57 @@ tr.className = rowClass;
        * UTILITY FUNCTIONS   *
       \*************************/
       function excelDateToJS(excelDate) {
-        if (typeof excelDate === 'string' && (excelDate.includes('/') || excelDate.includes('-'))) {
-          return new Date(excelDate).toLocaleDateString();
-        }
-        const a = parseFloat(excelDate);
-        if (isNaN(a)) return excelDate;
-        return new Date((a - 25569) * 86400 * 1000).toLocaleDateString();
-      }
+  if (!excelDate) return '';
+
+  // ✅ 1. Already a Date object
+  if (excelDate instanceof Date && !isNaN(excelDate)) {
+    return excelDate.toLocaleDateString();
+  }
+
+  // ✅ 2. Numeric Excel serial date (e.g., 45678)
+  const a = parseFloat(excelDate);
+  if (!isNaN(a) && a > 20000) {
+    const date = new Date((a - 25569) * 86400 * 1000);
+    return date.toLocaleDateString();
+  }
+
+  // ✅ 3. Text-based formats (handles "22-Nov", "Nov 22", "11/22/25", etc.)
+  let parsedDate = null;
+  const str = excelDate.toString().trim();
+
+  // Match patterns like "22-Nov" or "22 Nov"
+  const shortMonthMatch = str.match(/^(\d{1,2})[-\s]([A-Za-z]{3,})$/);
+  if (shortMonthMatch) {
+    const [_, day, mon] = shortMonthMatch;
+    const currentYear = new Date().getFullYear();
+    parsedDate = new Date(`${mon} ${day}, ${currentYear}`);
+  }
+
+  // Match patterns like "Nov 22, 25" or "Nov 22 2025"
+  if (!parsedDate || isNaN(parsedDate)) {
+    const flexibleDate = Date.parse(str.replace(/(\d{1,2})-(\w{3,})/, '$2 $1'));
+    if (!isNaN(flexibleDate)) parsedDate = new Date(flexibleDate);
+  }
+
+  // Match common numeric formats
+  if ((!parsedDate || isNaN(parsedDate)) && /[-/]/.test(str)) {
+    const normalized = str.replace(/-/g, '/');
+    parsedDate = new Date(normalized);
+  }
+
+  // Fallback: try native Date()
+  if (!parsedDate || isNaN(parsedDate)) {
+    parsedDate = new Date(str);
+  }
+
+  // ✅ If still invalid, just return raw text (so it doesn’t break parsing)
+  if (!parsedDate || isNaN(parsedDate)) {
+    console.warn('⚠️ Could not parse date:', excelDate);
+    return excelDate;
+  }
+
+  return parsedDate.toLocaleDateString();
+}
       
       function jsDateToExcel(jsDateStr) {
         const date = new Date(jsDateStr);
