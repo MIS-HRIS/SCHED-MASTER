@@ -112,6 +112,7 @@ function handlePaste(event) {
     // ✅ Flexible parsing (no headers)
     const classifyValue = (v) => {
       v = v.trim();
+      v = v.toUpperCase();
 
       if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v))
         return "date"; // Date
@@ -122,8 +123,9 @@ function handlePaste(event) {
       if (/^\d{1,6}$/.test(v))
         return "employeeNo"; // Employee number
 
-      if (/^[A-Za-z]{3}-\d{3}$/.test(v))
-        return "shiftCode"; // Shift code
+      // Accepts AASP-, RBG-, RBT-, WHSE- prefixes with 3 digits, optional details like (10-5)
+if (/^(?:AASP|RBG|RBT|WHSE)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
+  return "shiftCode";
 
       if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|branch\s*head)$/i.test(v))
         return "position"; // Known position words
@@ -214,7 +216,7 @@ function detectColumnMapping(rows, isWork) {
       if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v)) return "date";
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
       if (/^\d{1,6}$/.test(v)) return "employeeNo";
-      if (/^[A-Za-z]{3}-\d{3}$/.test(v)) return "shiftCode";
+      if (/^(?:AASP|RBG|RBT|WHSE)-\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
       if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead)$/i.test(v)) return "position";
       if (/^[A-Za-z\s]+$/.test(v)) return "name";
       return "unknown";
