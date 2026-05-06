@@ -290,7 +290,9 @@ const workDetectedHeader = headers.work;
 const restDetectedHeader = headers.rest;
 
 if (joined.includes('WORK SCHEDULE') || joined.includes('SHIFT CODE')) {
-  if (hasUsableHeader(header)) workHeader = header;
+if (hasUsableHeader(workDetectedHeader)) {
+  workHeader = workDetectedHeader;
+}
 }
 
 if (joined.includes('REST DAY SCHEDULE') || joined.includes('REST DAY DATE')) {
