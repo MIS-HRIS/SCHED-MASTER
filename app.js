@@ -72,6 +72,11 @@ importScheduleFiles.addEventListener('change', handleImportFiles);
 generateImportedBtn.addEventListener('click', generateImportedData);
 removeConflictFilesBtn.addEventListener('click', () => {
   importedFiles = importedFiles.filter(file => file.conflicts.length === 0);
+  generateImportedBtn.disabled = importedFiles.length === 0;
+
+if (importedFiles.length === 0) {
+  generateImportedBtn.classList.add('hidden');
+}
   renderImportSummaryDashboard();
   showWarning('Conflicted file(s) removed.');
 });
