@@ -513,62 +513,38 @@ function detectScheduleType(rows) {
 }
 
 function getImportedPreviewConflicts() {
-  const tempWorkRows = [];
-  const tempRestRows = [];
-
-  importedFiles.forEach(file => {
-    file.rows.forEach(row => {
-      if (row.type === 'work') {
-        tempWorkRows.push(row);
-      } else if (row.type === 'rest') {
-        tempRestRows.push(row);
-      }
-    });
-  });
-
   const workMap = new Map();
   const previewConflicts = [];
 
-  tempWorkRows.forEach((row, index) => {
-    if (!row.employeeNo || !row.date) return;
+  importedFiles.forEach(file => {
+    file.rows.forEach(row => {
+      if (row.type !== 'work' || !row.employeeNo || !row.date) return;
 
-    const key = `${row.employeeNo}-${row.date}`;
-
-    if (workMap.has(key)) {
-      previewConflicts.push({
-        type: 'work',
-        row: row.rowNumber || index + 1,
-        reason: `Duplicate Work Schedule for employee ${row.employeeNo} on ${row.date}`
+      const key = `${row.employeeNo}-${row.date}`;
+      workMap.set(key, {
+        ...row,
+        fileName: file.fileName,
+        sheetName: file.sheetName
       });
-    }
-
-    workMap.set(key, row);
+    });
   });
 
-  const restMap = new Map();
+  importedFiles.forEach(file => {
+    file.rows.forEach(row => {
+      if (row.type !== 'rest' || !row.employeeNo || !row.date) return;
 
-  tempRestRows.forEach((row, index) => {
-    if (!row.employeeNo || !row.date) return;
+      const key = `${row.employeeNo}-${row.date}`;
 
-    const key = `${row.employeeNo}-${row.date}`;
-
-    if (restMap.has(key)) {
-      previewConflicts.push({
-        type: 'rest',
-        row: row.rowNumber || index + 1,
-        reason: `Duplicate Rest Day for employee ${row.employeeNo} on ${row.date}`
-      });
-    }
-
-    restMap.set(key, row);
-
-    if (workMap.has(key)) {
-      previewConflicts.push({
-        type: 'combined',
-        row: row.rowNumber || index + 1,
-        reason: `Employee ${row.employeeNo} has Work Schedule and Rest Day on the same date: ${row.date}`
-      });
-    }
+      if (workMap.has(key)) {
+        previewConflicts.push({
+          fileName: file.fileName,
+          sheetName: file.sheetName,
+          employeeNo: row.employeeNo,
+          date: row.date,
+          reason: `Employee ${row.employeeNo} has Work Schedule and Rest Day overlap on ${row.date}`
+        });
+      }
+    });
   });
 
   return previewConflicts;
@@ -618,82 +594,127 @@ previewConflicts.forEach(conflict => {
   }
 });
 
-const previewConflictHtml = previewConflicts.length > 0
-  ? `
-    <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p class="font-semibold text-red-700">Schedule Conflict Preview</p>
-          <p class="text-sm text-red-700">${previewConflicts.length} conflict(s) found</p>
-          ${Object.entries(groupedPreviewConflicts).map(([empNo, dates]) => `
-            <p class="mt-2 text-sm text-red-700">
-              Employee ${empNo} has Work Schedule and Rest Day overlap on ${dates.length} date(s)
-            </p>
-          `).join('')}
-        </div>
+const filesGrouped = {};
 
-        <button type="button" id="togglePreviewConflictDetailsBtn" class="text-sm font-semibold text-red-700 hover:text-red-900">
-          View Details
-        </button>
-      </div>
+importedFiles.forEach((file, index) => {
+  if (!filesGrouped[file.fileName]) {
+    filesGrouped[file.fileName] = {
+      fileName: file.fileName,
+      sheets: [],
+      indexes: [],
+      fieldConflicts: [],
+      scheduleConflicts: []
+    };
+  }
 
-      <div id="previewConflictDetails" class="hidden mt-4 border-t border-red-200 pt-4">
-        ${Object.entries(groupedPreviewConflicts).map(([empNo, dates]) => `
-          <div class="mb-3">
-            <p class="font-semibold text-red-700">
-              Employee ${empNo} — Work Schedule and Rest Day overlap
-            </p>
-            <p class="text-sm text-red-700">
-              Affected Dates: ${dates.join(', ')}
-            </p>
-            <p class="text-sm font-semibold text-red-700">
-              Total: ${dates.length}
-            </p>
-          </div>
+  filesGrouped[file.fileName].sheets.push(file.sheetName);
+  filesGrouped[file.fileName].indexes.push(index);
+  filesGrouped[file.fileName].fieldConflicts.push(...file.conflicts);
+});
+
+previewConflicts.forEach(conflict => {
+  if (!filesGrouped[conflict.fileName]) return;
+  filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
+});
+
+importSummaryList.innerHTML = Object.values(filesGrouped).map((fileGroup, groupIndex) => {
+  const groupedScheduleConflicts = {};
+
+  fileGroup.scheduleConflicts.forEach(conflict => {
+    if (!groupedScheduleConflicts[conflict.employeeNo]) {
+      groupedScheduleConflicts[conflict.employeeNo] = [];
+    }
+
+    if (!groupedScheduleConflicts[conflict.employeeNo].includes(conflict.date)) {
+      groupedScheduleConflicts[conflict.employeeNo].push(conflict.date);
+    }
+  });
+
+  const totalScheduleConflicts = fileGroup.scheduleConflicts.length;
+  const totalFieldConflicts = fileGroup.fieldConflicts.length;
+  const hasConflict = totalScheduleConflicts > 0 || totalFieldConflicts > 0;
+
+  const conflictSummaryHtml = hasConflict
+    ? `
+      <div class="mt-3 text-sm text-red-700">
+        <p class="font-semibold">${totalFieldConflicts + totalScheduleConflicts} conflict(s) found</p>
+        ${Object.entries(groupedScheduleConflicts).map(([empNo, dates]) => `
+          <p>Employee ${empNo} has Work Schedule and Rest Day overlap on ${dates.length} date(s)</p>
         `).join('')}
       </div>
-    </div>
-  `
-  : '';
-importSummaryList.innerHTML = previewConflictHtml + importedFiles.map((file, index) => {
-    const hasConflict = file.conflicts.length > 0;
 
-    const conflictHtml = hasConflict
-      ? `
-        <ul class="mt-2 list-disc ml-6 text-sm text-red-700">
-          ${file.conflicts.map(c => `<li>Row ${c.row}: ${c.reason}</li>`).join('')}
-        </ul>
-      `
-      : `<p class="mt-2 text-sm text-green-700">No conflict detected.</p>`;
-
-    return `
-      <div class="rounded-lg border ${hasConflict ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'} p-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p class="font-semibold text-slate-800">${file.fileName}</p>
-            <p class="text-xs text-slate-500">Sheet: ${file.sheetName}</p>
+      <div id="fileConflictDetails-${groupIndex}" class="hidden mt-3 border-t border-red-200 pt-3 text-sm text-red-700">
+        ${Object.entries(groupedScheduleConflicts).map(([empNo, dates]) => `
+          <div class="mb-3">
+            <p class="font-semibold">Employee ${empNo} — Work Schedule and Rest Day overlap</p>
+            <p>Affected Dates: ${dates.join(', ')}</p>
+            <p class="font-semibold">Total: ${dates.length}</p>
           </div>
-          <button type="button" class="remove-imported-file-btn text-xs font-semibold text-red-600 hover:text-red-800" data-index="${index}">
-  Remove
-</button>
+        `).join('')}
+
+        ${
+          totalFieldConflicts > 0
+            ? `<ul class="list-disc ml-6">
+                ${fileGroup.fieldConflicts.map(c => `<li>Row ${c.row}: ${c.reason}</li>`).join('')}
+              </ul>`
+            : ''
+        }
+      </div>
+    `
+    : `<p class="mt-2 text-sm text-green-700">No conflict detected.</p>`;
+
+  return `
+    <div class="rounded-lg border ${hasConflict ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'} p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p class="font-semibold text-slate-800">${fileGroup.fileName}</p>
+          <p class="text-xs text-slate-500">Sheet(s): ${[...new Set(fileGroup.sheets)].join(', ')}</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          ${
+            hasConflict
+              ? `<button type="button" class="toggle-file-conflict-details-btn text-xs font-semibold text-red-700 hover:text-red-900" data-index="${groupIndex}">
+                  View Details
+                </button>`
+              : ''
+          }
+
+          <button type="button" class="remove-imported-file-btn text-xs font-semibold text-red-600 hover:text-red-800" data-file-name="${fileGroup.fileName}">
+            Remove
+          </button>
+
           <span class="px-3 py-1 rounded-full text-xs font-bold ${hasConflict ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
             ${hasConflict ? 'HAS CONFLICT' : 'NO CONFLICT'}
           </span>
         </div>
-        ${conflictHtml}
       </div>
-    `;
-  }).join('');
 
-const togglePreviewConflictDetailsBtn = document.getElementById('togglePreviewConflictDetailsBtn');
-const previewConflictDetails = document.getElementById('previewConflictDetails');
+      ${conflictSummaryHtml}
+    </div>
+  `;
+}).join('');
 
-if (togglePreviewConflictDetailsBtn && previewConflictDetails) {
-  togglePreviewConflictDetailsBtn.addEventListener('click', () => {
-    const isHidden = previewConflictDetails.classList.toggle('hidden');
-    togglePreviewConflictDetailsBtn.textContent = isHidden ? 'View Details' : 'Hide Details';
+document.querySelectorAll('.toggle-file-conflict-details-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const index = btn.dataset.index;
+    const details = document.getElementById(`fileConflictDetails-${index}`);
+
+    if (!details) return;
+
+    const isHidden = details.classList.toggle('hidden');
+    btn.textContent = isHidden ? 'View Details' : 'Hide Details';
   });
-}
+});
+
+document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const fileName = btn.dataset.fileName;
+    importedFiles = importedFiles.filter(file => file.fileName !== fileName);
+    renderImportSummaryDashboard();
+    showWarning('Imported file removed.');
+  });
+});
 
   document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
     btn.addEventListener('click', () => {
