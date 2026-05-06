@@ -192,87 +192,156 @@ function parseImportedRows(rows, isWork) {
 function parseMixedScheduleRows(rows) {
   const parsed = [];
 
-  rows.forEach((row, index) => {
-    const joined = row.join(' ').toUpperCase();
+  let workHeader = null;
+  let restHeader = null;
 
-    // Skip section titles
-    if (
-      joined.includes('WORK SCHEDULE') ||
-      joined.includes('REST DAY SCHEDULE')
-    ) {
+  const normalize = (v) =>
+    String(v || '').toUpperCase().replace(/\s+/g, ' ').trim();
+
+  const isShiftCode = (v) =>
+    /^(?:AASP|RBG|RBT|WHSE|CHAR)-\d{3}/i.test(String(v || '').trim());
+
+  const isDate = (v) => {
+    const value = String(v || '').trim();
+    if (!value) return false;
+
+    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(value)) return true;
+    if (/^[A-Za-z]+\s+\d{1,2},?\s+\d{4}$/i.test(value)) return true;
+    if (!isNaN(parseFloat(value)) && parseFloat(value) > 20000) return true;
+
+    return !isNaN(Date.parse(value)) && /[A-Za-z]/.test(value);
+  };
+
+  const isDay = (v) =>
+    /^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(String(v || '').trim());
+
+  const findHeaderIndexes = (row) => {
+    const header = {
+      name: null,
+      employeeNo: null,
+      date: null,
+      shiftCode: null,
+      dayOfWeek: null,
+      position: null
+    };
+
+    row.forEach((cell, idx) => {
+      const h = normalize(cell);
+
+      if (h === 'NAME' || h === 'EMPLOYEE NAME') header.name = idx;
+      else if (h.includes('EMPLOYEE NO')) header.employeeNo = idx;
+      else if (h === 'WORK DATE' || h === 'REST DAY DATE') header.date = idx;
+      else if (h.includes('SHIFT CODE') || h.includes('SCHED CODE')) header.shiftCode = idx;
+      else if (h.includes('DAY OF WEEK')) header.dayOfWeek = idx;
+      else if (h === 'POSITION') header.position = idx;
+    });
+
+    return header;
+  };
+
+  const hasUsableHeader = (header) =>
+    header.employeeNo !== null && header.date !== null;
+
+  rows.forEach((row, index) => {
+    const joined = normalize(row.join(' '));
+
+    const header = findHeaderIndexes(row);
+
+    if (joined.includes('WORK SCHEDULE') || joined.includes('SHIFT CODE')) {
+      if (hasUsableHeader(header)) workHeader = header;
       return;
     }
 
-    const values = row.map(v => String(v || '').trim());
+    if (joined.includes('REST DAY SCHEDULE') || joined.includes('REST DAY DATE')) {
+      if (hasUsableHeader(header)) restHeader = header;
+      return;
+    }
 
-    let entry = {
-      rowNumber: index + 1,
-      employeeNo: '',
-      name: '',
-      position: '',
-      date: '',
-      shiftCode: '',
-      dayOfWeek: '',
-      type: ''
-    };
+    // If row contains two tables side-by-side, split by big blank gap
+    const blankIndexes = row
+      .map((cell, idx) => ({ cell: String(cell || '').trim(), idx }))
+      .filter(x => x.cell === '')
+      .map(x => x.idx);
 
-    values.forEach(value => {
-      const upper = value.toUpperCase();
+    const possibleGap = blankIndexes.find(idx => idx >= 5 && idx <= row.length - 5);
 
-      if (/^\d{1,6}$/.test(value)) {
-        entry.employeeNo = value;
+    const blocks = [];
+
+    if (possibleGap !== undefined) {
+      blocks.push({
+        type: 'work',
+        offset: 0,
+        row: row.slice(0, possibleGap)
+      });
+
+      blocks.push({
+        type: 'rest',
+        offset: possibleGap + 1,
+        row: row.slice(possibleGap + 1)
+      });
+    } else {
+      blocks.push({
+        type: null,
+        offset: 0,
+        row
+      });
+    }
+
+    blocks.forEach(block => {
+      const activeHeader =
+        block.type === 'work'
+          ? workHeader
+          : block.type === 'rest'
+            ? restHeader
+            : workHeader || restHeader;
+
+      let entry = {
+        rowNumber: index + 1,
+        employeeNo: '',
+        name: '',
+        position: '',
+        date: '',
+        shiftCode: '',
+        dayOfWeek: '',
+        type: block.type || ''
+      };
+
+      if (activeHeader) {
+        const getVal = (key) => {
+          if (activeHeader[key] === null || activeHeader[key] === undefined) return '';
+          const localIndex = activeHeader[key] - block.offset;
+          return String(block.row[localIndex] || '').trim();
+        };
+
+        entry.name = getVal('name');
+        entry.employeeNo = getVal('employeeNo');
+        entry.date = excelDateToJS(getVal('date'));
+        entry.shiftCode = getVal('shiftCode').toUpperCase();
+        entry.dayOfWeek = getVal('dayOfWeek');
+        entry.position = getVal('position');
+      } else {
+        block.row.forEach(value => {
+          value = String(value || '').trim();
+          const upper = value.toUpperCase();
+
+          if (/^\d{1,6}$/.test(value)) entry.employeeNo ||= value;
+          else if (isShiftCode(upper)) entry.shiftCode ||= upper;
+          else if (isDate(value)) entry.date ||= excelDateToJS(value);
+          else if (isDay(value)) entry.dayOfWeek ||= value;
+          else if (/^(branch\s*head|oic|officer\s*in\s*charge|cashier|manager|assistant|lead|mac\s*expert|site\s*supervisor)$/i.test(value)) entry.position ||= value;
+          else if (/^[A-Za-z,\s.-]+$/.test(value)) entry.name ||= value;
+        });
       }
 
-      else if (
-        /^(?:AASP|RBG|RBT|WHSE|CHAR)-\d{3}/i.test(upper)
-      ) {
-        entry.shiftCode = upper;
+      if (!entry.type) {
+        if (entry.shiftCode && entry.date) entry.type = 'work';
+        else if (!entry.shiftCode && entry.date) entry.type = 'rest';
       }
 
-      else if (
-        /^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(value) ||
-        /^[A-Z]+\s+\d{1,2},?\s+\d{4}$/i.test(value)
-      ) {
-        entry.date = excelDateToJS(value);
-      }
-
-      else if (
-        /^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(value)
-      ) {
-        entry.dayOfWeek = value;
-      }
-
-      else if (
-        /^(branch\s*head|oic|officer\s*in\s*charge|cashier|manager|assistant|lead|mac\s*expert|site\s*supervisor)$/i.test(value)
-      ) {
-        entry.position = value;
-      }
-
-      else if (
-        /^[A-Za-z,\s.-]+$/.test(value)
-      ) {
-        if (!entry.name) {
-          entry.name = value;
-        }
+      if (entry.employeeNo || entry.name || entry.date) {
+        parsed.push(entry);
       }
     });
-
-    // Intelligent row type detection
-    if (entry.shiftCode && entry.date) {
-      entry.type = 'work';
-    }
-
-    else if (!entry.shiftCode && entry.date) {
-      entry.type = 'rest';
-    }
-
-    if (
-      entry.employeeNo ||
-      entry.name ||
-      entry.date
-    ) {
-      parsed.push(entry);
-    }
   });
 
   return parsed;
