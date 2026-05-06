@@ -18,6 +18,8 @@
       const successMsg = document.getElementById('success-message');
       const generateWorkFileBtn = document.getElementById('generateWorkFile');
       const importScheduleFiles = document.getElementById('importScheduleFiles');
+      const addScheduleFilesBtn = document.getElementById('addScheduleFilesBtn');
+const addScheduleFilesInput = document.getElementById('addScheduleFilesInput');
 const importScheduleBtn = document.getElementById('importScheduleBtn');
 const generateImportedBtn = document.getElementById('generateImportedBtn');
 const importSummaryPanel = document.getElementById('importSummaryPanel');
@@ -56,27 +58,31 @@ let importedFiles = [];
       const editShiftCodeWrapper = document.getElementById('editShiftCodeWrapper');
 
 
-      /*************************\
-       * EVENT LISTENERS     *
-      \*************************/
-      workInput.addEventListener('paste', handlePaste);
-      restInput.addEventListener('paste', handlePaste);
+/*************************\
+ * EVENT LISTENERS     *
+\*************************/
+workInput.addEventListener('paste', handlePaste);
+restInput.addEventListener('paste', handlePaste);
 
-      generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
-      generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
+generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
+generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
+
 importScheduleBtn.addEventListener('click', function () {
-  addScheduleFilesBtn.addEventListener('click', function () {
-  addScheduleFilesInput.click();
-});
   importScheduleFiles.click();
 });
 
+addScheduleFilesBtn.addEventListener('click', function () {
+  addScheduleFilesInput.click();
+});
+
 importScheduleFiles.addEventListener('change', handleImportFiles);
+
 addScheduleFilesInput.addEventListener('change', async (event) => {
   await handleImportFiles(event, true);
 });
 
 generateImportedBtn.addEventListener('click', generateImportedData);
+
 removeConflictFilesBtn.addEventListener('click', () => {
   importedFiles = importedFiles.filter(file => file.conflicts.length === 0);
   generateImportedBtn.disabled = importedFiles.length === 0;
@@ -551,10 +557,28 @@ function getImportedPreviewConflicts() {
 }
 
   function renderImportSummaryDashboard() {
-  const totalSheets = importedFiles.length;
-  const conflictFiles = importedFiles.filter(file => file.conflicts.length > 0);
+const totalFiles = Object.keys(filesGrouped).length;
+const conflictFiles = importedFiles.filter(file => {
+  const fileScheduleConflicts = previewConflicts.filter(
+    c => c.fileName === file.fileName
+  );
+
+  return (
+    file.conflicts.length > 0 ||
+    fileScheduleConflicts.length > 0
+  );
+});
   const previewConflicts = getImportedPreviewConflicts();
-  const noConflictFiles = importedFiles.filter(file => file.conflicts.length === 0);
+const noConflictFiles = importedFiles.filter(file => {
+  const fileScheduleConflicts = previewConflicts.filter(
+    c => c.fileName === file.fileName
+  );
+
+  return (
+    file.conflicts.length === 0 &&
+    fileScheduleConflicts.length === 0
+  );
+});
 
   importSummaryPanel.classList.remove('hidden');
   removeAllImportedFilesBtn.classList.toggle('hidden', importedFiles.length === 0);
@@ -715,15 +739,6 @@ document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
     showWarning('Imported file removed.');
   });
 });
-
-  document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const index = Number(btn.dataset.index);
-      importedFiles.splice(index, 1);
-      renderImportSummaryDashboard();
-      showWarning('Imported file/sheet removed.');
-    });
-  });
 }
 async function handleImportFiles(event, appendMode = false) {
   const files = Array.from(event.target.files || []);
@@ -756,6 +771,7 @@ const upperSheetName = sheetName.toUpperCase();
 const ignoredSheetKeywords = [
   'AASP CODE',
   'RSO CODE',
+  'RBT CODE',
   'WAREHOUSE CODE',
   'HELP SHEET',
 ];
