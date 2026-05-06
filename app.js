@@ -748,7 +748,9 @@ if (!appendMode) {
   let summaryMessage = '';
 
   for (const file of files) {
-    const buffer = await file.arrayBuffer();
+const buffer = await file.arrayBuffer();
+
+await new Promise(resolve => setTimeout(resolve, 0));
 
     const workbook = XLSX.read(buffer, {
       type: 'array'
@@ -829,6 +831,7 @@ if (shouldIgnoreSheet) {
     });
   }
 
+requestAnimationFrame(() => {
   renderImportSummaryDashboard();
 
   generateImportedBtn.disabled =
@@ -837,6 +840,7 @@ if (shouldIgnoreSheet) {
   showSuccess(
     `${importedFiles.length} sheet(s) ready for generation.`
   );
+});
 
   event.target.value = '';
 }
