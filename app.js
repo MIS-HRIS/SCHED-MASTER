@@ -669,6 +669,7 @@ const ignoredSheetKeywords = [
   'AASP CODE',
   'RSO CODE',
   'WAREHOUSE CODE',
+  'HELP SHEET',
 ];
 
 const shouldIgnoreSheet =
