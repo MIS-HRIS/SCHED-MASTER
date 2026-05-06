@@ -1031,6 +1031,9 @@ tr.className = rowClass;
         clearRestBtn.disabled = restDayData.length === 0;
         undoRestBtn.disabled = undoStack.rest.length === 0;
         redoRestBtn.disabled = redoStack.rest.length === 0;
+        if (generateImportedBtn) {
+  generateImportedBtn.disabled = importedFiles.length === 0;
+        }
       }
 
       function switchTab(tab) {
