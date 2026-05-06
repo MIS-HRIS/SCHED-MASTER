@@ -1356,13 +1356,13 @@ if (isWorkSchedule) {
         if (isWorkSchedule) {
             return {
                 'Employee Number': row.employeeNo,
-                'Work Date': new Date(row.date),
+                'Work Date': normalizeDateForExport(row.date),
                 'Shift Code': row.shiftCode,
             };
         } else {
             return {
                 'Employee No': row.employeeNo,
-                'Rest Day Date': new Date(row.date),
+                'Rest Day Date': normalizeDateForExport(row.date),
             };
         }
     });
@@ -1828,6 +1828,33 @@ tr.className = rowClass;
   }
 
   return parsedDate.toLocaleDateString();
+}
+
+function normalizeDateForExport(dateValue) {
+  if (!dateValue || dateValue === 'NaN') return '';
+
+  const value = String(dateValue).trim();
+
+  const match = value.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+  if (match) {
+    let [, month, day, year] = match;
+
+    if (year.length === 2) {
+      year = `20${year}`;
+    }
+
+    return `${month.padStart(2, '0')}/${day.padStart(2, '0')}/${year}`;
+  }
+
+  const parsed = new Date(value);
+
+  if (isNaN(parsed)) return '';
+
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  const year = parsed.getFullYear();
+
+  return `${month}/${day}/${year}`;
 }
       
       function jsDateToExcel(jsDateStr) {
