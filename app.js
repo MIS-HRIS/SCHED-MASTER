@@ -65,10 +65,16 @@ let importedFiles = [];
       generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
       generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
 importScheduleBtn.addEventListener('click', function () {
+  addScheduleFilesBtn.addEventListener('click', function () {
+  addScheduleFilesInput.click();
+});
   importScheduleFiles.click();
 });
 
 importScheduleFiles.addEventListener('change', handleImportFiles);
+addScheduleFilesInput.addEventListener('change', async (event) => {
+  await handleImportFiles(event, true);
+});
 
 generateImportedBtn.addEventListener('click', generateImportedData);
 removeConflictFilesBtn.addEventListener('click', () => {
@@ -77,6 +83,9 @@ removeConflictFilesBtn.addEventListener('click', () => {
 
 if (importedFiles.length === 0) {
   generateImportedBtn.classList.add('hidden');
+}
+if (importedFiles.length === 0) {
+  addScheduleFilesBtn.classList.add('hidden');
 }
   renderImportSummaryDashboard();
   showWarning('Conflicted file(s) removed.');
@@ -574,6 +583,7 @@ function getImportedPreviewConflicts() {
   importSummaryPanel.classList.remove('hidden');
   removeAllImportedFilesBtn.classList.toggle('hidden', importedFiles.length === 0);
   generateImportedBtn.classList.remove('hidden');
+  addScheduleFilesBtn.classList.remove('hidden');
   generateImportedBtn.disabled = importedFiles.length === 0;
 
   importSummaryText.textContent =
@@ -694,12 +704,14 @@ if (togglePreviewConflictDetailsBtn && previewConflictDetails) {
     });
   });
 }
-async function handleImportFiles(event) {
+async function handleImportFiles(event, appendMode = false) {
   const files = Array.from(event.target.files || []);
 
   if (!files.length) return;
 
+if (!appendMode) {
   importedFiles = [];
+}
 
   let summaryMessage = '';
 

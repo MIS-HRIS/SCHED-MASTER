@@ -45,7 +45,9 @@
       <div id="view-schedule">
 <div class="mb-6 flex flex-wrap items-center justify-center gap-4">
 <div id="importDashboard" class="dashboard-card mb-8">
-  <input type="file" id="importScheduleFiles" accept=".xlsx,.xls,.csv" multiple class="hidden">
+  <input type="file" id="importScheduleFiles" accept=".xlsx,.xls,.csv,.numbers" multiple class="hidden">
+  <input type="file" id="addScheduleFilesInput" accept=".xlsx,.xls,.csv,.numbers" multiple class="hidden">
+  
 
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
@@ -63,6 +65,10 @@
         <ion-icon name="folder-open-outline"></ion-icon>
         Import Files
       </button>
+      <button type="button" id="addScheduleFilesBtn" class="action-btn secondary flex items-center gap-2 hidden">
+  <ion-icon name="add-outline"></ion-icon>
+  Add File
+</button>
 
       <button type="button" id="generateImportedBtn" class="action-btn flex items-center gap-2 hidden" disabled>
         <ion-icon name="refresh-outline"></ion-icon>
