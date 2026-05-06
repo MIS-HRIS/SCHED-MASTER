@@ -215,29 +215,69 @@ function parseMixedScheduleRows(rows) {
   const isDay = (v) =>
     /^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(String(v || '').trim());
 
-  const findHeaderIndexes = (row) => {
-    const header = {
-      name: null,
-      employeeNo: null,
-      date: null,
-      shiftCode: null,
-      dayOfWeek: null,
-      position: null
-    };
-
-    row.forEach((cell, idx) => {
-      const h = normalize(cell);
-
-      if (h === 'NAME' || h === 'EMPLOYEE NAME') header.name = idx;
-      else if (h.includes('EMPLOYEE NO')) header.employeeNo = idx;
-      else if (h === 'WORK DATE' || h === 'REST DAY DATE') header.date = idx;
-      else if (h.includes('SHIFT CODE') || h.includes('SCHED CODE')) header.shiftCode = idx;
-      else if (h.includes('DAY OF WEEK')) header.dayOfWeek = idx;
-      else if (h === 'POSITION') header.position = idx;
-    });
-
-    return header;
+const findHeaderIndexes = (row) => {
+  const workHeaders = {
+    name: null,
+    employeeNo: null,
+    date: null,
+    shiftCode: null,
+    dayOfWeek: null,
+    position: null
   };
+
+  const restHeaders = {
+    name: null,
+    employeeNo: null,
+    date: null,
+    dayOfWeek: null,
+    position: null
+  };
+
+  row.forEach((cell, idx) => {
+    const h = normalize(cell);
+
+    // WORK HEADERS
+    if (h === 'NAME' || h === 'EMPLOYEE NAME') {
+      if (workHeaders.name === null) workHeaders.name = idx;
+      else if (restHeaders.name === null) restHeaders.name = idx;
+    }
+
+    else if (h.includes('EMPLOYEE NO')) {
+      if (workHeaders.employeeNo === null) workHeaders.employeeNo = idx;
+      else if (restHeaders.employeeNo === null) restHeaders.employeeNo = idx;
+    }
+
+    else if (h === 'WORK DATE') {
+      workHeaders.date = idx;
+    }
+
+    else if (h === 'REST DAY DATE') {
+      restHeaders.date = idx;
+    }
+
+    else if (
+      h.includes('SHIFT CODE') ||
+      h.includes('SCHED CODE')
+    ) {
+      workHeaders.shiftCode = idx;
+    }
+
+    else if (h.includes('DAY OF WEEK')) {
+      if (workHeaders.dayOfWeek === null) workHeaders.dayOfWeek = idx;
+      else if (restHeaders.dayOfWeek === null) restHeaders.dayOfWeek = idx;
+    }
+
+    else if (h === 'POSITION') {
+      if (workHeaders.position === null) workHeaders.position = idx;
+      else if (restHeaders.position === null) restHeaders.position = idx;
+    }
+  });
+
+  return {
+    work: workHeaders,
+    rest: restHeaders
+  };
+}
 
   const hasUsableHeader = (header) =>
     header.employeeNo !== null && header.date !== null;
@@ -245,14 +285,18 @@ function parseMixedScheduleRows(rows) {
   rows.forEach((row, index) => {
     const joined = normalize(row.join(' '));
 
-    const header = findHeaderIndexes(row);
+const headers = findHeaderIndexes(row);
+const workDetectedHeader = headers.work;
+const restDetectedHeader = headers.rest;
 
 if (joined.includes('WORK SCHEDULE') || joined.includes('SHIFT CODE')) {
   if (hasUsableHeader(header)) workHeader = header;
 }
 
 if (joined.includes('REST DAY SCHEDULE') || joined.includes('REST DAY DATE')) {
-  if (hasUsableHeader(header)) restHeader = header;
+if (hasUsableHeader(restDetectedHeader)) {
+  restHeader = restDetectedHeader;
+}
 }
 
 if (
