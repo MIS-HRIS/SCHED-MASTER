@@ -251,6 +251,15 @@ async function handleImportFiles(event) {
   generateImportedBtn.disabled = importedFiles.length === 0;
 
   showSuccess(`${files.length} file(s) imported successfully.`);
+  setTimeout(() => {
+  const proceed = confirm(
+    `${files.length} file(s) imported successfully.\n\nGenerate data now?`
+  );
+
+  if (proceed) {
+    generateImportedData();
+  }
+}, 200);
 }
 
 function generateImportedData() {
