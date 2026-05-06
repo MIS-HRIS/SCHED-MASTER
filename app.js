@@ -800,6 +800,11 @@ async function handleImportFiles(event, appendMode = false) {
 
         const parsedRows = parseMixedScheduleRows(cleanedRows);
 
+        parsedRows.forEach(row => {
+  row.sourceFile = file.name;
+  row.sourceSheet = sheetName;
+});
+
         const conflicts = validateMixedRows(
           parsedRows,
           file.name,
@@ -901,6 +906,8 @@ function generateImportedData() {
     name: row.name,
     position: row.position,
     date: String(row.date || ''),
+    sourceFile: row.sourceFile || '',
+sourceSheet: row.sourceSheet || '',
     dayOfWeek: row.dayOfWeek
   }));
 
