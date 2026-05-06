@@ -56,11 +56,19 @@ let importedFiles = [];
 
       generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
       generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
-      importScheduleBtn.addEventListener('click', () => importScheduleFiles.click());
+      if (importScheduleBtn && importScheduleFiles) {
+  importScheduleBtn.addEventListener('click', () => {
+    importScheduleFiles.click();
+  });
+}
 
-importScheduleFiles.addEventListener('change', handleImportFiles);
+if (importScheduleFiles) {
+  importScheduleFiles.addEventListener('change', handleImportFiles);
+}
 
-generateImportedBtn.addEventListener('click', generateImportedData);
+if (generateImportedBtn) {
+  generateImportedBtn.addEventListener('click', generateImportedData);
+}
       
       clearWorkBtn.addEventListener('click', () => clearData('work'));
       clearRestBtn.addEventListener('click', () => clearData('rest'));

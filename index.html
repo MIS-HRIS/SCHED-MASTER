@@ -43,20 +43,24 @@
     <main id="app-container">
       <!-- Schedule Input View -->
       <div id="view-schedule">
+        <div class="dashboard-card mb-8 flex flex-wrap items-center justify-center gap-4">
+  <input type="file" id="importScheduleFiles" accept=".xlsx,.xls,.csv" multiple class="hidden">
+
+  <button id="importScheduleBtn" class="action-btn secondary flex items-center gap-2">
+    <ion-icon name="cloud-upload-outline"></ion-icon>
+    Import Schedule Files
+  </button>
+
+  <button id="generateImportedBtn" class="action-btn flex items-center gap-2" disabled>
+    <ion-icon name="refresh-outline"></ion-icon>
+    Generate to Data Below
+  </button>
+</div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Work Schedule Section -->
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
             <div class="mb-4 flex items-center gap-3">
-  <input type="file" id="importWorkFiles" accept=".xlsx,.xls,.csv" multiple class="hidden">
-  <button id="importWorkBtn" class="action-btn secondary">
-    <ion-icon name="cloud-upload-outline"></ion-icon>
-    Import Files
-  </button>
-  <button id="generateImportedWorkBtn" class="action-btn" disabled>
-    Generate to Data Below
-  </button>
-</div>
             <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
             
             <div class="mt-6 flex flex-wrap items-center justify-between gap-y-4 gap-x-2">
