@@ -189,6 +189,144 @@ function parseImportedRows(rows, isWork) {
   return data;
 }
 
+function parseMixedScheduleRows(rows) {
+  const parsed = [];
+
+  rows.forEach((row, index) => {
+    const joined = row.join(' ').toUpperCase();
+
+    // Skip section titles
+    if (
+      joined.includes('WORK SCHEDULE') ||
+      joined.includes('REST DAY SCHEDULE')
+    ) {
+      return;
+    }
+
+    const values = row.map(v => String(v || '').trim());
+
+    let entry = {
+      rowNumber: index + 1,
+      employeeNo: '',
+      name: '',
+      position: '',
+      date: '',
+      shiftCode: '',
+      dayOfWeek: '',
+      type: ''
+    };
+
+    values.forEach(value => {
+      const upper = value.toUpperCase();
+
+      if (/^\d{1,6}$/.test(value)) {
+        entry.employeeNo = value;
+      }
+
+      else if (
+        /^(?:AASP|RBG|RBT|WHSE|CHAR)-\d{3}/i.test(upper)
+      ) {
+        entry.shiftCode = upper;
+      }
+
+      else if (
+        /^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(value) ||
+        /^[A-Z]+\s+\d{1,2},?\s+\d{4}$/i.test(value)
+      ) {
+        entry.date = excelDateToJS(value);
+      }
+
+      else if (
+        /^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(value)
+      ) {
+        entry.dayOfWeek = value;
+      }
+
+      else if (
+        /^(branch\s*head|oic|officer\s*in\s*charge|cashier|manager|assistant|lead|mac\s*expert|site\s*supervisor)$/i.test(value)
+      ) {
+        entry.position = value;
+      }
+
+      else if (
+        /^[A-Za-z,\s.-]+$/.test(value)
+      ) {
+        if (!entry.name) {
+          entry.name = value;
+        }
+      }
+    });
+
+    // Intelligent row type detection
+    if (entry.shiftCode && entry.date) {
+      entry.type = 'work';
+    }
+
+    else if (!entry.shiftCode && entry.date) {
+      entry.type = 'rest';
+    }
+
+    if (
+      entry.employeeNo ||
+      entry.name ||
+      entry.date
+    ) {
+      parsed.push(entry);
+    }
+  });
+
+  return parsed;
+}
+
+function validateMixedRows(rows, fileName, sheetName) {
+  const conflicts = [];
+
+  rows.forEach(row => {
+    // WORK validation
+    if (row.type === 'work') {
+      if (!row.employeeNo) {
+        conflicts.push({
+          row: row.rowNumber,
+          reason: 'Missing Employee Number'
+        });
+      }
+
+      if (!row.date) {
+        conflicts.push({
+          row: row.rowNumber,
+          reason: 'Missing Work Date'
+        });
+      }
+
+      if (!row.shiftCode) {
+        conflicts.push({
+          row: row.rowNumber,
+          reason: 'Missing Shift Code'
+        });
+      }
+    }
+
+    // REST validation
+    else if (row.type === 'rest') {
+      if (!row.employeeNo) {
+        conflicts.push({
+          row: row.rowNumber,
+          reason: 'Missing Employee Number'
+        });
+      }
+
+      if (!row.date) {
+        conflicts.push({
+          row: row.rowNumber,
+          reason: 'Missing Rest Day Date'
+        });
+      }
+    }
+  });
+
+  return conflicts;
+}
+
 function detectScheduleType(rows) {
   const joined = rows.flat().join(' ').toUpperCase();
 
@@ -222,8 +360,6 @@ async function handleImportFiles(event) {
       type: 'array'
     });
 
-    let allRows = [];
-
     workbook.SheetNames.forEach(sheetName => {
       const sheet = workbook.Sheets[sheetName];
 
@@ -232,58 +368,55 @@ async function handleImportFiles(event) {
         raw: false
       });
 
+      const cleanedRows = [];
+
       rows.forEach(row => {
         if (
           row &&
           row.some(cell => String(cell || '').trim() !== '')
         ) {
-          allRows.push(
+          cleanedRows.push(
             row.map(cell => String(cell || '').trim())
           );
         }
       });
-    });
 
-    const detectedType = detectScheduleType(allRows);
+      const parsedRows = parseMixedScheduleRows(cleanedRows);
 
-    const conflicts = detectImportedFileConflicts(
-      [{
+      const conflicts = validateMixedRows(
+        parsedRows,
+        file.name,
+        sheetName
+      );
+
+      importedFiles.push({
         fileName: file.name,
-        rows: allRows
-      }],
-      detectedType === 'work'
-    );
-
-    let hasConflict = conflicts.length > 0;
-
-    importedFiles.push({
-      fileName: file.name,
-      rows: allRows,
-      type: detectedType,
-      hasConflict,
-      conflicts
-    });
-
-    summaryMessage += `FILE: ${file.name}\n`;
-    summaryMessage += `TYPE: ${detectedType.toUpperCase()}\n`;
-
-    if (!hasConflict) {
-      summaryMessage += `STATUS: NO CONFLICT\n\n`;
-    } else {
-      summaryMessage += `STATUS: HAS CONFLICT\n`;
-
-      conflicts.forEach(conflict => {
-        conflict.reasons.forEach(reason => {
-          summaryMessage += `• ${reason}\n`;
-        });
+        sheetName,
+        rows: parsedRows,
+        conflicts
       });
 
-      summaryMessage += `\n`;
-    }
+      summaryMessage += `FILE: ${file.name}\n`;
+      summaryMessage += `SHEET: ${sheetName}\n`;
+
+      const hasConflict = conflicts.length > 0;
+
+      if (!hasConflict) {
+        summaryMessage += `STATUS: NO CONFLICT\n\n`;
+      } else {
+        summaryMessage += `STATUS: HAS CONFLICT\n`;
+
+        conflicts.forEach(conflict => {
+          summaryMessage += `• Row ${conflict.row}: ${conflict.reason}\n`;
+        });
+
+        summaryMessage += `\n`;
+      }
+    });
   }
 
   const hasConflictFiles = importedFiles.some(
-    file => file.hasConflict
+    file => file.conflicts.length > 0
   );
 
   if (hasConflictFiles) {
@@ -293,7 +426,7 @@ async function handleImportFiles(event) {
 
     if (!proceed) {
       importedFiles = importedFiles.filter(
-        file => !file.hasConflict
+        file => file.conflicts.length === 0
       );
 
       showWarning('Conflicted file(s) removed.');
@@ -306,7 +439,7 @@ async function handleImportFiles(event) {
     importedFiles.length === 0;
 
   showSuccess(
-    `${importedFiles.length} valid file(s) ready for generation.`
+    `${importedFiles.length} sheet(s) ready for generation.`
   );
 
   event.target.value = '';
@@ -318,84 +451,53 @@ function generateImportedData() {
     return;
   }
 
-  let validFiles = [...importedFiles];
-  const conflictFiles = [];
-
-  validFiles.forEach(file => {
-    const isWork = file.type === 'work';
-
-    const conflicts = detectImportedFileConflicts(
-      [{ fileName: file.fileName, rows: file.rows }],
-      isWork
-    );
-
-    if (conflicts.length > 0) {
-      conflictFiles.push(...conflicts);
-    }
-  });
-
-  if (conflictFiles.length > 0) {
-    const message = conflictFiles
-      .map(file => `• ${file.fileName}\n  ${file.reasons.join('\n  ')}`)
-      .join('\n\n');
-
-    const proceed = confirm(
-      `Conflict detected:\n\n${message}\n\nPress OK to continue.\nPress Cancel to remove conflicted file(s).`
-    );
-
-    if (!proceed) {
-      validFiles = validFiles.filter(file =>
-        !conflictFiles.some(c => c.fileName === file.fileName)
-      );
-
-      importedFiles = validFiles;
-
-      showWarning('Conflicted file(s) removed.');
-
-      if (!importedFiles.length) {
-        generateImportedBtn.disabled = true;
-        return;
-      }
-    }
-  }
+  saveUndoState('work');
+  saveUndoState('rest');
 
   const workRows = [];
   const restRows = [];
 
   importedFiles.forEach(file => {
-    if (file.type === 'work') {
-      workRows.push(...file.rows);
-    } else {
-      restRows.push(...file.rows);
-    }
+    file.rows.forEach(row => {
+      if (row.type === 'work') {
+        workRows.push(row);
+      }
+
+      else if (row.type === 'rest') {
+        restRows.push(row);
+      }
+    });
   });
 
-  saveUndoState('work');
-  saveUndoState('rest');
+  workScheduleData = workRows.map(row => ({
+    employeeNo: row.employeeNo,
+    name: row.name,
+    position: row.position,
+    date: row.date,
+    shiftCode: row.shiftCode,
+    dayOfWeek: row.dayOfWeek
+  }));
 
-  if (workRows.length > 0) {
-    const parsedWork = parseImportedRows(workRows, true);
-
-    workScheduleData = parsedWork.map(d => ({
-      ...d,
-      date: excelDateToJS(d.date),
-    }));
-  }
-
-  if (restRows.length > 0) {
-    const parsedRest = parseImportedRows(restRows, false);
-
-    restDayData = parsedRest.map(d => ({
-      ...d,
-      date: excelDateToJS(d.date),
-    }));
-  }
+  restDayData = restRows.map(row => ({
+    employeeNo: row.employeeNo,
+    name: row.name,
+    position: row.position,
+    date: row.date,
+    dayOfWeek: row.dayOfWeek
+  }));
 
   recheckConflicts();
+
+  renderWorkTable();
+  renderRestTable();
+
   updateButtonStates();
+
   saveState();
 
-  showSuccess('Imported schedules generated successfully.');
+  showSuccess(
+    `Generated ${workRows.length} Work Schedule rows and ${restRows.length} Rest Day rows.`
+  );
 }
 
 function handlePaste(event) {
