@@ -27,6 +27,7 @@ const importSummaryList = document.getElementById('importSummaryList');
 const importConflictActions = document.getElementById('importConflictActions');
 const removeConflictFilesBtn = document.getElementById('removeConflictFilesBtn');
 const continueConflictFilesBtn = document.getElementById('continueConflictFilesBtn');
+const removeAllImportedFilesBtn = document.getElementById('removeAllImportedFilesBtn');
 
 let importedFiles = [];
       const generateRestFileBtn = document.getElementById('generateRestFile');
@@ -79,6 +80,12 @@ if (importedFiles.length === 0) {
 }
   renderImportSummaryDashboard();
   showWarning('Conflicted file(s) removed.');
+});
+
+removeAllImportedFilesBtn.addEventListener('click', () => {
+  importedFiles = [];
+  renderImportSummaryDashboard();
+  showWarning('All imported file(s) removed.');
 });
 
 continueConflictFilesBtn.addEventListener('click', () => {
@@ -502,6 +509,7 @@ function detectScheduleType(rows) {
   const noConflictFiles = importedFiles.filter(file => file.conflicts.length === 0);
 
   importSummaryPanel.classList.remove('hidden');
+  removeAllImportedFilesBtn.classList.toggle('hidden', importedFiles.length === 0);
   generateImportedBtn.classList.remove('hidden');
   generateImportedBtn.disabled = importedFiles.length === 0;
 
@@ -520,7 +528,7 @@ function detectScheduleType(rows) {
     importConflictActions.classList.add('hidden');
   }
 
-  importSummaryList.innerHTML = importedFiles.map(file => {
+importSummaryList.innerHTML = importedFiles.map((file, index) => {
     const hasConflict = file.conflicts.length > 0;
 
     const conflictHtml = hasConflict
@@ -538,6 +546,9 @@ function detectScheduleType(rows) {
             <p class="font-semibold text-slate-800">${file.fileName}</p>
             <p class="text-xs text-slate-500">Sheet: ${file.sheetName}</p>
           </div>
+          <button type="button" class="remove-imported-file-btn text-xs font-semibold text-red-600 hover:text-red-800" data-index="${index}">
+  Remove
+</button>
           <span class="px-3 py-1 rounded-full text-xs font-bold ${hasConflict ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
             ${hasConflict ? 'HAS CONFLICT' : 'NO CONFLICT'}
           </span>
@@ -546,6 +557,15 @@ function detectScheduleType(rows) {
       </div>
     `;
   }).join('');
+
+  document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = Number(btn.dataset.index);
+      importedFiles.splice(index, 1);
+      renderImportSummaryDashboard();
+      showWarning('Imported file/sheet removed.');
+    });
+  });
 }
 async function handleImportFiles(event) {
   const files = Array.from(event.target.files || []);
