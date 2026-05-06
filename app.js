@@ -741,106 +741,123 @@ async function handleImportFiles(event, appendMode = false) {
 
   if (!files.length) return;
 
-if (!appendMode) {
-  importedFiles = [];
-}
+  if (!appendMode) {
+    importedFiles = [];
+  }
 
   let summaryMessage = '';
 
   for (const file of files) {
-const buffer = await file.arrayBuffer();
+    try {
+      const buffer = await file.arrayBuffer();
 
-await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 0));
 
-    const workbook = XLSX.read(buffer, {
-      type: 'array'
-    });
-
-    workbook.SheetNames.forEach(sheetName => {
-      const sheet = workbook.Sheets[sheetName];
-
-      const rows = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        raw: false
+      const workbook = XLSX.read(buffer, {
+        type: 'array'
       });
 
-const upperSheetName = sheetName.toUpperCase();
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
 
-const ignoredSheetKeywords = [
-  'AASP CODE',
-  'RSO CODE',
-  'RBT CODE',
-  'WAREHOUSE CODE',
-  'HELP SHEET',
-];
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+          header: 1,
+          raw: false
+        });
 
-const shouldIgnoreSheet =
-  ignoredSheetKeywords.some(keyword =>
-    upperSheetName.includes(keyword)
-  );
+        const upperSheetName = sheetName.toUpperCase();
 
-if (shouldIgnoreSheet) {
-  console.log(`Skipped irrelevant sheet: ${sheetName}`);
-  return;
-}
+        const ignoredSheetKeywords = [
+          'AASP CODE',
+          'RSO CODE',
+          'RBT CODE',
+          'WAREHOUSE CODE',
+          'HELP SHEET',
+        ];
 
-      const cleanedRows = [];
-
-      rows.forEach(row => {
-        if (
-          row &&
-          row.some(cell => String(cell || '').trim() !== '')
-        ) {
-          cleanedRows.push(
-            row.map(cell => String(cell || '').trim())
+        const shouldIgnoreSheet =
+          ignoredSheetKeywords.some(keyword =>
+            upperSheetName.includes(keyword)
           );
+
+        if (shouldIgnoreSheet) {
+          console.log(`Skipped irrelevant sheet: ${sheetName}`);
+          return;
+        }
+
+        const cleanedRows = [];
+
+        rows.forEach(row => {
+          if (
+            row &&
+            row.some(cell => String(cell || '').trim() !== '')
+          ) {
+            cleanedRows.push(
+              row.map(cell => String(cell || '').trim())
+            );
+          }
+        });
+
+        const parsedRows = parseMixedScheduleRows(cleanedRows);
+
+        const conflicts = validateMixedRows(
+          parsedRows,
+          file.name,
+          sheetName
+        );
+
+        importedFiles.push({
+          fileName: file.name,
+          sheetName,
+          rows: parsedRows,
+          conflicts
+        });
+
+        summaryMessage += `FILE: ${file.name}\n`;
+        summaryMessage += `SHEET: ${sheetName}\n`;
+
+        const hasConflict = conflicts.length > 0;
+
+        if (!hasConflict) {
+          summaryMessage += `STATUS: NO CONFLICT\n\n`;
+        } else {
+          summaryMessage += `STATUS: HAS CONFLICT\n`;
+
+          conflicts.forEach(conflict => {
+            summaryMessage += `• Row ${conflict.row}: ${conflict.reason}\n`;
+          });
+
+          summaryMessage += `\n`;
         }
       });
 
-      const parsedRows = parseMixedScheduleRows(cleanedRows);
-
-      const conflicts = validateMixedRows(
-        parsedRows,
-        file.name,
-        sheetName
-      );
+    } catch (error) {
+      console.error('Import failed for file:', file.name, error);
 
       importedFiles.push({
         fileName: file.name,
-        sheetName,
-        rows: parsedRows,
-        conflicts
+        sheetName: 'Unable to read',
+        rows: [],
+        conflicts: [
+          {
+            row: '-',
+            reason: 'File could not be read. Please check if this is a valid Excel/CSV file.'
+          }
+        ]
       });
-
-      summaryMessage += `FILE: ${file.name}\n`;
-      summaryMessage += `SHEET: ${sheetName}\n`;
-
-      const hasConflict = conflicts.length > 0;
-
-      if (!hasConflict) {
-        summaryMessage += `STATUS: NO CONFLICT\n\n`;
-      } else {
-        summaryMessage += `STATUS: HAS CONFLICT\n`;
-
-        conflicts.forEach(conflict => {
-          summaryMessage += `• Row ${conflict.row}: ${conflict.reason}\n`;
-        });
-
-        summaryMessage += `\n`;
-      }
-    });
+    }
   }
 
-requestAnimationFrame(() => {
-  renderImportSummaryDashboard();
+  requestAnimationFrame(() => {
+    renderImportSummaryDashboard();
 
-  generateImportedBtn.disabled =
-    importedFiles.length === 0;
+    generateImportedBtn.disabled =
+      importedFiles.length === 0;
 
-  showSuccess(
-    `${importedFiles.length} sheet(s) ready for generation.`
-  );
-});
+    showSuccess(
+      `${importedFiles.length} sheet(s) ready for generation.`
+    );
+  });
 
   event.target.value = '';
 }
