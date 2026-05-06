@@ -247,15 +247,22 @@ function parseMixedScheduleRows(rows) {
 
     const header = findHeaderIndexes(row);
 
-    if (joined.includes('WORK SCHEDULE') || joined.includes('SHIFT CODE')) {
-      if (hasUsableHeader(header)) workHeader = header;
-      return;
-    }
+if (joined.includes('WORK SCHEDULE') || joined.includes('SHIFT CODE')) {
+  if (hasUsableHeader(header)) workHeader = header;
+}
 
-    if (joined.includes('REST DAY SCHEDULE') || joined.includes('REST DAY DATE')) {
-      if (hasUsableHeader(header)) restHeader = header;
-      return;
-    }
+if (joined.includes('REST DAY SCHEDULE') || joined.includes('REST DAY DATE')) {
+  if (hasUsableHeader(header)) restHeader = header;
+}
+
+if (
+  joined.includes('WORK SCHEDULE') ||
+  joined.includes('SHIFT CODE') ||
+  joined.includes('REST DAY SCHEDULE') ||
+  joined.includes('REST DAY DATE')
+) {
+  return;
+}
 
     // If row contains two tables side-by-side, split by big blank gap
     const blankIndexes = row
@@ -263,31 +270,34 @@ function parseMixedScheduleRows(rows) {
       .filter(x => x.cell === '')
       .map(x => x.idx);
 
-    const possibleGap = blankIndexes.find(idx => idx >= 5 && idx <= row.length - 5);
+const blocks = [];
 
-    const blocks = [];
+if (workHeader) {
+  blocks.push({
+    type: 'work',
+    offset: 0,
+    row
+  });
+}
 
-    if (possibleGap !== undefined) {
-      blocks.push({
-        type: 'work',
-        offset: 0,
-        row: row.slice(0, possibleGap)
-      });
+if (restHeader) {
+  const restOffset = restHeader.employeeNo ?? restHeader.name ?? restHeader.date ?? 0;
 
-      blocks.push({
-        type: 'rest',
-        offset: possibleGap + 1,
-        row: row.slice(possibleGap + 1)
-      });
-    } else {
-      blocks.push({
-        type: null,
-        offset: 0,
-        row
-      });
-    }
+  blocks.push({
+    type: 'rest',
+    offset: restOffset,
+    row: row.slice(restOffset)
+  });
+}
 
-    blocks.forEach(block => {
+if (!workHeader && !restHeader) {
+  blocks.push({
+    type: null,
+    offset: 0,
+    row
+  });
+}
+blocks.forEach(block => {
       const activeHeader =
         block.type === 'work'
           ? workHeader
@@ -315,7 +325,8 @@ function parseMixedScheduleRows(rows) {
 
         entry.name = getVal('name');
         entry.employeeNo = getVal('employeeNo');
-        entry.date = excelDateToJS(getVal('date'));
+        const rawDate = getVal('date');
+entry.date = rawDate ? excelDateToJS(rawDate) : '';
         entry.shiftCode = getVal('shiftCode').toUpperCase();
         entry.dayOfWeek = getVal('dayOfWeek');
         entry.position = getVal('position');
@@ -338,7 +349,11 @@ function parseMixedScheduleRows(rows) {
         else if (!entry.shiftCode && entry.date) entry.type = 'rest';
       }
 
-      if (entry.employeeNo || entry.name || entry.date) {
+      const hasUsefulData =
+  entry.employeeNo &&
+  entry.date;
+
+if (hasUsefulData) {
         parsed.push(entry);
       }
     });
