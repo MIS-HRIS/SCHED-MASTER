@@ -44,17 +44,57 @@
       <!-- Schedule Input View -->
       <div id="view-schedule">
 <div class="mb-6 flex flex-wrap items-center justify-center gap-4">
+<div id="importDashboard" class="dashboard-card mb-8">
   <input type="file" id="importScheduleFiles" accept=".xlsx,.xls,.csv" multiple class="hidden">
 
-  <button type="button" id="importScheduleBtn" class="action-btn secondary flex items-center gap-2">
-    <ion-icon name="cloud-upload-outline"></ion-icon>
-    Import Schedule Files
-  </button>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+        <ion-icon name="cloud-upload-outline"></ion-icon>
+        Schedule Import
+      </h3>
+      <p class="text-sm text-slate-500 mt-1">
+        Import one or multiple files. Work Schedule and Rest Day will be detected automatically.
+      </p>
+    </div>
 
-  <button type="button" id="generateImportedBtn" class="action-btn flex items-center gap-2" disabled>
-    <ion-icon name="refresh-outline"></ion-icon>
-    Generate Imported Data
-  </button>
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="button" id="importScheduleBtn" class="action-btn secondary flex items-center gap-2">
+        <ion-icon name="folder-open-outline"></ion-icon>
+        Import Files
+      </button>
+
+      <button type="button" id="generateImportedBtn" class="action-btn flex items-center gap-2 hidden" disabled>
+        <ion-icon name="refresh-outline"></ion-icon>
+        Generate Imported Data
+      </button>
+    </div>
+  </div>
+
+  <div id="importSummaryPanel" class="hidden mt-6 rounded-xl border border-slate-200 bg-white/70 p-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div>
+        <h4 class="font-bold text-slate-800">Import Summary</h4>
+        <p id="importSummaryText" class="text-sm text-slate-500">No imported files yet.</p>
+      </div>
+
+      <div id="importSummaryBadge" class="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-600">
+        Waiting
+      </div>
+    </div>
+
+    <div id="importSummaryList" class="space-y-3"></div>
+
+    <div id="importConflictActions" class="hidden mt-5 flex justify-end gap-3">
+      <button type="button" id="removeConflictFilesBtn" class="action-btn danger">
+        Remove Conflicted File(s)
+      </button>
+      <button type="button" id="continueConflictFilesBtn" class="action-btn">
+        Continue Anyway
+      </button>
+    </div>
+  </div>
+</div>
 </div>
 
 </div>

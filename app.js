@@ -20,6 +20,13 @@
       const importScheduleFiles = document.getElementById('importScheduleFiles');
 const importScheduleBtn = document.getElementById('importScheduleBtn');
 const generateImportedBtn = document.getElementById('generateImportedBtn');
+const importSummaryPanel = document.getElementById('importSummaryPanel');
+const importSummaryText = document.getElementById('importSummaryText');
+const importSummaryBadge = document.getElementById('importSummaryBadge');
+const importSummaryList = document.getElementById('importSummaryList');
+const importConflictActions = document.getElementById('importConflictActions');
+const removeConflictFilesBtn = document.getElementById('removeConflictFilesBtn');
+const continueConflictFilesBtn = document.getElementById('continueConflictFilesBtn');
 
 let importedFiles = [];
       const generateRestFileBtn = document.getElementById('generateRestFile');
@@ -63,6 +70,16 @@ importScheduleBtn.addEventListener('click', function () {
 importScheduleFiles.addEventListener('change', handleImportFiles);
 
 generateImportedBtn.addEventListener('click', generateImportedData);
+removeConflictFilesBtn.addEventListener('click', () => {
+  importedFiles = importedFiles.filter(file => file.conflicts.length === 0);
+  renderImportSummaryDashboard();
+  showWarning('Conflicted file(s) removed.');
+});
+
+continueConflictFilesBtn.addEventListener('click', () => {
+  importConflictActions.classList.add('hidden');
+  showSuccess('Conflicted file(s) kept. You may now generate.');
+});
       
       clearWorkBtn.addEventListener('click', () => clearData('work'));
       clearRestBtn.addEventListener('click', () => clearData('rest'));
@@ -474,6 +491,57 @@ function detectScheduleType(rows) {
   return 'rest';
 }
 
+  function renderImportSummaryDashboard() {
+  const totalSheets = importedFiles.length;
+  const conflictFiles = importedFiles.filter(file => file.conflicts.length > 0);
+  const noConflictFiles = importedFiles.filter(file => file.conflicts.length === 0);
+
+  importSummaryPanel.classList.remove('hidden');
+  generateImportedBtn.classList.remove('hidden');
+  generateImportedBtn.disabled = importedFiles.length === 0;
+
+  importSummaryText.textContent =
+    `${totalSheets} sheet(s) imported • ${noConflictFiles.length} no conflict • ${conflictFiles.length} with conflict`;
+
+  if (conflictFiles.length > 0) {
+    importSummaryBadge.textContent = 'Has Conflict';
+    importSummaryBadge.className =
+      'px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700';
+    importConflictActions.classList.remove('hidden');
+  } else {
+    importSummaryBadge.textContent = 'No Conflict';
+    importSummaryBadge.className =
+      'px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700';
+    importConflictActions.classList.add('hidden');
+  }
+
+  importSummaryList.innerHTML = importedFiles.map(file => {
+    const hasConflict = file.conflicts.length > 0;
+
+    const conflictHtml = hasConflict
+      ? `
+        <ul class="mt-2 list-disc ml-6 text-sm text-red-700">
+          ${file.conflicts.map(c => `<li>Row ${c.row}: ${c.reason}</li>`).join('')}
+        </ul>
+      `
+      : `<p class="mt-2 text-sm text-green-700">No conflict detected.</p>`;
+
+    return `
+      <div class="rounded-lg border ${hasConflict ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'} p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p class="font-semibold text-slate-800">${file.fileName}</p>
+            <p class="text-xs text-slate-500">Sheet: ${file.sheetName}</p>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold ${hasConflict ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+            ${hasConflict ? 'HAS CONFLICT' : 'NO CONFLICT'}
+          </span>
+        </div>
+        ${conflictHtml}
+      </div>
+    `;
+  }).join('');
+}
 async function handleImportFiles(event) {
   const files = Array.from(event.target.files || []);
 
@@ -563,25 +631,7 @@ if (shouldIgnoreSheet) {
     });
   }
 
-  const hasConflictFiles = importedFiles.some(
-    file => file.conflicts.length > 0
-  );
-
-  if (hasConflictFiles) {
-    const proceed = confirm(
-      `${summaryMessage}\nPress OK to Continue.\nPress Cancel to Remove Conflicted File(s).`
-    );
-
-    if (!proceed) {
-      importedFiles = importedFiles.filter(
-        file => file.conflicts.length === 0
-      );
-
-      showWarning('Conflicted file(s) removed.');
-    }
-  } else {
-    alert(summaryMessage);
-  }
+  renderImportSummaryDashboard();
 
   generateImportedBtn.disabled =
     importedFiles.length === 0;
@@ -592,6 +642,7 @@ if (shouldIgnoreSheet) {
 
   event.target.value = '';
 }
+
 
 function generateImportedData() {
   if (!importedFiles.length) {
