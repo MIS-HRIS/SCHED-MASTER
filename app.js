@@ -590,13 +590,58 @@ if (conflictFiles.length > 0 || previewConflicts.length > 0) {
       'px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700';
     importConflictActions.classList.add('hidden');
   }
+const groupedPreviewConflicts = {};
+
+previewConflicts.forEach(conflict => {
+  const empMatch = conflict.reason.match(/Employee\s+(\d+)/i);
+  const dateMatch = conflict.reason.match(/date:\s*(.+)$/i);
+
+  const empNo = empMatch ? empMatch[1] : 'Unknown';
+  const date = dateMatch ? dateMatch[1] : '';
+
+  if (!groupedPreviewConflicts[empNo]) {
+    groupedPreviewConflicts[empNo] = [];
+  }
+
+  if (date && !groupedPreviewConflicts[empNo].includes(date)) {
+    groupedPreviewConflicts[empNo].push(date);
+  }
+});
+
 const previewConflictHtml = previewConflicts.length > 0
   ? `
     <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-      <p class="font-semibold text-red-700">Schedule Conflict Preview</p>
-      <ul class="mt-2 list-disc ml-6 text-sm text-red-700">
-        ${previewConflicts.map(c => `<li>${c.reason}</li>`).join('')}
-      </ul>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="font-semibold text-red-700">Schedule Conflict Preview</p>
+          <p class="text-sm text-red-700">${previewConflicts.length} conflict(s) found</p>
+          ${Object.entries(groupedPreviewConflicts).map(([empNo, dates]) => `
+            <p class="mt-2 text-sm text-red-700">
+              Employee ${empNo} has Work Schedule and Rest Day overlap on ${dates.length} date(s)
+            </p>
+          `).join('')}
+        </div>
+
+        <button type="button" id="togglePreviewConflictDetailsBtn" class="text-sm font-semibold text-red-700 hover:text-red-900">
+          View Details
+        </button>
+      </div>
+
+      <div id="previewConflictDetails" class="hidden mt-4 border-t border-red-200 pt-4">
+        ${Object.entries(groupedPreviewConflicts).map(([empNo, dates]) => `
+          <div class="mb-3">
+            <p class="font-semibold text-red-700">
+              Employee ${empNo} — Work Schedule and Rest Day overlap
+            </p>
+            <p class="text-sm text-red-700">
+              Affected Dates: ${dates.join(', ')}
+            </p>
+            <p class="text-sm font-semibold text-red-700">
+              Total: ${dates.length}
+            </p>
+          </div>
+        `).join('')}
+      </div>
     </div>
   `
   : '';
@@ -629,6 +674,16 @@ importSummaryList.innerHTML = previewConflictHtml + importedFiles.map((file, ind
       </div>
     `;
   }).join('');
+
+const togglePreviewConflictDetailsBtn = document.getElementById('togglePreviewConflictDetailsBtn');
+const previewConflictDetails = document.getElementById('previewConflictDetails');
+
+if (togglePreviewConflictDetailsBtn && previewConflictDetails) {
+  togglePreviewConflictDetailsBtn.addEventListener('click', () => {
+    const isHidden = previewConflictDetails.classList.toggle('hidden');
+    togglePreviewConflictDetailsBtn.textContent = isHidden ? 'View Details' : 'Hide Details';
+  });
+}
 
   document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
     btn.addEventListener('click', () => {
