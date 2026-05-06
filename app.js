@@ -498,6 +498,24 @@ async function handleImportFiles(event) {
         raw: false
       });
 
+const upperSheetName = sheetName.toUpperCase();
+
+const ignoredSheetKeywords = [
+  'AASP CODE',
+  'RSO CODE',
+  'WAREHOUSE CODE',
+];
+
+const shouldIgnoreSheet =
+  ignoredSheetKeywords.some(keyword =>
+    upperSheetName.includes(keyword)
+  );
+
+if (shouldIgnoreSheet) {
+  console.log(`Skipped irrelevant sheet: ${sheetName}`);
+  return;
+}
+
       const cleanedRows = [];
 
       rows.forEach(row => {
