@@ -891,7 +891,7 @@ function generateImportedData() {
     employeeNo: row.employeeNo,
     name: row.name,
     position: row.position,
-    date: row.date,
+    date: String(row.date || ''),
     shiftCode: row.shiftCode,
     dayOfWeek: row.dayOfWeek
   }));
@@ -900,7 +900,7 @@ function generateImportedData() {
     employeeNo: row.employeeNo,
     name: row.name,
     position: row.position,
-    date: row.date,
+    date: String(row.date || ''),
     dayOfWeek: row.dayOfWeek
   }));
 
@@ -1356,13 +1356,13 @@ if (isWorkSchedule) {
         if (isWorkSchedule) {
             return {
                 'Employee Number': row.employeeNo,
-                'Work Date': normalizeDateForExport(row.date),
+                'Work Date': String(row.date || ''),
                 'Shift Code': row.shiftCode,
             };
         } else {
             return {
                 'Employee No': row.employeeNo,
-                'Rest Day Date': normalizeDateForExport(row.date),
+                'Rest Day Date': String(row.date || ''),
             };
         }
     });
@@ -1371,14 +1371,6 @@ if (isWorkSchedule) {
     const sheet = XLSX.utils.json_to_sheet(formattedData);
 
     // ✅ Date formatting
-    Object.keys(sheet).forEach(cell => {
-        if (cell[0] === "!" || !sheet[cell].v) return;
-        const val = sheet[cell].v;
-        if (val instanceof Date || /^\d{4}-\d{2}-\d{2}/.test(val)) {
-            sheet[cell].t = "d";
-            sheet[cell].z = "mm/dd/yy";
-        }
-    });
 
     // 📘 Create workbook
     const workbook = XLSX.utils.book_new();
