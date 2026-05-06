@@ -47,6 +47,16 @@
           <!-- Work Schedule Section -->
           <div class="dashboard-card">
             <h2 class="text-2xl font-bold mb-4 text-slate-800">Work Schedule</h2>
+            <div class="mb-4 flex items-center gap-3">
+  <input type="file" id="importWorkFiles" accept=".xlsx,.xls,.csv" multiple class="hidden">
+  <button id="importWorkBtn" class="action-btn secondary">
+    <ion-icon name="cloud-upload-outline"></ion-icon>
+    Import Files
+  </button>
+  <button id="generateImportedWorkBtn" class="action-btn" disabled>
+    Generate to Data Below
+  </button>
+</div>
             <textarea id="workScheduleInput" class="w-full font-mono text-sm" placeholder="Paste your work schedule data here..."></textarea>
             
             <div class="mt-6 flex flex-wrap items-center justify-between gap-y-4 gap-x-2">

@@ -17,6 +17,11 @@
       const warningBanner = document.getElementById('warning-banner');
       const successMsg = document.getElementById('success-message');
       const generateWorkFileBtn = document.getElementById('generateWorkFile');
+      const importScheduleFiles = document.getElementById('importScheduleFiles');
+const importScheduleBtn = document.getElementById('importScheduleBtn');
+const generateImportedBtn = document.getElementById('generateImportedBtn');
+
+let importedFiles = [];
       const generateRestFileBtn = document.getElementById('generateRestFile');
       const clearWorkBtn = document.getElementById('clearWorkData');
       const clearRestBtn = document.getElementById('clearRestData');
@@ -51,6 +56,11 @@
 
       generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
       generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
+      importScheduleBtn.addEventListener('click', () => importScheduleFiles.click());
+
+importScheduleFiles.addEventListener('change', handleImportFiles);
+
+generateImportedBtn.addEventListener('click', generateImportedData);
       
       clearWorkBtn.addEventListener('click', () => clearData('work'));
       clearRestBtn.addEventListener('click', () => clearData('rest'));
@@ -78,6 +88,248 @@
       /*************************\
        * CORE FUNCTIONS      *
       \*************************/
+
+function detectImportedFileConflicts(files, isWork) {
+  const conflictFiles = [];
+
+  files.forEach(file => {
+    const reasons = [];
+    const data = parseImportedRows(file.rows, isWork).map(d => ({
+      ...d,
+      date: excelDateToJS(d.date)
+    }));
+
+    const seen = new Set();
+
+    data.forEach(row => {
+      if (!row.employeeNo || !row.date) return;
+
+      const key = `${row.employeeNo}-${row.date}`;
+
+      if (seen.has(key)) {
+        reasons.push(`Duplicate employee/date found: ${row.employeeNo} - ${row.date}`);
+      }
+
+      seen.add(key);
+
+      if (isWork && !row.shiftCode) {
+        reasons.push(`Missing shift code: ${row.employeeNo} - ${row.date}`);
+      }
+    });
+
+    if (reasons.length > 0) {
+      conflictFiles.push({
+        fileName: file.fileName,
+        reasons: [...new Set(reasons)]
+      });
+    }
+  });
+
+  return conflictFiles;
+}
+
+function parseImportedRows(rows, isWork) {
+  const { mapping, headerRow } = detectColumnMapping(rows, isWork);
+
+  let data;
+
+  if (headerRow !== -1 && Object.values(mapping).some(v => v !== null)) {
+    data = rows.slice(headerRow + 1).map(row => {
+      const entry = {};
+
+      for (const key in mapping) {
+        entry[key] =
+          mapping[key] !== null && row[mapping[key]] !== undefined
+            ? String(row[mapping[key]]).trim()
+            : '';
+      }
+
+      return entry;
+    });
+  } else {
+    data = rows.map(rawRow => {
+      const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
+
+      const entry = {
+        nameParts: [],
+        positionParts: []
+      };
+
+      tokens.forEach(t => {
+        const value = t.trim();
+        const upperValue = value.toUpperCase();
+
+        if (/^\d{1,6}$/.test(value)) {
+          if (!entry.employeeNo) entry.employeeNo = value;
+        } else if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(value) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(value)) {
+          if (!entry.date) entry.date = value;
+        } else if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(value)) {
+          if (!entry.dayOfWeek) entry.dayOfWeek = value;
+        } else if (/^(?:AASP|RBG|RBT|WHSE|CHAR)-\d{3}(?:\s*\([^)]*\))?$/i.test(upperValue)) {
+          if (!entry.shiftCode) entry.shiftCode = upperValue;
+        } else if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|branch\s*head|site\s*supervisor)$/i.test(value)) {
+          entry.positionParts.push(value);
+        } else if (/^[A-Za-z]+$/.test(value)) {
+          entry.nameParts.push(value);
+        }
+      });
+
+      if (entry.nameParts.length > 0) entry.name = entry.nameParts.join(' ');
+      if (entry.positionParts.length > 0) entry.position = entry.positionParts.join(' ');
+
+      delete entry.nameParts;
+      delete entry.positionParts;
+
+      return entry;
+    });
+  }
+
+  return data;
+}
+
+function detectScheduleType(rows) {
+  const joined = rows.flat().join(' ').toUpperCase();
+
+  if (
+    joined.includes('SHIFT CODE') ||
+    joined.includes('RBT-') ||
+    joined.includes('AASP-') ||
+    joined.includes('RBG-') ||
+    joined.includes('CHAR-') ||
+    joined.includes('WHSE-')
+  ) {
+    return 'work';
+  }
+
+  return 'rest';
+}
+
+async function handleImportFiles(event) {
+  const files = Array.from(event.target.files || []);
+  if (files.length === 0) return;
+
+  importedFiles = [];
+
+  for (const file of files) {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+
+    let allRows = [];
+
+    workbook.SheetNames.forEach(sheetName => {
+      const sheet = workbook.Sheets[sheetName];
+
+      const rows = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        raw: false
+      });
+
+      rows.forEach(row => {
+        if (row && row.some(cell => String(cell || '').trim() !== '')) {
+          allRows.push(row.map(cell => String(cell || '').trim()));
+        }
+      });
+    });
+
+    const detectedType = detectScheduleType(allRows);
+
+    importedFiles.push({
+      fileName: file.name,
+      rows: allRows,
+      type: detectedType
+    });
+  }
+
+  generateImportedBtn.disabled = importedFiles.length === 0;
+
+  showSuccess(`${files.length} file(s) imported successfully.`);
+}
+
+function generateImportedData() {
+  if (!importedFiles.length) {
+    showWarning('No imported files found.');
+    return;
+  }
+
+  let validFiles = [...importedFiles];
+  const conflictFiles = [];
+
+  validFiles.forEach(file => {
+    const isWork = file.type === 'work';
+
+    const conflicts = detectImportedFileConflicts(
+      [{ fileName: file.fileName, rows: file.rows }],
+      isWork
+    );
+
+    if (conflicts.length > 0) {
+      conflictFiles.push(...conflicts);
+    }
+  });
+
+  if (conflictFiles.length > 0) {
+    const message = conflictFiles
+      .map(file => `• ${file.fileName}\n  ${file.reasons.join('\n  ')}`)
+      .join('\n\n');
+
+    const proceed = confirm(
+      `Conflict detected:\n\n${message}\n\nPress OK to continue.\nPress Cancel to remove conflicted file(s).`
+    );
+
+    if (!proceed) {
+      validFiles = validFiles.filter(file =>
+        !conflictFiles.some(c => c.fileName === file.fileName)
+      );
+
+      importedFiles = validFiles;
+
+      showWarning('Conflicted file(s) removed.');
+
+      if (!importedFiles.length) {
+        generateImportedBtn.disabled = true;
+        return;
+      }
+    }
+  }
+
+  const workRows = [];
+  const restRows = [];
+
+  importedFiles.forEach(file => {
+    if (file.type === 'work') {
+      workRows.push(...file.rows);
+    } else {
+      restRows.push(...file.rows);
+    }
+  });
+
+  saveUndoState('work');
+  saveUndoState('rest');
+
+  if (workRows.length > 0) {
+    const parsedWork = parseImportedRows(workRows, true);
+
+    workScheduleData = parsedWork.map(d => ({
+      ...d,
+      date: excelDateToJS(d.date),
+    }));
+  }
+
+  if (restRows.length > 0) {
+    const parsedRest = parseImportedRows(restRows, false);
+
+    restDayData = parsedRest.map(d => ({
+      ...d,
+      date: excelDateToJS(d.date),
+    }));
+  }
+
+  recheckConflicts();
+  updateButtonStates();
+  saveState();
+
+  showSuccess('Imported schedules generated successfully.');
+}
 
 function handlePaste(event) {
   event.preventDefault();
