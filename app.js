@@ -503,9 +503,72 @@ function detectScheduleType(rows) {
   return 'rest';
 }
 
+function getImportedPreviewConflicts() {
+  const tempWorkRows = [];
+  const tempRestRows = [];
+
+  importedFiles.forEach(file => {
+    file.rows.forEach(row => {
+      if (row.type === 'work') {
+        tempWorkRows.push(row);
+      } else if (row.type === 'rest') {
+        tempRestRows.push(row);
+      }
+    });
+  });
+
+  const workMap = new Map();
+  const previewConflicts = [];
+
+  tempWorkRows.forEach((row, index) => {
+    if (!row.employeeNo || !row.date) return;
+
+    const key = `${row.employeeNo}-${row.date}`;
+
+    if (workMap.has(key)) {
+      previewConflicts.push({
+        type: 'work',
+        row: row.rowNumber || index + 1,
+        reason: `Duplicate Work Schedule for employee ${row.employeeNo} on ${row.date}`
+      });
+    }
+
+    workMap.set(key, row);
+  });
+
+  const restMap = new Map();
+
+  tempRestRows.forEach((row, index) => {
+    if (!row.employeeNo || !row.date) return;
+
+    const key = `${row.employeeNo}-${row.date}`;
+
+    if (restMap.has(key)) {
+      previewConflicts.push({
+        type: 'rest',
+        row: row.rowNumber || index + 1,
+        reason: `Duplicate Rest Day for employee ${row.employeeNo} on ${row.date}`
+      });
+    }
+
+    restMap.set(key, row);
+
+    if (workMap.has(key)) {
+      previewConflicts.push({
+        type: 'combined',
+        row: row.rowNumber || index + 1,
+        reason: `Employee ${row.employeeNo} has Work Schedule and Rest Day on the same date: ${row.date}`
+      });
+    }
+  });
+
+  return previewConflicts;
+}
+
   function renderImportSummaryDashboard() {
   const totalSheets = importedFiles.length;
   const conflictFiles = importedFiles.filter(file => file.conflicts.length > 0);
+  const previewConflicts = getImportedPreviewConflicts();
   const noConflictFiles = importedFiles.filter(file => file.conflicts.length === 0);
 
   importSummaryPanel.classList.remove('hidden');
@@ -514,9 +577,9 @@ function detectScheduleType(rows) {
   generateImportedBtn.disabled = importedFiles.length === 0;
 
   importSummaryText.textContent =
-    `${totalSheets} sheet(s) imported • ${noConflictFiles.length} no conflict • ${conflictFiles.length} with conflict`;
+`${totalSheets} sheet(s) imported • ${noConflictFiles.length} no field conflict • ${conflictFiles.length} sheet conflict • ${previewConflicts.length} schedule conflict`;
 
-  if (conflictFiles.length > 0) {
+if (conflictFiles.length > 0 || previewConflicts.length > 0) {
     importSummaryBadge.textContent = 'Has Conflict';
     importSummaryBadge.className =
       'px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700';
@@ -527,8 +590,17 @@ function detectScheduleType(rows) {
       'px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700';
     importConflictActions.classList.add('hidden');
   }
-
-importSummaryList.innerHTML = importedFiles.map((file, index) => {
+const previewConflictHtml = previewConflicts.length > 0
+  ? `
+    <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+      <p class="font-semibold text-red-700">Schedule Conflict Preview</p>
+      <ul class="mt-2 list-disc ml-6 text-sm text-red-700">
+        ${previewConflicts.map(c => `<li>${c.reason}</li>`).join('')}
+      </ul>
+    </div>
+  `
+  : '';
+importSummaryList.innerHTML = previewConflictHtml + importedFiles.map((file, index) => {
     const hasConflict = file.conflicts.length > 0;
 
     const conflictHtml = hasConflict
