@@ -56,19 +56,13 @@ let importedFiles = [];
 
       generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleData, 'WorkSchedule'));
       generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
-      if (importScheduleBtn && importScheduleFiles) {
-  importScheduleBtn.addEventListener('click', () => {
-    importScheduleFiles.click();
-  });
-}
+importScheduleBtn.addEventListener('click', function () {
+  importScheduleFiles.click();
+});
 
-if (importScheduleFiles) {
-  importScheduleFiles.addEventListener('change', handleImportFiles);
-}
+importScheduleFiles.addEventListener('change', handleImportFiles);
 
-if (generateImportedBtn) {
-  generateImportedBtn.addEventListener('click', generateImportedData);
-}
+generateImportedBtn.addEventListener('click', generateImportedData);
       
       clearWorkBtn.addEventListener('click', () => clearData('work'));
       clearRestBtn.addEventListener('click', () => clearData('rest'));
@@ -214,13 +208,19 @@ function detectScheduleType(rows) {
 
 async function handleImportFiles(event) {
   const files = Array.from(event.target.files || []);
-  if (files.length === 0) return;
+
+  if (!files.length) return;
 
   importedFiles = [];
 
+  let summaryMessage = '';
+
   for (const file of files) {
     const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'array' });
+
+    const workbook = XLSX.read(buffer, {
+      type: 'array'
+    });
 
     let allRows = [];
 
@@ -233,33 +233,83 @@ async function handleImportFiles(event) {
       });
 
       rows.forEach(row => {
-        if (row && row.some(cell => String(cell || '').trim() !== '')) {
-          allRows.push(row.map(cell => String(cell || '').trim()));
+        if (
+          row &&
+          row.some(cell => String(cell || '').trim() !== '')
+        ) {
+          allRows.push(
+            row.map(cell => String(cell || '').trim())
+          );
         }
       });
     });
 
     const detectedType = detectScheduleType(allRows);
 
+    const conflicts = detectImportedFileConflicts(
+      [{
+        fileName: file.name,
+        rows: allRows
+      }],
+      detectedType === 'work'
+    );
+
+    let hasConflict = conflicts.length > 0;
+
     importedFiles.push({
       fileName: file.name,
       rows: allRows,
-      type: detectedType
+      type: detectedType,
+      hasConflict,
+      conflicts
     });
+
+    summaryMessage += `FILE: ${file.name}\n`;
+    summaryMessage += `TYPE: ${detectedType.toUpperCase()}\n`;
+
+    if (!hasConflict) {
+      summaryMessage += `STATUS: NO CONFLICT\n\n`;
+    } else {
+      summaryMessage += `STATUS: HAS CONFLICT\n`;
+
+      conflicts.forEach(conflict => {
+        conflict.reasons.forEach(reason => {
+          summaryMessage += `• ${reason}\n`;
+        });
+      });
+
+      summaryMessage += `\n`;
+    }
   }
 
-  generateImportedBtn.disabled = importedFiles.length === 0;
-
-  showSuccess(`${files.length} file(s) imported successfully.`);
-  setTimeout(() => {
-  const proceed = confirm(
-    `${files.length} file(s) imported successfully.\n\nGenerate data now?`
+  const hasConflictFiles = importedFiles.some(
+    file => file.hasConflict
   );
 
-  if (proceed) {
-    generateImportedData();
+  if (hasConflictFiles) {
+    const proceed = confirm(
+      `${summaryMessage}\nPress OK to Continue.\nPress Cancel to Remove Conflicted File(s).`
+    );
+
+    if (!proceed) {
+      importedFiles = importedFiles.filter(
+        file => !file.hasConflict
+      );
+
+      showWarning('Conflicted file(s) removed.');
+    }
+  } else {
+    alert(summaryMessage);
   }
-}, 200);
+
+  generateImportedBtn.disabled =
+    importedFiles.length === 0;
+
+  showSuccess(
+    `${importedFiles.length} valid file(s) ready for generation.`
+  );
+
+  event.target.value = '';
 }
 
 function generateImportedData() {

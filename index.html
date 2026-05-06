@@ -43,13 +43,19 @@
     <main id="app-container">
       <!-- Schedule Input View -->
       <div id="view-schedule">
-<div class="flex flex-wrap items-center justify-center gap-4 mb-6"></div>
+<div class="mb-6 flex flex-wrap items-center justify-center gap-4">
   <input type="file" id="importScheduleFiles" accept=".xlsx,.xls,.csv" multiple class="hidden">
 
-  <button id="importScheduleBtn" class="action-btn secondary flex items-center gap-2">
+  <button type="button" id="importScheduleBtn" class="action-btn secondary flex items-center gap-2">
     <ion-icon name="cloud-upload-outline"></ion-icon>
     Import Schedule Files
   </button>
+
+  <button type="button" id="generateImportedBtn" class="action-btn flex items-center gap-2" disabled>
+    <ion-icon name="refresh-outline"></ion-icon>
+    Generate Imported Data
+  </button>
+</div>
 
 </div>
 
