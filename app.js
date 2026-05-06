@@ -68,14 +68,18 @@ generateWorkFileBtn.addEventListener('click', () => generateFile(workScheduleDat
 generateRestFileBtn.addEventListener('click', () => generateFile(restDayData, 'RestDaySchedule'));
 
 importScheduleBtn.addEventListener('click', function () {
+  importScheduleFiles.value = '';
   importScheduleFiles.click();
 });
 
 addScheduleFilesBtn.addEventListener('click', function () {
+  addScheduleFilesInput.value = '';
   addScheduleFilesInput.click();
 });
 
-importScheduleFiles.addEventListener('change', handleImportFiles);
+importScheduleFiles.addEventListener('change', async (event) => {
+  await handleImportFiles(event, false);
+});
 
 addScheduleFilesInput.addEventListener('change', async (event) => {
   await handleImportFiles(event, true);
@@ -556,29 +560,44 @@ function getImportedPreviewConflicts() {
   return previewConflicts;
 }
 
-  function renderImportSummaryDashboard() {
-const totalFiles = Object.keys(filesGrouped).length;
-const conflictFiles = importedFiles.filter(file => {
-  const fileScheduleConflicts = previewConflicts.filter(
-    c => c.fileName === file.fileName
-  );
-
-  return (
-    file.conflicts.length > 0 ||
-    fileScheduleConflicts.length > 0
-  );
-});
+function renderImportSummaryDashboard() {
   const previewConflicts = getImportedPreviewConflicts();
-const noConflictFiles = importedFiles.filter(file => {
-  const fileScheduleConflicts = previewConflicts.filter(
-    c => c.fileName === file.fileName
+
+  const filesGrouped = {};
+
+  importedFiles.forEach((file, index) => {
+    if (!filesGrouped[file.fileName]) {
+      filesGrouped[file.fileName] = {
+        fileName: file.fileName,
+        sheets: [],
+        indexes: [],
+        fieldConflicts: [],
+        scheduleConflicts: []
+      };
+    }
+
+    filesGrouped[file.fileName].sheets.push(file.sheetName);
+    filesGrouped[file.fileName].indexes.push(index);
+    filesGrouped[file.fileName].fieldConflicts.push(...file.conflicts);
+  });
+
+  previewConflicts.forEach(conflict => {
+    if (!filesGrouped[conflict.fileName]) return;
+    filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
+  });
+
+  const fileGroups = Object.values(filesGrouped);
+  const totalFiles = fileGroups.length;
+
+  const conflictFiles = fileGroups.filter(file =>
+    file.fieldConflicts.length > 0 ||
+    file.scheduleConflicts.length > 0
   );
 
-  return (
-    file.conflicts.length === 0 &&
-    fileScheduleConflicts.length === 0
+  const noConflictFiles = fileGroups.filter(file =>
+    file.fieldConflicts.length === 0 &&
+    file.scheduleConflicts.length === 0
   );
-});
 
   importSummaryPanel.classList.remove('hidden');
   removeAllImportedFilesBtn.classList.toggle('hidden', importedFiles.length === 0);
@@ -587,8 +606,7 @@ const noConflictFiles = importedFiles.filter(file => {
   generateImportedBtn.disabled = importedFiles.length === 0;
 
   importSummaryText.textContent =
-`${totalSheets} sheet(s) imported • ${noConflictFiles.length} no field conflict • ${conflictFiles.length} sheet conflict • ${previewConflicts.length} schedule conflict`;
-
+`${totalFiles} file(s) imported • ${noConflictFiles.length} no conflict • ${conflictFiles.length} with conflict • ${previewConflicts.length} schedule conflict`;
 if (conflictFiles.length > 0 || previewConflicts.length > 0) {
     importSummaryBadge.textContent = 'Has Conflict';
     importSummaryBadge.className =
@@ -618,28 +636,6 @@ previewConflicts.forEach(conflict => {
   }
 });
 
-const filesGrouped = {};
-
-importedFiles.forEach((file, index) => {
-  if (!filesGrouped[file.fileName]) {
-    filesGrouped[file.fileName] = {
-      fileName: file.fileName,
-      sheets: [],
-      indexes: [],
-      fieldConflicts: [],
-      scheduleConflicts: []
-    };
-  }
-
-  filesGrouped[file.fileName].sheets.push(file.sheetName);
-  filesGrouped[file.fileName].indexes.push(index);
-  filesGrouped[file.fileName].fieldConflicts.push(...file.conflicts);
-});
-
-previewConflicts.forEach(conflict => {
-  if (!filesGrouped[conflict.fileName]) return;
-  filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
-});
 
 importSummaryList.innerHTML = Object.values(filesGrouped).map((fileGroup, groupIndex) => {
   const groupedScheduleConflicts = {};
