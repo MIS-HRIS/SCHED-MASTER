@@ -308,10 +308,7 @@ const findHeaderIndexes = (row) => {
     position: null
   };
 
-  const headerCells = Array.from(
-    { length: row.length },
-    (_, i) => normalize(row[i] || '')
-  );
+  const headerCells = row.map(cell => normalize(cell || ''));
 
   const restDateIndex = headerCells.findIndex(h =>
     h.includes('REST DAY DATE') ||
@@ -322,64 +319,67 @@ const findHeaderIndexes = (row) => {
     h.includes('WORK DATE')
   );
 
-  headerCells.forEach((h, idx) => {
-    const isRestSide =
-      restDateIndex !== -1 &&
-      idx <= restDateIndex &&
-      (workDateIndex === -1 || idx < workDateIndex);
+  if (restDateIndex !== -1) {
+    restHeaders.date = restDateIndex;
 
-    const isWorkSide =
-      workDateIndex !== -1 &&
-      idx >= workDateIndex - 2;
+    for (let i = restDateIndex - 1; i >= 0; i--) {
+      const h = headerCells[i];
 
-    if (isRestSide) {
-      if (h.includes('EMPLOYEE NUMBER') || h.includes('EMPLOYEE NO') || h.includes('EMP NO')) {
-        restHeaders.employeeNo = idx;
+      if (restHeaders.employeeNo === null && (
+        h.includes('EMPLOYEE NUMBER') ||
+        h.includes('EMPLOYEE NO') ||
+        h.includes('EMP NO')
+      )) {
+        restHeaders.employeeNo = i;
       }
 
-      if (h === 'NAME' || h.includes('EMPLOYEE NAME')) {
-        restHeaders.name = idx;
+      if (restHeaders.name === null && (
+        h === 'NAME' ||
+        h.includes('EMPLOYEE NAME')
+      )) {
+        restHeaders.name = i;
+      }
+    }
+  }
+
+  if (workDateIndex !== -1) {
+    workHeaders.date = workDateIndex;
+
+    for (let i = workDateIndex - 1; i >= 0; i--) {
+      const h = headerCells[i];
+
+      if (workHeaders.employeeNo === null && (
+        h.includes('EMPLOYEE NUMBER') ||
+        h.includes('EMPLOYEE NO') ||
+        h.includes('EMP NO')
+      )) {
+        workHeaders.employeeNo = i;
       }
 
-      if (h.includes('REST DAY DATE') || h.includes('RD DATE')) {
-        restHeaders.date = idx;
-      }
-
-      if (h.includes('DAY OF WEEK')) {
-        restHeaders.dayOfWeek = idx;
-      }
-
-      if (h === 'POSITION') {
-        restHeaders.position = idx;
+      if (workHeaders.name === null && (
+        h === 'NAME' ||
+        h.includes('EMPLOYEE NAME')
+      )) {
+        workHeaders.name = i;
       }
     }
 
-    if (isWorkSide) {
-      if (h.includes('EMPLOYEE NUMBER') || h.includes('EMPLOYEE NO') || h.includes('EMP NO')) {
-        workHeaders.employeeNo = idx;
+    for (let i = workDateIndex + 1; i < headerCells.length; i++) {
+      const h = headerCells[i];
+
+      if (workHeaders.shiftCode === null && (
+        h.includes('SHIFT CODE') ||
+        h.includes('SHIFTCODE') ||
+        h.includes('SCHED CODE')
+      )) {
+        workHeaders.shiftCode = i;
       }
 
-      if (h === 'NAME' || h.includes('EMPLOYEE NAME')) {
-        workHeaders.name = idx;
-      }
-
-      if (h.includes('WORK DATE')) {
-        workHeaders.date = idx;
-      }
-
-      if (h.includes('SHIFT CODE') || h.includes('SHIFTCODE') || h.includes('SCHED CODE')) {
-        workHeaders.shiftCode = idx;
-      }
-
-      if (h.includes('DAY OF WEEK')) {
-        workHeaders.dayOfWeek = idx;
-      }
-
-      if (h === 'POSITION') {
-        workHeaders.position = idx;
+      if (workHeaders.position === null && h.includes('BRANCH ASSIGNMENT')) {
+        workHeaders.position = i;
       }
     }
-  });
+  }
 
   return {
     work: workHeaders,
