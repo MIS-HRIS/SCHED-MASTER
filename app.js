@@ -1032,6 +1032,20 @@ function arrayBufferToBinary(buffer) {
   return binary;
 }
 
+function detectFileHeaderType(buffer) {
+  const bytes = new Uint8Array(buffer.slice(0, 8));
+  if (bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B) {
+    return 'zip';
+  }
+  if (bytes.length >= 8 && bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0) {
+    return 'ole';
+  }
+  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return 'pdf';
+  }
+  return 'unknown';
+}
+
 async function readWorkbookFromFile(file) {
   const fileName = String(file.name || '').toLowerCase();
   const isCsv = fileName.endsWith('.csv') || (file.type && file.type.includes('csv')) || fileName.endsWith('.txt');
@@ -1042,28 +1056,35 @@ async function readWorkbookFromFile(file) {
   }
 
   const buffer = await file.arrayBuffer();
+  const headerType = detectFileHeaderType(buffer);
 
-  try {
-    return XLSX.read(buffer, { type: 'array' });
-  } catch (xlsxError) {
+  if (headerType === 'zip' || headerType === 'ole') {
     try {
-      const uint8 = new Uint8Array(buffer);
-      return XLSX.read(uint8, { type: 'array' });
-    } catch (altError) {
+      return XLSX.read(buffer, { type: 'array' });
+    } catch (arrayError) {
       try {
-        const binary = arrayBufferToBinary(buffer);
-        return XLSX.read(binary, { type: 'binary', raw: false });
-      } catch (binaryError) {
-        const text = await file.text();
-        if (text.includes(',') || text.includes('\t')) {
-          return XLSX.read(text, { type: 'string', raw: false });
+        const uint8 = new Uint8Array(buffer);
+        return XLSX.read(uint8, { type: 'array' });
+      } catch (altError) {
+        try {
+          const binary = arrayBufferToBinary(buffer);
+          return XLSX.read(binary, { type: 'binary', raw: false });
+        } catch (binaryError) {
+          const readError = arrayError || altError || binaryError;
+          readError.message = `Unable to parse workbook (${headerType}): ${readError.message}`;
+          throw readError;
         }
-        const readError = xlsxError || altError || binaryError;
-        readError.message = `Unable to parse workbook: ${readError.message}`;
-        throw readError;
       }
     }
   }
+
+  const text = await file.text();
+  if (text.includes(',') || text.includes('\t')) {
+    return XLSX.read(text, { type: 'string', raw: false });
+  }
+
+  const error = new Error(`Unsupported file header type: ${headerType}`);
+  throw error;
 }
 
 async function handleImportFiles(event, appendMode = false) {
