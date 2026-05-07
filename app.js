@@ -470,13 +470,28 @@ entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
         else if (!entry.shiftCode && entry.date) entry.type = 'rest';
       }
 
-      const hasUsefulData =
+let hasUsefulData = false;
+
+if (
+  entry.type === 'work' &&
   entry.employeeNo &&
-  entry.date;
+  entry.date &&
+  entry.shiftCode
+) {
+  hasUsefulData = true;
+}
+
+else if (
+  entry.type === 'rest' &&
+  entry.employeeNo &&
+  entry.date
+) {
+  hasUsefulData = true;
+}
 
 if (hasUsefulData) {
-        parsed.push(entry);
-      }
+  parsed.push(entry);
+}
     });
   });
 
@@ -797,6 +812,7 @@ async function handleImportFiles(event, appendMode = false) {
         const ignoredSheetKeywords = [
           'AASP CODE',
           'RSO CODE',
+          'EXPORT SUMMARY',
           'RBT CODE',
           'WAREHOUSE CODE',
           'HELP SHEET',
@@ -911,13 +927,22 @@ function generateImportedData() {
 
   importedFiles.forEach(file => {
     file.rows.forEach(row => {
-      if (row.type === 'work') {
-        workRows.push(row);
-      }
+if (
+  row.type === 'work' &&
+  row.employeeNo &&
+  row.date &&
+  row.shiftCode
+) {
+  workRows.push(row);
+}
 
-      else if (row.type === 'rest') {
-        restRows.push(row);
-      }
+else if (
+  row.type === 'rest' &&
+  row.employeeNo &&
+  row.date
+) {
+  restRows.push(row);
+}
     });
   });
 
