@@ -308,11 +308,14 @@ const findHeaderIndexes = (row) => {
     position: null
   };
 
-  const headerCells = row.map(cell => normalize(cell));
+const headerCells = Array.from(
+  { length: row.length },
+  (_, i) => normalize(row[i] || '')
+);
 
   const findNearestLeft = (dateIndex, keywords) => {
     for (let i = dateIndex - 1; i >= 0; i--) {
-      if (keywords.some(keyword => headerCells[i].includes(keyword))) {
+      if (headerCells[i] && keywords.some(keyword => headerCells[i].includes(keyword))) {
         return i;
       }
     }
