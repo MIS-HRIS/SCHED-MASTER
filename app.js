@@ -308,51 +308,56 @@ const findHeaderIndexes = (row) => {
     position: null
   };
 
-  row.forEach((cell, idx) => {
-    const h = normalize(cell);
+  const headerCells = row.map(cell => normalize(cell));
 
-    // WORK HEADERS
-    if (h === 'NAME' || h === 'EMPLOYEE NAME') {
-      if (workHeaders.name === null) workHeaders.name = idx;
-      else if (restHeaders.name === null) restHeaders.name = idx;
+  const findNearestLeft = (dateIndex, keywords) => {
+    for (let i = dateIndex - 1; i >= 0; i--) {
+      if (keywords.some(keyword => headerCells[i].includes(keyword))) {
+        return i;
+      }
     }
+    return null;
+  };
 
-    else if (h.includes('EMPLOYEE NO') ||
-  h.includes(EMP. NO)) {
-      if (workHeaders.employeeNo === null) workHeaders.employeeNo = idx;
-      else if (restHeaders.employeeNo === null) restHeaders.employeeNo = idx;
-    }
-
-    else if (h === 'WORK DATE') {
+  headerCells.forEach((h, idx) => {
+    if (h === 'WORK DATE' || h.includes('WORK DATE')) {
       workHeaders.date = idx;
+      workHeaders.employeeNo = findNearestLeft(idx, ['EMPLOYEE NO', 'EMPLOYEE NUMBER', 'EMP. NO', 'EMP NO']);
+      workHeaders.name = findNearestLeft(idx, ['NAME', 'EMPLOYEE NAME']);
     }
 
-    else if (
-  h === 'REST DAY DATE' ||
-  h.includes('RD DATE') ||
-  h.includes('REST DAY')
-) {
-  restHeaders.date = idx;
-}
+    if (
+      h === 'REST DAY DATE' ||
+      h.includes('REST DAY DATE') ||
+      h.includes('RD DATE')
+    ) {
+      restHeaders.date = idx;
+      restHeaders.employeeNo = findNearestLeft(idx, ['EMPLOYEE NO', 'EMPLOYEE NUMBER', 'EMP. NO', 'EMP NO']);
+      restHeaders.name = findNearestLeft(idx, ['NAME', 'EMPLOYEE NAME']);
+    }
 
-    else if (
+    if (
       h.includes('SHIFT CODE') ||
       h.includes('SHIFTCODE') ||
-      h.includes('SHIFT CODES') ||
-      h.includes('SHIFTCODES') ||
       h.includes('SCHED CODE')
     ) {
       workHeaders.shiftCode = idx;
     }
 
-    else if (h.includes('DAY OF WEEK')) {
-      if (workHeaders.dayOfWeek === null) workHeaders.dayOfWeek = idx;
-      else if (restHeaders.dayOfWeek === null) restHeaders.dayOfWeek = idx;
+    if (h.includes('DAY OF WEEK')) {
+      if (workHeaders.date !== null && idx > workHeaders.date) {
+        workHeaders.dayOfWeek = idx;
+      } else if (restHeaders.date !== null && idx > restHeaders.date) {
+        restHeaders.dayOfWeek = idx;
+      }
     }
 
-    else if (h === 'POSITION') {
-      if (workHeaders.position === null) workHeaders.position = idx;
-      else if (restHeaders.position === null) restHeaders.position = idx;
+    if (h === 'POSITION') {
+      if (workHeaders.date !== null && idx > workHeaders.date) {
+        workHeaders.position = idx;
+      } else if (restHeaders.date !== null && idx > restHeaders.date) {
+        restHeaders.position = idx;
+      }
     }
   });
 
@@ -392,7 +397,8 @@ if (
   joined.includes('WORK SCHEDULE') ||
   joined.includes('SHIFT CODE') ||
   joined.includes('REST DAY SCHEDULE') ||
-  joined.includes('REST DAY DATE')
+  joined.includes('REST DAY DATE') ||
+  joined.includes('RD DATE')
 ) {
   return;
 }
