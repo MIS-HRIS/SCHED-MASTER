@@ -470,6 +470,18 @@ entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
         else if (!entry.shiftCode && entry.date) entry.type = 'rest';
       }
 
+      const currentYear = new Date().getFullYear();
+const rowYear = new Date(entry.date).getFullYear();
+
+const allowedYears = [
+  currentYear,
+  currentYear + 1
+];
+
+if (entry.date && !allowedYears.includes(rowYear)) {
+  return;
+}
+
       const isSampleRow =
   String(entry.employeeNo || '').trim() === '1010' ||
   String(entry.name || '').toUpperCase().includes('JUAN DELA CRUZ');
