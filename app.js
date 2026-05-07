@@ -470,6 +470,14 @@ entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
         else if (!entry.shiftCode && entry.date) entry.type = 'rest';
       }
 
+      const isSampleRow =
+  String(entry.employeeNo || '').trim() === '1010' ||
+  String(entry.name || '').toUpperCase().includes('JUAN DELA CRUZ');
+
+if (isSampleRow) {
+  return;
+}
+
 let hasUsefulData = false;
 
 if (
