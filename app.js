@@ -312,6 +312,7 @@ function parseMixedScheduleRows(rows, dateContext = null) {
 
 const findHeaderIndexes = (row) => {
   const workHeaders = {
+    start: null,
     name: null,
     employeeNo: null,
     date: null,
@@ -321,6 +322,7 @@ const findHeaderIndexes = (row) => {
   };
 
   const restHeaders = {
+    start: null,
     name: null,
     employeeNo: null,
     date: null,
@@ -363,10 +365,12 @@ const findHeaderIndexes = (row) => {
     }
 
     else if (isWorkDateHeader(h)) {
+      if (workHeaders.start === null) workHeaders.start = idx;
       workHeaders.date = idx;
     }
 
     else if (isRestDateHeader(h)) {
+      if (restHeaders.start === null) restHeaders.start = idx;
       restHeaders.date = idx;
     }
 
@@ -377,6 +381,7 @@ const findHeaderIndexes = (row) => {
       h.includes('SHIFTCODES') ||
       h.includes('SCHED CODE')
     ) {
+      if (workHeaders.start === null) workHeaders.start = idx;
       workHeaders.shiftCode = idx;
     }
 
@@ -388,6 +393,45 @@ const findHeaderIndexes = (row) => {
       putSharedHeader('position', idx);
     }
   });
+
+  if (workHeaders.date !== null && restHeaders.date !== null) {
+    const assignSharedHeadersByNearestDate = (key, matcher) => {
+      workHeaders[key] = null;
+      restHeaders[key] = null;
+
+      normalizedCells.forEach((h, idx) => {
+        if (!matcher(h)) return;
+
+        const distanceToWork = Math.abs(idx - workHeaders.date);
+        const distanceToRest = Math.abs(idx - restHeaders.date);
+
+        if (distanceToRest < distanceToWork) {
+          if (restHeaders[key] === null) restHeaders[key] = idx;
+        } else if (workHeaders[key] === null) {
+          workHeaders[key] = idx;
+        }
+      });
+    };
+
+    assignSharedHeadersByNearestDate('name', h => h === 'NAME' || h === 'EMPLOYEE NAME');
+    assignSharedHeadersByNearestDate('employeeNo', isEmployeeHeader);
+  }
+
+  const setHeaderStart = (header) => {
+    const indexes = [
+      header.name,
+      header.employeeNo,
+      header.date,
+      header.shiftCode,
+      header.dayOfWeek,
+      header.position
+    ].filter(idx => idx !== null && idx !== undefined);
+
+    header.start = indexes.length ? Math.min(...indexes) : null;
+  };
+
+  setHeaderStart(workHeaders);
+  setHeaderStart(restHeaders);
 
   return {
     work: workHeaders,
@@ -430,23 +474,17 @@ if (isHeaderRow) {
 const blocks = [];
 
 if (workHeader) {
+  const workOffset = workHeader.start ?? 0;
+
   blocks.push({
     type: 'work',
-    offset: 0,
-    row
+    offset: workOffset,
+    row: row.slice(workOffset)
   });
 }
 
 if (restHeader) {
-  const restOffset = Math.min(
-    ...[
-      restHeader.name,
-      restHeader.employeeNo,
-      restHeader.date,
-      restHeader.dayOfWeek,
-      restHeader.position
-    ].filter(idx => idx !== null && idx !== undefined)
-  );
+  const restOffset = restHeader.start ?? 0;
 
   blocks.push({
     type: 'rest',
@@ -541,8 +579,7 @@ const cleanDate = String(entry.date || '').trim();
 
 let hasUsefulData = false;
 
-// Only accept if there is at least a Name AND a Date
-if (cleanName !== '' && cleanDate !== '') {
+if (cleanDate !== '') {
     if (entry.type === 'work' && cleanEmpNo !== '' && entry.shiftCode) {
         hasUsefulData = true;
     } else if (entry.type === 'rest' && cleanEmpNo !== '') {
