@@ -317,7 +317,8 @@ const findHeaderIndexes = (row) => {
       else if (restHeaders.name === null) restHeaders.name = idx;
     }
 
-    else if (h.includes('EMPLOYEE NO')) {
+    else if (h.includes('EMPLOYEE NO') ||
+  h.includes(EMP. NO)) {
       if (workHeaders.employeeNo === null) workHeaders.employeeNo = idx;
       else if (restHeaders.employeeNo === null) restHeaders.employeeNo = idx;
     }
@@ -326,12 +327,19 @@ const findHeaderIndexes = (row) => {
       workHeaders.date = idx;
     }
 
-    else if (h === 'REST DAY DATE') {
-      restHeaders.date = idx;
-    }
+    else if (
+  h === 'REST DAY DATE' ||
+  h.includes('RD DATE') ||
+  h.includes('REST DAY')
+) {
+  restHeaders.date = idx;
+}
 
     else if (
       h.includes('SHIFT CODE') ||
+      h.includes('SHIFTCODE') ||
+      h.includes('SHIFT CODES') ||
+      h.includes('SHIFTCODES') ||
       h.includes('SCHED CODE')
     ) {
       workHeaders.shiftCode = idx;
