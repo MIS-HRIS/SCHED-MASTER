@@ -308,58 +308,75 @@ const findHeaderIndexes = (row) => {
     position: null
   };
 
-const headerCells = Array.from(
-  { length: row.length },
-  (_, i) => normalize(row[i] || '')
-);
+  const headerCells = Array.from(
+    { length: row.length },
+    (_, i) => normalize(row[i] || '')
+  );
 
-  const findNearestLeft = (dateIndex, keywords) => {
-    for (let i = dateIndex - 1; i >= 0; i--) {
-      if (headerCells[i] && keywords.some(keyword => headerCells[i].includes(keyword))) {
-        return i;
-      }
-    }
-    return null;
-  };
+  const restDateIndex = headerCells.findIndex(h =>
+    h.includes('REST DAY DATE') ||
+    h.includes('RD DATE')
+  );
+
+  const workDateIndex = headerCells.findIndex(h =>
+    h.includes('WORK DATE')
+  );
 
   headerCells.forEach((h, idx) => {
-    if (h === 'WORK DATE' || h.includes('WORK DATE')) {
-      workHeaders.date = idx;
-      workHeaders.employeeNo = findNearestLeft(idx, ['EMPLOYEE NO', 'EMPLOYEE NUMBER', 'EMP. NO', 'EMP NO']);
-      workHeaders.name = findNearestLeft(idx, ['NAME', 'EMPLOYEE NAME']);
-    }
+    const isRestSide =
+      restDateIndex !== -1 &&
+      idx <= restDateIndex &&
+      (workDateIndex === -1 || idx < workDateIndex);
 
-    if (
-      h === 'REST DAY DATE' ||
-      h.includes('REST DAY DATE') ||
-      h.includes('RD DATE')
-    ) {
-      restHeaders.date = idx;
-      restHeaders.employeeNo = findNearestLeft(idx, ['EMPLOYEE NO', 'EMPLOYEE NUMBER', 'EMP. NO', 'EMP NO']);
-      restHeaders.name = findNearestLeft(idx, ['NAME', 'EMPLOYEE NAME']);
-    }
+    const isWorkSide =
+      workDateIndex !== -1 &&
+      idx >= workDateIndex - 2;
 
-    if (
-      h.includes('SHIFT CODE') ||
-      h.includes('SHIFTCODE') ||
-      h.includes('SCHED CODE')
-    ) {
-      workHeaders.shiftCode = idx;
-    }
+    if (isRestSide) {
+      if (h.includes('EMPLOYEE NUMBER') || h.includes('EMPLOYEE NO') || h.includes('EMP NO')) {
+        restHeaders.employeeNo = idx;
+      }
 
-    if (h.includes('DAY OF WEEK')) {
-      if (workHeaders.date !== null && idx > workHeaders.date) {
-        workHeaders.dayOfWeek = idx;
-      } else if (restHeaders.date !== null && idx > restHeaders.date) {
+      if (h === 'NAME' || h.includes('EMPLOYEE NAME')) {
+        restHeaders.name = idx;
+      }
+
+      if (h.includes('REST DAY DATE') || h.includes('RD DATE')) {
+        restHeaders.date = idx;
+      }
+
+      if (h.includes('DAY OF WEEK')) {
         restHeaders.dayOfWeek = idx;
+      }
+
+      if (h === 'POSITION') {
+        restHeaders.position = idx;
       }
     }
 
-    if (h === 'POSITION') {
-      if (workHeaders.date !== null && idx > workHeaders.date) {
+    if (isWorkSide) {
+      if (h.includes('EMPLOYEE NUMBER') || h.includes('EMPLOYEE NO') || h.includes('EMP NO')) {
+        workHeaders.employeeNo = idx;
+      }
+
+      if (h === 'NAME' || h.includes('EMPLOYEE NAME')) {
+        workHeaders.name = idx;
+      }
+
+      if (h.includes('WORK DATE')) {
+        workHeaders.date = idx;
+      }
+
+      if (h.includes('SHIFT CODE') || h.includes('SHIFTCODE') || h.includes('SCHED CODE')) {
+        workHeaders.shiftCode = idx;
+      }
+
+      if (h.includes('DAY OF WEEK')) {
+        workHeaders.dayOfWeek = idx;
+      }
+
+      if (h === 'POSITION') {
         workHeaders.position = idx;
-      } else if (restHeaders.date !== null && idx > restHeaders.date) {
-        restHeaders.position = idx;
       }
     }
   });
