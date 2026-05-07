@@ -984,6 +984,39 @@ document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
   });
 });
 }
+function detectScheduleContent(rows) {
+  const flattened = rows
+    .flat()
+    .map(cell => String(cell || '').toUpperCase().replace(/\s+/g, ' ').trim());
+
+  const hasEmployeeNo = flattened.some(v =>
+    v.includes('EMPLOYEE NUMBER') ||
+    v.includes('EMPLOYEE NO') ||
+    v.includes('EMP NO')
+  );
+
+  const hasWorkDate = flattened.some(v =>
+    v.includes('WORK DATE')
+  );
+
+  const hasShiftCode = flattened.some(v =>
+    v.includes('SHIFT CODE') ||
+    v.includes('SCHED CODE')
+  );
+
+  const hasRestDayDate = flattened.some(v =>
+    v.includes('REST DAY DATE') ||
+    v.includes('RD DATE')
+  );
+
+  return {
+    hasWorkSchedule: hasEmployeeNo && hasWorkDate && hasShiftCode,
+    hasRestDay: hasEmployeeNo && hasRestDayDate,
+    isScheduleSheet:
+      (hasEmployeeNo && hasWorkDate && hasShiftCode) ||
+      (hasEmployeeNo && hasRestDayDate)
+  };
+}
 async function handleImportFiles(event, appendMode = false) {
   const files = Array.from(event.target.files || []);
 
@@ -1010,30 +1043,12 @@ async function handleImportFiles(event, appendMode = false) {
         const sheet = workbook.Sheets[sheetName];
 
         const rows = XLSX.utils.sheet_to_json(sheet, {
-          header: 1,
-          raw: false
-        });
+  header: 1,
+  raw: false,
+  defval: ''
+});
 
-        const upperSheetName = sheetName.toUpperCase();
 
-        const ignoredSheetKeywords = [
-          'AASP CODE',
-          'RSO CODE',
-          'EXPORT SUMMARY',
-          'RBT CODE',
-          'WAREHOUSE CODE',
-          'HELP SHEET',
-        ];
-
-        const shouldIgnoreSheet =
-          ignoredSheetKeywords.some(keyword =>
-            upperSheetName.includes(keyword)
-          );
-
-        if (shouldIgnoreSheet) {
-          console.log(`Skipped irrelevant sheet: ${sheetName}`);
-          return;
-        }
 
         const sheetText = rows
   .slice(0, 10)
@@ -1065,6 +1080,13 @@ if (!hasScheduleContent) {
             );
           }
         });
+
+        const scheduleContent = detectScheduleContent(cleanedRows);
+
+if (!scheduleContent.isScheduleSheet) {
+  console.log(`Skipped non-schedule sheet: ${sheetName}`);
+  return;
+}
         
 
         const dateContext = detectDominantMonthYearFromRows(cleanedRows);
@@ -1108,11 +1130,13 @@ const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
       });
 
     } catch (error) {
-      console.error('Import failed for file:', file.name);
-console.error(error);
-alert(
-  `IMPORT ERROR\n\nFILE: ${file.name}\n\n${error?.message || error}`
-);
+console.error('Import failed:', {
+  file: file.name,
+  message: error?.message,
+  stack: error?.stack
+});
+
+alert(`Import failed for ${file.name}: ${error?.message}`);
 
       importedFiles.push({
         fileName: file.name,
