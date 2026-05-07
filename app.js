@@ -576,6 +576,7 @@ function detectScheduleType(rows) {
     joined.includes('AASP-') ||
     joined.includes('RBG-') ||
     joined.includes('CHAR-') ||
+    joined.includes('HO-') ||
     joined.includes('WHSE-')
   ) {
     return 'work';
