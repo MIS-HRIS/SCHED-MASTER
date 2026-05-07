@@ -622,13 +622,17 @@ function renderImportSummaryDashboard() {
         sheets: [],
         indexes: [],
         fieldConflicts: [],
-        scheduleConflicts: []
+        scheduleConflicts: [],
+workCount: 0,
+restCount: 0
       };
     }
 
     filesGrouped[file.fileName].sheets.push(file.sheetName);
     filesGrouped[file.fileName].indexes.push(index);
     filesGrouped[file.fileName].fieldConflicts.push(...file.conflicts);
+    filesGrouped[file.fileName].workCount += file.rows.filter(row => row.type === 'work').length;
+filesGrouped[file.fileName].restCount += file.rows.filter(row => row.type === 'rest').length;
   });
 
   previewConflicts.forEach(conflict => {
@@ -739,6 +743,9 @@ importSummaryList.innerHTML = Object.values(filesGrouped).map((fileGroup, groupI
         <div>
           <p class="font-semibold text-slate-800">${fileGroup.fileName}</p>
           <p class="text-xs text-slate-500">Sheet(s): ${[...new Set(fileGroup.sheets)].join(', ')}</p>
+          <p class="text-xs text-slate-500">
+  WS: ${fileGroup.workCount} row(s) • RD: ${fileGroup.restCount} row(s)
+</p>
         </div>
 
         <div class="flex items-center gap-4">
