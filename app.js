@@ -592,11 +592,12 @@ function getImportedPreviewConflicts() {
 
   importedFiles.forEach(file => {
     file.rows.forEach(row => {
-      const taggedRow = {
-        ...row,
-        fileName: file.fileName,
-        sheetName: file.sheetName
-      };
+const taggedRow = {
+  ...row,
+  fileName: file.fileName,
+  importFileKey: file.importFileKey,
+  sheetName: file.sheetName
+};
 
       if (row.type === 'work') workRows.push(taggedRow);
       if (row.type === 'rest') restRows.push(taggedRow);
@@ -796,13 +797,12 @@ filesGrouped[groupKey].workCount += file.rows.filter(row => row.type === 'work')
 filesGrouped[groupKey].restCount += file.rows.filter(row => row.type === 'rest').length;
   });
 
-  previewConflicts.forEach(conflict => {
-    const conflictKey = conflict.importFileKey || conflict.fileName;
+previewConflicts.forEach(conflict => {
+  const conflictKey = conflict.importFileKey || conflict.fileName;
 
-if (!filesGrouped[conflictKey]) return;
-filesGrouped[conflictKey].scheduleConflicts.push(conflict);
-    filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
-  });
+  if (!filesGrouped[conflictKey]) return;
+  filesGrouped[conflictKey].scheduleConflicts.push(conflict);
+});
 
 const fileKeyCounts = {};
 
