@@ -1035,6 +1035,24 @@ async function handleImportFiles(event, appendMode = false) {
           return;
         }
 
+        const sheetText = rows
+  .slice(0, 10)
+  .flat()
+  .map(cell => normalize(cell))
+  .join(' ');
+
+const hasScheduleContent =
+  sheetText.includes('WORK DATE') ||
+  sheetText.includes('WORK SCHEDULE') ||
+  sheetText.includes('REST DAY DATE') ||
+  sheetText.includes('RD DATE') ||
+  sheetText.includes('SHIFT CODE');
+
+if (!hasScheduleContent) {
+  console.log(`Skipped non-schedule content sheet: ${sheetName}`);
+  return;
+}
+
         const cleanedRows = [];
 
         rows.forEach(row => {
