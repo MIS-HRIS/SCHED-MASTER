@@ -699,12 +699,13 @@ const taggedRow = {
     if (!r.employeeNo || !r.date) return;
     const key = `${r.employeeNo}-${r.date}`;
 
-    if (workMap.has(key)) {
-      previewConflicts.push({
-        fileName: r.fileName,
-        sheetName: r.sheetName,
-        employeeNo: r.employeeNo,
-        date: r.date,
+      if (workMap.has(key)) {
+        previewConflicts.push({
+          fileName: r.fileName,
+          importFileKey: r.importFileKey,
+          sheetName: r.sheetName,
+          employeeNo: r.employeeNo,
+          date: r.date,
         reason: `Employee ${r.employeeNo} has Work Schedule and Rest Day on the same date: ${r.date}`
       });
     }
@@ -722,6 +723,7 @@ const taggedRow = {
       if (seen.has(key)) {
         previewConflicts.push({
           fileName: row.fileName,
+          importFileKey: row.importFileKey,
           sheetName: row.sheetName,
           employeeNo: row.employeeNo,
           date: row.date,
@@ -743,6 +745,7 @@ const taggedRow = {
     if (row.employeeNo && !workNos.has(row.employeeNo)) {
       previewConflicts.push({
         fileName: row.fileName,
+        importFileKey: row.importFileKey,
         sheetName: row.sheetName,
         employeeNo: row.employeeNo,
         date: row.date,
@@ -816,6 +819,7 @@ const taggedRow = {
         entries.forEach(e => {
           previewConflicts.push({
             fileName: e.row.fileName,
+            importFileKey: e.row.importFileKey,
             sheetName: e.row.sheetName,
             employeeNo: e.row.employeeNo,
             date: e.row.date,
@@ -835,6 +839,7 @@ const taggedRow = {
         .forEach(e => {
           previewConflicts.push({
             fileName: e.row.fileName,
+            importFileKey: e.row.importFileKey,
             sheetName: e.row.sheetName,
             employeeNo: e.row.employeeNo,
             date: e.row.date,
@@ -1720,6 +1725,8 @@ Object.values(employeeMonthWeekMap).forEach(weeks => {
     weekend: 'Too many weekends'
   };
   [...workScheduleData, ...restDayData].forEach(d => {
+    d.conflictReasons = [...new Set(d.conflictReasons || [])];
+
     if (d.conflict) {
       d.conflictReason = shortMessage[d.conflictType] || 'Conflict detected';
     }
