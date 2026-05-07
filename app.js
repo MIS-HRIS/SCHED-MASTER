@@ -628,9 +628,12 @@ function renderImportSummaryDashboard() {
   const filesGrouped = {};
 
   importedFiles.forEach((file, index) => {
-    if (!filesGrouped[file.fileName]) {
+    const groupKey = file.importFileKey || file.fileName;
+
+if (!filesGrouped[groupKey]) {
       filesGrouped[file.fileName] = {
         fileName: file.fileName,
+        importFileKey: groupKey,
         sheets: [],
         indexes: [],
         fieldConflicts: [],
@@ -641,11 +644,11 @@ isDuplicate: false
       };
     }
 
-    filesGrouped[file.fileName].sheets.push(file.sheetName);
-    filesGrouped[file.fileName].indexes.push(index);
-    filesGrouped[file.fileName].fieldConflicts.push(...file.conflicts);
-    filesGrouped[file.fileName].workCount += file.rows.filter(row => row.type === 'work').length;
-filesGrouped[file.fileName].restCount += file.rows.filter(row => row.type === 'rest').length;
+    filesGrouped[groupKey].sheets.push(file.sheetName);
+filesGrouped[groupKey].indexes.push(index);
+filesGrouped[groupKey].fieldConflicts.push(...file.conflicts);
+filesGrouped[groupKey].workCount += file.rows.filter(row => row.type === 'work').length;
+filesGrouped[groupKey].restCount += file.rows.filter(row => row.type === 'rest').length;
   });
 
   previewConflicts.forEach(conflict => {
@@ -653,14 +656,16 @@ filesGrouped[file.fileName].restCount += file.rows.filter(row => row.type === 'r
     filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
   });
 
-const fileNameCounts = {};
+const fileKeyCounts = {};
 
 importedFiles.forEach(file => {
-  fileNameCounts[file.fileName] = (fileNameCounts[file.fileName] || 0) + 1;
+  const key = file.importFileKey || file.fileName;
+  fileKeyCounts[key] = (fileKeyCounts[key] || 0) + 1;
 });
 
 Object.values(filesGrouped).forEach(fileGroup => {
-  fileGroup.isDuplicate = fileNameCounts[fileGroup.fileName] > 1;
+  fileGroup.isDuplicate =
+    fileKeyCounts[fileGroup.importFileKey] > 1;
 });
 
   const fileGroups = Object.values(filesGrouped);
@@ -828,6 +833,7 @@ async function handleImportFiles(event, appendMode = false) {
   let summaryMessage = '';
 
   for (const file of files) {
+    const importFileKey = `${file.name}-${file.size}`;
     try {
       const buffer = await file.arrayBuffer();
 
@@ -895,7 +901,8 @@ const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
         );
 
         importedFiles.push({
-          fileName: file.name,
+  fileName: file.name,
+  importFileKey,
           sheetName,
           rows: parsedRows,
           conflicts
