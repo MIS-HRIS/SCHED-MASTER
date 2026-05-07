@@ -974,29 +974,42 @@ document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
   });
 });
 }
-function detectScheduleContent(rows) {
+function detectScheduleContent(rows, sheetName = '') {
   const flattened = rows
     .flat()
     .map(cell => String(cell || '').toUpperCase().replace(/\s+/g, ' ').trim());
 
+  const upperSheetName = String(sheetName || '').toUpperCase();
+  const sheetNameLooksSchedule = /(?:WS|RD|WORK|REST|SCHEDULE)/.test(upperSheetName) &&
+    !/(?:CODE|SUMMARY|HELP|NOTICE)/.test(upperSheetName);
+
   const hasEmployeeNo = flattened.some(v =>
     v.includes('EMPLOYEE NUMBER') ||
     v.includes('EMPLOYEE NO') ||
-    v.includes('EMP NO')
+    v.includes('EMP NO') ||
+    v.includes('EMPLOYEE #') ||
+    v.includes('EMP ID')
   );
 
   const hasWorkDate = flattened.some(v =>
-    v.includes('WORK DATE')
+    v.includes('WORK DATE') ||
+    v.includes('WORKDATE') ||
+    (v.includes('DATE') && !v.includes('REST'))
   );
 
   const hasShiftCode = flattened.some(v =>
     v.includes('SHIFT CODE') ||
-    v.includes('SCHED CODE')
+    v.includes('SCHED CODE') ||
+    v.includes('SCODE') ||
+    v.includes('SHIFT')
   );
 
   const hasRestDayDate = flattened.some(v =>
     v.includes('REST DAY DATE') ||
-    v.includes('RD DATE')
+    v.includes('RESTDAY DATE') ||
+    v.includes('RD DATE') ||
+    v.includes('REST DAY') ||
+    v.includes('RESTDAY')
   );
 
   return {
@@ -1004,9 +1017,33 @@ function detectScheduleContent(rows) {
     hasRestDay: hasEmployeeNo && hasRestDayDate,
     isScheduleSheet:
       (hasEmployeeNo && hasWorkDate && hasShiftCode) ||
-      (hasEmployeeNo && hasRestDayDate)
+      (hasEmployeeNo && hasRestDayDate) ||
+      sheetNameLooksSchedule
   };
 }
+
+async function readWorkbookFromFile(file) {
+  const fileName = String(file.name || '').toLowerCase();
+  const isCsv = fileName.endsWith('.csv') || file.type.includes('csv') || fileName.endsWith('.txt');
+
+  if (isCsv) {
+    const text = await file.text();
+    return XLSX.read(text, { type: 'string', raw: false });
+  }
+
+  const buffer = await file.arrayBuffer();
+
+  try {
+    return XLSX.read(buffer, { type: 'array' });
+  } catch (xlsxError) {
+    const text = await file.text();
+    if (text.includes(',') || text.includes('\t')) {
+      return XLSX.read(text, { type: 'string', raw: false });
+    }
+    throw xlsxError;
+  }
+}
+
 async function handleImportFiles(event, appendMode = false) {
   const files = Array.from(event.target.files || []);
 
@@ -1021,103 +1058,64 @@ async function handleImportFiles(event, appendMode = false) {
   for (const file of files) {
     const importFileKey = `${file.name}-${file.size}`;
     try {
-      const buffer = await file.arrayBuffer();
+      const workbook = await readWorkbookFromFile(file);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      workbook.SheetNames.forEach(sheetName => {
+        try {
+          const sheet = workbook.Sheets[sheetName];
 
-      const workbook = XLSX.read(buffer, {
-        type: 'array'
+          const rows = XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            raw: false,
+            defval: ''
+          });
+
+          const cleanedRows = rows
+            .filter(row => Array.isArray(row) && row.some(cell => String(cell || '').trim() !== ''))
+            .map(row => row.map(cell => String(cell || '').trim()));
+
+          const scheduleContent = detectScheduleContent(cleanedRows, sheetName);
+
+          if (!scheduleContent.isScheduleSheet) {
+            console.log(`Skipped non-schedule sheet: ${sheetName}`);
+            return;
+          }
+
+          const dateContext = detectDominantMonthYearFromRows(cleanedRows);
+
+          const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
+
+          parsedRows.forEach(row => {
+            row.sourceFile = file.name;
+            row.sourceSheet = sheetName;
+          });
+
+          const conflicts = validateMixedRows(parsedRows, file.name, sheetName);
+
+          importedFiles.push({
+            fileName: file.name,
+            importFileKey,
+            sheetName,
+            rows: parsedRows,
+            conflicts
+          });
+        } catch (sheetError) {
+          console.error('Sheet failed:', {
+            file: file.name,
+            sheetName,
+            message: sheetError?.message,
+            stack: sheetError?.stack
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Import failed:', {
+        file: file.name,
+        message: error?.message,
+        stack: error?.stack
       });
 
-workbook.SheetNames.forEach(sheetName => {
-  try {
-    const sheet = workbook.Sheets[sheetName];
-
-    const rows = XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-      raw: false,
-      defval: ''
-    });
-
-    const cleanedRows = [];
-
-    rows.forEach(row => {
-      if (
-        row &&
-        row.some(cell => String(cell || '').trim() !== '')
-      ) {
-        cleanedRows.push(
-          row.map(cell => String(cell || '').trim())
-        );
-      }
-    });
-
-const scheduleContent = detectScheduleContent(cleanedRows);
-
-const upperSheetName = String(sheetName || '').toUpperCase();
-
-const sheetNameLooksSchedule =
-  upperSheetName.includes('WS') ||
-  upperSheetName.includes('RD') ||
-  upperSheetName.includes('WORK') ||
-  upperSheetName.includes('REST') ||
-  upperSheetName.includes('SCHEDULE');
-
-const sheetNameLooksHelper =
-  upperSheetName.includes('CODE') ||
-  upperSheetName.includes('SUMMARY') ||
-  upperSheetName.includes('HELP') ||
-  upperSheetName.includes('NOTICE');
-
-if (!scheduleContent.isScheduleSheet && (!sheetNameLooksSchedule || sheetNameLooksHelper)) {
-  console.log(`Skipped non-schedule sheet: ${sheetName}`);
-  return;
-}
-
-    const dateContext = detectDominantMonthYearFromRows(cleanedRows);
-
-    const parsedRows = parseMixedScheduleRows(
-      cleanedRows,
-      dateContext
-    );
-
-    parsedRows.forEach(row => {
-      row.sourceFile = file.name;
-      row.sourceSheet = sheetName;
-    });
-
-    const conflicts = validateMixedRows(
-      parsedRows,
-      file.name,
-      sheetName
-    );
-
-    importedFiles.push({
-      fileName: file.name,
-      importFileKey,
-      sheetName,
-      rows: parsedRows,
-      conflicts
-    });
-
-  } catch (sheetError) {
-    console.error('Sheet failed:', {
-      file: file.name,
-      sheetName,
-      message: sheetError?.message,
-      stack: sheetError?.stack
-    });
-  }
-});
-
-    } catch (error) {
-console.error('Import failed:', {
-  file: file.name,
-  message: error?.message,
-  stack: error?.stack
-});
-
-alert(`Import failed for ${file.name}: ${error?.message}`);
+      alert(`Import failed for ${file.name}: ${error?.message}`);
 
       importedFiles.push({
         fileName: file.name,
