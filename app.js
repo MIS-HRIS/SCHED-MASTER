@@ -1022,9 +1022,19 @@ function detectScheduleContent(rows, sheetName = '') {
   };
 }
 
+function arrayBufferToBinary(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return binary;
+}
+
 async function readWorkbookFromFile(file) {
   const fileName = String(file.name || '').toLowerCase();
-  const isCsv = fileName.endsWith('.csv') || file.type.includes('csv') || fileName.endsWith('.txt');
+  const isCsv = fileName.endsWith('.csv') || (file.type && file.type.includes('csv')) || fileName.endsWith('.txt');
 
   if (isCsv) {
     const text = await file.text();
@@ -1036,11 +1046,23 @@ async function readWorkbookFromFile(file) {
   try {
     return XLSX.read(buffer, { type: 'array' });
   } catch (xlsxError) {
-    const text = await file.text();
-    if (text.includes(',') || text.includes('\t')) {
-      return XLSX.read(text, { type: 'string', raw: false });
+    try {
+      const uint8 = new Uint8Array(buffer);
+      return XLSX.read(uint8, { type: 'array' });
+    } catch (altError) {
+      try {
+        const binary = arrayBufferToBinary(buffer);
+        return XLSX.read(binary, { type: 'binary', raw: false });
+      } catch (binaryError) {
+        const text = await file.text();
+        if (text.includes(',') || text.includes('\t')) {
+          return XLSX.read(text, { type: 'string', raw: false });
+        }
+        const readError = xlsxError || altError || binaryError;
+        readError.message = `Unable to parse workbook: ${readError.message}`;
+        throw readError;
+      }
     }
-    throw xlsxError;
   }
 }
 
@@ -1124,7 +1146,7 @@ async function handleImportFiles(event, appendMode = false) {
         conflicts: [
           {
             row: '-',
-            reason: 'File could not be read. Please check if this is a valid Excel/CSV file.'
+            reason: `File could not be read: ${error?.message || 'unknown error'}. Please check if this is a valid Excel/CSV file.`
           }
         ]
       });
