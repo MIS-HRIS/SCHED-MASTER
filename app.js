@@ -494,32 +494,24 @@ if (isSampleRow) {
   return;
 }
 
+// Clean the data before checking
+const cleanName = String(entry.name || '').trim();
+const cleanEmpNo = String(entry.employeeNo || '').trim();
+const cleanDate = String(entry.date || '').trim();
+
 let hasUsefulData = false;
 
-if (
-  entry.type === 'work' &&
-  entry.employeeNo &&
-  entry.date &&
-  entry.shiftCode
-) {
-  hasUsefulData = true;
-}
-
-else if (
-  entry.type === 'rest' &&
-  entry.employeeNo &&
-  entry.date
-) {
-  hasUsefulData = true;
+// Only accept if there is at least a Name AND a Date
+if (cleanName !== '' && cleanDate !== '') {
+    if (entry.type === 'work' && cleanEmpNo !== '' && entry.shiftCode) {
+        hasUsefulData = true;
+    } else if (entry.type === 'rest' && cleanEmpNo !== '') {
+        hasUsefulData = true;
+    }
 }
 
 if (hasUsefulData) {
-  parsed.push(entry);
-}
-    });
-  });
-
-  return parsed;
+    parsed.push(entry);
 }
 
 function validateMixedRows(rows, fileName, sheetName) {
