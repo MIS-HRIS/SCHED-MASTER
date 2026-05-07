@@ -312,11 +312,13 @@ const findHeaderIndexes = (row) => {
 
   const restDateIndex = headerCells.findIndex(h =>
     h.includes('REST DAY DATE') ||
-    h.includes('RD DATE')
+h.includes('RD DATE') ||
+h.includes('REST DAY')
   );
 
   const workDateIndex = headerCells.findIndex(h =>
-    h.includes('WORK DATE')
+    h.includes('WORK DATE') ||
+h.includes('WORK SCHEDULE')
   );
 
   if (restDateIndex !== -1) {
@@ -847,7 +849,7 @@ const fileKeyCounts = {};
 
 importedFiles.forEach(file => {
   const key = file.importFileKey || file.fileName;
-  fileKeyCounts[key] = (fileKeyCounts[key] || 0) + 1;
+  fileKeyCounts[key] = 1;
 });
 
 Object.values(filesGrouped).forEach(fileGroup => {
