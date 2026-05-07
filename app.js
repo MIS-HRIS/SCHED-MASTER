@@ -624,7 +624,8 @@ function renderImportSummaryDashboard() {
         fieldConflicts: [],
         scheduleConflicts: [],
 workCount: 0,
-restCount: 0
+restCount: 0,
+isDuplicate: false
       };
     }
 
@@ -639,6 +640,16 @@ filesGrouped[file.fileName].restCount += file.rows.filter(row => row.type === 'r
     if (!filesGrouped[conflict.fileName]) return;
     filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
   });
+
+const fileNameCounts = {};
+
+importedFiles.forEach(file => {
+  fileNameCounts[file.fileName] = (fileNameCounts[file.fileName] || 0) + 1;
+});
+
+Object.values(filesGrouped).forEach(fileGroup => {
+  fileGroup.isDuplicate = fileNameCounts[fileGroup.fileName] > 1;
+});
 
   const fileGroups = Object.values(filesGrouped);
   const totalFiles = fileGroups.length;
@@ -761,8 +772,8 @@ importSummaryList.innerHTML = Object.values(filesGrouped).map((fileGroup, groupI
             Remove
           </button>
 
-          <span class="px-3 py-1 rounded-full text-xs font-bold ${hasConflict ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
-            ${hasConflict ? 'HAS CONFLICT' : 'NO CONFLICT'}
+          <span class="px-3 py-1 rounded-full text-xs font-bold ${fileGroup.isDuplicate ? 'bg-yellow-100 text-yellow-700' : hasConflict ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+            ${fileGroup.isDuplicate ? 'DUPLICATE FILE' : hasConflict ? 'HAS CONFLICT' : 'NO CONFLICT'}
           </span>
         </div>
       </div>
