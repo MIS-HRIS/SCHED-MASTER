@@ -954,13 +954,62 @@ previewConflicts.forEach(conflict => {
 importSummaryList.innerHTML = Object.values(filesGrouped).map((fileGroup, groupIndex) => {
   const groupedScheduleConflicts = {};
 
-  fileGroup.scheduleConflicts.forEach(conflict => {
-    if (!groupedScheduleConflicts[conflict.employeeNo]) {
-      groupedScheduleConflicts[conflict.employeeNo] = [];
+  const getScheduleConflictType = (reason = '') => {
+    const normalizedReason = String(reason || '').toLowerCase();
+
+    if (normalizedReason.includes('not found in work schedule')) {
+      return {
+        key: 'missing',
+        summary: 'is in Rest Day but not found in Work Schedule',
+        title: 'Rest Day employee not found in Work Schedule'
+      };
     }
 
-    if (!groupedScheduleConflicts[conflict.employeeNo].includes(conflict.date)) {
-      groupedScheduleConflicts[conflict.employeeNo].push(conflict.date);
+    if (normalizedReason.includes('duplicate date')) {
+      return {
+        key: 'duplicate',
+        summary: 'has duplicate schedule date entries',
+        title: 'Duplicate schedule date'
+      };
+    }
+
+    if (
+      normalizedReason.includes('consecutive weekend') ||
+      normalizedReason.includes('maximum weekend')
+    ) {
+      return {
+        key: 'weekend',
+        summary: 'has Rest Day weekend rule conflict',
+        title: 'Rest Day weekend rule conflict'
+      };
+    }
+
+    return {
+      key: 'overlap',
+      summary: 'has Work Schedule and Rest Day overlap',
+      title: 'Work Schedule and Rest Day overlap'
+    };
+  };
+
+  fileGroup.scheduleConflicts.forEach(conflict => {
+    const conflictType = getScheduleConflictType(conflict.reason);
+    const groupKey = `${conflict.employeeNo || 'Unknown'}-${conflictType.key}`;
+
+    if (!groupedScheduleConflicts[groupKey]) {
+      groupedScheduleConflicts[groupKey] = {
+        employeeNo: conflict.employeeNo || 'Unknown',
+        type: conflictType,
+        dates: [],
+        reasons: []
+      };
+    }
+
+    if (conflict.date && !groupedScheduleConflicts[groupKey].dates.includes(conflict.date)) {
+      groupedScheduleConflicts[groupKey].dates.push(conflict.date);
+    }
+
+    if (conflict.reason && !groupedScheduleConflicts[groupKey].reasons.includes(conflict.reason)) {
+      groupedScheduleConflicts[groupKey].reasons.push(conflict.reason);
     }
   });
 
@@ -972,17 +1021,18 @@ importSummaryList.innerHTML = Object.values(filesGrouped).map((fileGroup, groupI
     ? `
       <div class="mt-3 text-sm text-red-700">
         <p class="font-semibold">${totalFieldConflicts + totalScheduleConflicts} conflict(s) found</p>
-        ${Object.entries(groupedScheduleConflicts).map(([empNo, dates]) => `
-          <p>Employee ${empNo} has Work Schedule and Rest Day overlap on ${dates.length} date(s)</p>
+        ${Object.values(groupedScheduleConflicts).map(group => `
+          <p>Employee ${group.employeeNo} ${group.type.summary}${group.dates.length ? ` on ${group.dates.length} date(s)` : ''}</p>
         `).join('')}
       </div>
 
       <div id="fileConflictDetails-${groupIndex}" class="hidden mt-3 border-t border-red-200 pt-3 text-sm text-red-700">
-        ${Object.entries(groupedScheduleConflicts).map(([empNo, dates]) => `
+        ${Object.values(groupedScheduleConflicts).map(group => `
           <div class="mb-3">
-            <p class="font-semibold">Employee ${empNo} — Work Schedule and Rest Day overlap</p>
-            <p>Affected Dates: ${dates.join(', ')}</p>
-            <p class="font-semibold">Total: ${dates.length}</p>
+            <p class="font-semibold">Employee ${group.employeeNo} — ${group.type.title}</p>
+            ${group.dates.length ? `<p>Affected Dates: ${group.dates.join(', ')}</p>` : ''}
+            ${group.reasons.length ? `<p>${group.reasons.join('; ')}</p>` : ''}
+            <p class="font-semibold">Total: ${group.dates.length || group.reasons.length}</p>
           </div>
         `).join('')}
 
