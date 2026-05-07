@@ -1116,7 +1116,11 @@ const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
       });
 
     } catch (error) {
-      console.error('Import failed for file:', file.name, error);
+      console.error('Import failed for file:', file.name);
+console.error(error);
+alert(
+  `IMPORT ERROR\n\nFILE: ${file.name}\n\n${error?.message || error}`
+);
 
       importedFiles.push({
         fileName: file.name,
