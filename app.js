@@ -1821,22 +1821,26 @@ function excelDateToJS(excelDate, dateContext = null) {
       year = `20${year}`;
     }
 
-    if (dateContext && dateContext.month && dateContext.year) {
-      const parsedMonth = Number(month);
-      const parsedYear = Number(year);
+    const parsedMonth = Number(month);
+    const parsedDay = Number(day);
+    const parsedYear = Number(year);
 
-      const isSuspicious =
-        parsedYear !== dateContext.year ||
-        Math.abs(parsedMonth - dateContext.month) > 1 ||
-        parsedMonth === 0;
+    const isValidDate =
+      parsedMonth >= 1 &&
+      parsedMonth <= 12 &&
+      parsedDay >= 1 &&
+      parsedDay <= 31 &&
+      parsedYear >= 2020;
 
-      if (isSuspicious) {
-        month = String(dateContext.month);
-        year = String(dateContext.year);
-      }
+    if (isValidDate) {
+      return `${parsedMonth}/${parsedDay}/${parsedYear}`;
     }
 
-    return `${Number(month)}/${Number(day)}/${year}`;
+    if (dateContext && dateContext.month && dateContext.year) {
+      return `${dateContext.month}/${parsedDay}/${dateContext.year}`;
+    }
+
+    return '';
   }
 
   const serial = Number(value);
@@ -1846,20 +1850,16 @@ function excelDateToJS(excelDate, dateContext = null) {
 
     if (isNaN(date)) return '';
 
-    const month = dateContext?.month || date.getMonth() + 1;
-    const year = dateContext?.year || date.getFullYear();
-
-    return `${month}/${date.getDate()}/${year}`;
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
   }
 
   const parsed = new Date(value);
 
-  if (isNaN(parsed)) return '';
+  if (!isNaN(parsed)) {
+    return `${parsed.getMonth() + 1}/${parsed.getDate()}/${parsed.getFullYear()}`;
+  }
 
-  const month = dateContext?.month || parsed.getMonth() + 1;
-  const year = dateContext?.year || parsed.getFullYear();
-
-  return `${month}/${parsed.getDate()}/${year}`;
+  return '';
 }
 
 function normalizeDateForExport(dateValue) {
