@@ -237,7 +237,34 @@ function parseImportedRows(rows, isWork) {
   return data;
 }
 
-function parseMixedScheduleRows(rows) {
+function detectDominantMonthYearFromRows(rows) {
+  const counts = {};
+
+  rows.flat().forEach(cell => {
+    const value = String(cell || '').trim();
+
+    const match = value.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](20\d{2})$/);
+    if (!match) return;
+
+    const [, month, , year] = match;
+    const key = `${Number(month)}-${year}`;
+
+    counts[key] = (counts[key] || 0) + 1;
+  });
+
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+
+  if (!top) return null;
+
+  const [month, year] = top[0].split('-');
+
+  return {
+    month: Number(month),
+    year: Number(year)
+  };
+}
+
+function parseMixedScheduleRows(rows, dateContext = null) {
   const parsed = [];
 
   let workHeader = null;
@@ -420,7 +447,7 @@ blocks.forEach(block => {
         entry.name = getVal('name');
         entry.employeeNo = getVal('employeeNo');
         const rawDate = getVal('date');
-entry.date = rawDate ? excelDateToJS(rawDate) : '';
+entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
         entry.shiftCode = getVal('shiftCode').toUpperCase();
         entry.dayOfWeek = getVal('dayOfWeek');
         entry.position = getVal('position');
@@ -431,7 +458,7 @@ entry.date = rawDate ? excelDateToJS(rawDate) : '';
 
           if (/^\d{1,6}$/.test(value)) entry.employeeNo ||= value;
           else if (isShiftCode(upper)) entry.shiftCode ||= upper;
-          else if (isDate(value)) entry.date ||= excelDateToJS(value);
+          else if (isDate(value)) entry.date ||= excelDateToJS(value, dateContext);
           else if (isDay(value)) entry.dayOfWeek ||= value;
           else if (/^(branch\s*head|oic|officer\s*in\s*charge|cashier|manager|assistant|lead|mac\s*expert|site\s*supervisor)$/i.test(value)) entry.position ||= value;
           else if (/^[A-Za-z,\s.-]+$/.test(value)) entry.name ||= value;
@@ -797,8 +824,10 @@ async function handleImportFiles(event, appendMode = false) {
             );
           }
         });
+        
 
-        const parsedRows = parseMixedScheduleRows(cleanedRows);
+        const dateContext = detectDominantMonthYearFromRows(cleanedRows);
+const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
 
         parsedRows.forEach(row => {
   row.sourceFile = file.name;
@@ -1776,57 +1805,61 @@ tr.className = rowClass;
       /*************************\
        * UTILITY FUNCTIONS   *
       \*************************/
-      function excelDateToJS(excelDate) {
+function excelDateToJS(excelDate, dateContext = null) {
   if (!excelDate) return '';
 
-  // ✅ 1. Already a Date object
-  if (excelDate instanceof Date && !isNaN(excelDate)) {
-    return excelDate.toLocaleDateString();
+  const value = String(excelDate).trim();
+
+  if (!value || value.toUpperCase() === 'NAN') return '';
+
+  const numericMatch = value.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+
+  if (numericMatch) {
+    let [, month, day, year] = numericMatch;
+
+    if (year.length === 2) {
+      year = `20${year}`;
+    }
+
+    if (dateContext && dateContext.month && dateContext.year) {
+      const parsedMonth = Number(month);
+      const parsedYear = Number(year);
+
+      const isSuspicious =
+        parsedYear !== dateContext.year ||
+        Math.abs(parsedMonth - dateContext.month) > 1 ||
+        parsedMonth === 0;
+
+      if (isSuspicious) {
+        month = String(dateContext.month);
+        year = String(dateContext.year);
+      }
+    }
+
+    return `${Number(month)}/${Number(day)}/${year}`;
   }
 
-  // ✅ 2. Numeric Excel serial date (e.g., 45678)
-  const a = parseFloat(excelDate);
-  if (!isNaN(a) && a > 20000) {
-    const date = new Date((a - 25569) * 86400 * 1000);
-    return date.toLocaleDateString();
+  const serial = Number(value);
+
+  if (!isNaN(serial) && serial > 20000) {
+    const date = new Date((serial - 25569) * 86400 * 1000);
+
+    if (isNaN(date)) return '';
+
+    const month = dateContext?.month || date.getMonth() + 1;
+    const year = dateContext?.year || date.getFullYear();
+
+    return `${month}/${date.getDate()}/${year}`;
   }
 
-  // ✅ 3. Text-based formats (handles "22-Nov", "Nov 22", "11/22/25", etc.)
-  let parsedDate = null;
-  const str = excelDate.toString().trim();
+  const parsed = new Date(value);
 
-  // Match patterns like "22-Nov" or "22 Nov"
-  const shortMonthMatch = str.match(/^(\d{1,2})[-\s]([A-Za-z]{3,})$/);
-  if (shortMonthMatch) {
-    const [_, day, mon] = shortMonthMatch;
-    const currentYear = new Date().getFullYear();
-    parsedDate = new Date(`${mon} ${day}, ${currentYear}`);
-  }
+  if (isNaN(parsed)) return '';
 
-  // Match patterns like "Nov 22, 25" or "Nov 22 2025"
-  if (!parsedDate || isNaN(parsedDate)) {
-    const flexibleDate = Date.parse(str.replace(/(\d{1,2})-(\w{3,})/, '$2 $1'));
-    if (!isNaN(flexibleDate)) parsedDate = new Date(flexibleDate);
-  }
+  const month = dateContext?.month || parsed.getMonth() + 1;
+  const year = dateContext?.year || parsed.getFullYear();
 
-  // Match common numeric formats
-  if ((!parsedDate || isNaN(parsedDate)) && /[-/]/.test(str)) {
-    const normalized = str.replace(/-/g, '/');
-    parsedDate = new Date(normalized);
-  }
-
-  // Fallback: try native Date()
-  if (!parsedDate || isNaN(parsedDate)) {
-    parsedDate = new Date(str);
-  }
-
-  // ✅ If still invalid, just return raw text (so it doesn’t break parsing)
-  if (!parsedDate || isNaN(parsedDate)) {
-    console.warn('⚠️ Could not parse date:', excelDate);
-    return excelDate;
-  }
-
-  return parsedDate.toLocaleDateString();
+  return `${month}/${parsed.getDate()}/${year}`;
 }
 
 function normalizeDateForExport(dateValue) {
