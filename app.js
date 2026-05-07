@@ -585,38 +585,90 @@ function detectScheduleType(rows) {
 }
 
 function getImportedPreviewConflicts() {
-  const workMap = new Map();
   const previewConflicts = [];
+
+  const workRows = [];
+  const restRows = [];
 
   importedFiles.forEach(file => {
     file.rows.forEach(row => {
-      if (row.type !== 'work' || !row.employeeNo || !row.date) return;
-
-      const key = `${row.employeeNo}-${row.date}`;
-      workMap.set(key, {
+      const taggedRow = {
         ...row,
         fileName: file.fileName,
         sheetName: file.sheetName
-      });
+      };
+
+      if (row.type === 'work') workRows.push(taggedRow);
+      if (row.type === 'rest') restRows.push(taggedRow);
     });
   });
 
-  importedFiles.forEach(file => {
-    file.rows.forEach(row => {
-      if (row.type !== 'rest' || !row.employeeNo || !row.date) return;
+  // 1. Same employee/date across WS and RD
+  const workMap = new Map();
+
+  workRows.forEach((w, index) => {
+    if (!w.employeeNo || !w.date) return;
+    const key = `${w.employeeNo}-${w.date}`;
+    workMap.set(key, {
+      ...w,
+      rowNum: index + 1
+    });
+  });
+
+  restRows.forEach((r, index) => {
+    if (!r.employeeNo || !r.date) return;
+    const key = `${r.employeeNo}-${r.date}`;
+
+    if (workMap.has(key)) {
+      previewConflicts.push({
+        fileName: r.fileName,
+        sheetName: r.sheetName,
+        employeeNo: r.employeeNo,
+        date: r.date,
+        reason: `Employee ${r.employeeNo} has Work Schedule and Rest Day on the same date: ${r.date}`
+      });
+    }
+  });
+
+  // 2. Duplicate dates within WS or RD
+  const detectDuplicates = (rows, label) => {
+    const seen = new Map();
+
+    rows.forEach((row, index) => {
+      if (!row.employeeNo || !row.date) return;
 
       const key = `${row.employeeNo}-${row.date}`;
 
-      if (workMap.has(key)) {
+      if (seen.has(key)) {
         previewConflicts.push({
-          fileName: file.fileName,
-          sheetName: file.sheetName,
+          fileName: row.fileName,
+          sheetName: row.sheetName,
           employeeNo: row.employeeNo,
           date: row.date,
-          reason: `Employee ${row.employeeNo} has Work Schedule and Rest Day overlap on ${row.date}`
+          reason: `Employee ${row.employeeNo} has duplicate date in ${label}: ${row.date}`
         });
+      } else {
+        seen.set(key, row);
       }
     });
+  };
+
+  detectDuplicates(workRows, 'Work Schedule');
+  detectDuplicates(restRows, 'Rest Day Schedule');
+
+  // 3. RD employee not found in WS
+  const workNos = new Set(workRows.map(row => row.employeeNo));
+
+  restRows.forEach(row => {
+    if (row.employeeNo && !workNos.has(row.employeeNo)) {
+      previewConflicts.push({
+        fileName: row.fileName,
+        sheetName: row.sheetName,
+        employeeNo: row.employeeNo,
+        date: row.date,
+        reason: `Employee ${row.employeeNo} not found in Work Schedule`
+      });
+    }
   });
 
   return previewConflicts;
@@ -1274,22 +1326,6 @@ function recheckConflicts() {
     }
   });
 
-  // --- 4️⃣ Multiple leaders resting same day ---
-  const byDate = {};
-  restDayData.forEach(r => {
-    if (!r.date || !r.position) return;
-    if (!byDate[r.date]) byDate[r.date] = [];
-    if (LEADERSHIP_POSITIONS.includes(r.position)) byDate[r.date].push(r);
-  });
-  Object.entries(byDate).forEach(([date, list]) => {
-    if (list.length > 1) {
-      list.forEach(ld => {
-        ld.conflict = true;
-        ld.conflictType ||= 'leadership';
-        ld.conflictReasons.push(`Multiple leaders resting on ${date}`);
-      });
-    }
-  });
 
 // --- 5️⃣ Weekend RD Validation (Business Rule Based) ---
 const weekendDays = ['Friday', 'Saturday', 'Sunday'];
