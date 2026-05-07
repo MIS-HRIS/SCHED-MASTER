@@ -1284,112 +1284,107 @@ function recheckConflicts() {
     }
   });
 
-// --- 5️⃣ Smarter Weekend RD Counting ---
+// --- 5️⃣ Weekend RD Validation (Business Rule Based) ---
 const weekendDays = ['Friday', 'Saturday', 'Sunday'];
-const weekendAdjacent = ['Thursday', 'Monday'];
-const validWeekendDays = [...weekendDays, ...weekendAdjacent];
 
-const weekendGroups = {}; // { empNo: { weekKey: [dates] } }
+const employeeMonthWeekMap = {};
 
-// Helper: get ISO week key
-function getWeekKey(dateStr) {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const firstThursday = new Date(date);
-  firstThursday.setDate(date.getDate() + 4 - (date.getDay() || 7));
-  const weekNo = Math.ceil((((firstThursday - new Date(year, 0, 1)) / 86400000) + 1) / 7);
-  return `${year}-W${weekNo}`;
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + mondayOffset);
+
+  return monday.toISOString().split('T')[0];
 }
 
-// Helper: get day index
-function getDayIndex(dayName) {
-  const map = {
-    Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
-    Thursday: 4, Friday: 5, Saturday: 6
-  };
-  return map[dayName] ?? -1;
-}
-
-// Group rest days per employee per week
 restDayData.forEach(r => {
   if (!r.employeeNo || !r.date) return;
+
   const date = new Date(r.date);
+
   if (isNaN(date)) return;
-  const empNo = r.employeeNo;
-  const weekKey = getWeekKey(r.date);
-  const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
 
-  if (!weekendGroups[empNo]) weekendGroups[empNo] = {};
-  if (!weekendGroups[empNo][weekKey]) weekendGroups[empNo][weekKey] = [];
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
 
-  if (validWeekendDays.includes(dayName)) {
-    weekendGroups[empNo][weekKey].push({
-      day: dayName,
-      date: r.date,
-      index: getDayIndex(dayName)
-    });
+  const dayName = date.toLocaleDateString('en-US', {
+    weekday: 'long'
+  });
+
+  if (!weekendDays.includes(dayName)) return;
+
+  const weekKey = getWeekStart(r.date);
+
+  const empKey = `${r.employeeNo}-${year}-${month}`;
+
+  if (!employeeMonthWeekMap[empKey]) {
+    employeeMonthWeekMap[empKey] = {};
   }
+
+  if (!employeeMonthWeekMap[empKey][weekKey]) {
+    employeeMonthWeekMap[empKey][weekKey] = [];
+  }
+
+  employeeMonthWeekMap[empKey][weekKey].push({
+    row: r,
+    dayName
+  });
 });
 
-// Count weekend rest groups
-const weekendCount = {};
+// Validate each employee/month/week
+Object.values(employeeMonthWeekMap).forEach(weeks => {
+  let weekendGroupCount = 0;
 
-Object.entries(weekendGroups).forEach(([empNo, weeks]) => {
-  let totalGroups = 0;
+  Object.values(weeks).forEach(entries => {
+    const days = entries.map(e => e.dayName);
 
-  Object.values(weeks).forEach(days => {
-    if (days.length === 0) return;
+    const hasFriday = days.includes('Friday');
+    const hasSaturday = days.includes('Saturday');
+    const hasSunday = days.includes('Sunday');
 
-    // Sort by weekday order
-    days.sort((a, b) => a.index - b.index);
+    const hasConsecutiveWeekend =
+      (hasFriday && hasSaturday) ||
+      (hasSaturday && hasSunday);
 
-    // Merge consecutive or overlapping days into a single "weekend group"
-    let currentGroup = [days[0]];
-
-    for (let i = 1; i < days.length; i++) {
-      const prev = days[i - 1];
-      const curr = days[i];
-      const diff = curr.index - prev.index;
-
-      // Consecutive day or Fri→Mon type overlap
-      if (diff === 1 || (prev.day === 'Friday' && curr.day === 'Monday')) {
-        currentGroup.push(curr);
-      } else {
-        // Evaluate previous group before starting new one
-        if (currentGroup.some(d => weekendDays.includes(d.day))) {
-          totalGroups++;
-        }
-        currentGroup = [curr];
-      }
+    // ❌ Consecutive weekend RD
+    if (hasConsecutiveWeekend) {
+      entries.forEach(e => {
+        e.row.conflict = true;
+        e.row.conflictType = 'weekend';
+        e.row.conflictReasons.push(
+          'Consecutive weekend Rest Days are not allowed.'
+        );
+      });
     }
 
-    // Count the last group if it contains a weekend day
-    if (currentGroup.some(d => weekendDays.includes(d.day))) {
-      totalGroups++;
+    // ✅ Count valid weekend group
+    if (
+      hasFriday ||
+      hasSaturday ||
+      hasSunday
+    ) {
+      weekendGroupCount++;
     }
   });
 
-  weekendCount[empNo] = totalGroups;
-});
-
-// Apply conflicts only if > 2 weekend RD groups total
-Object.entries(weekendCount).forEach(([empNo, count]) => {
-  if (count > 2) {
-    restDayData
-      .filter(r => r.employeeNo === empNo)
-      .forEach(r => {
-        const dayName = new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' });
-        if (validWeekendDays.includes(dayName)) {
-          r.conflict = true;
-          r.conflictType ||= 'weekend';
-          r.conflictReason = '⚠️ Too many weekends';
-          r.conflictReasons.push(`Exceeded limit: ${count} weekend rest groups (max 2 allowed)`);
-        }
+  // ❌ Exceeded monthly max
+  if (weekendGroupCount > 4) {
+    Object.values(weeks)
+      .flat()
+      .forEach(e => {
+        e.row.conflict = true;
+        e.row.conflictType = 'weekend';
+        e.row.conflictReasons.push(
+          'Maximum weekend RD groups exceeded. Allowed maximum is 4 per month.'
+        );
       });
   }
 });
 
-  // --- 6️⃣ Row short messages (only for display) ---
   const shortMessage = {
     sameDate: 'Same date conflict',
     duplicate: 'Duplicate date',
