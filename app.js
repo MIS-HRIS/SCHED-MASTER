@@ -1052,12 +1052,27 @@ workbook.SheetNames.forEach(sheetName => {
       }
     });
 
-    const scheduleContent = detectScheduleContent(cleanedRows);
+const scheduleContent = detectScheduleContent(cleanedRows);
 
-    if (!scheduleContent.isScheduleSheet) {
-      console.log(`Skipped non-schedule sheet: ${sheetName}`);
-      return;
-    }
+const upperSheetName = String(sheetName || '').toUpperCase();
+
+const sheetNameLooksSchedule =
+  upperSheetName.includes('WS') ||
+  upperSheetName.includes('RD') ||
+  upperSheetName.includes('WORK') ||
+  upperSheetName.includes('REST') ||
+  upperSheetName.includes('SCHEDULE');
+
+const sheetNameLooksHelper =
+  upperSheetName.includes('CODE') ||
+  upperSheetName.includes('SUMMARY') ||
+  upperSheetName.includes('HELP') ||
+  upperSheetName.includes('NOTICE');
+
+if (!scheduleContent.isScheduleSheet && (!sheetNameLooksSchedule || sheetNameLooksHelper)) {
+  console.log(`Skipped non-schedule sheet: ${sheetName}`);
+  return;
+}
 
     const dateContext = detectDominantMonthYearFromRows(cleanedRows);
 
