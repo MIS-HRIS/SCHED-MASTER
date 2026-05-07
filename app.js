@@ -378,7 +378,11 @@ if (hasUsableHeader(workDetectedHeader)) {
 }
 }
 
-if (joined.includes('REST DAY SCHEDULE') || joined.includes('REST DAY DATE')) {
+if (
+  joined.includes('REST DAY SCHEDULE') ||
+  joined.includes('REST DAY DATE') ||
+  joined.includes('RD DATE')
+) {
 if (hasUsableHeader(restDetectedHeader)) {
   restHeader = restDetectedHeader;
 }
