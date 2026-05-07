@@ -671,6 +671,99 @@ function getImportedPreviewConflicts() {
     }
   });
 
+    // 4. Weekend RD Validation
+  const weekendDays = ['Friday', 'Saturday', 'Sunday'];
+  const employeeMonthWeekMap = {};
+
+  function getWeekStart(dateStr) {
+    const d = new Date(dateStr);
+    const day = d.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + mondayOffset);
+
+    return monday.toISOString().split('T')[0];
+  }
+
+  restRows.forEach(row => {
+    if (!row.employeeNo || !row.date) return;
+
+    const date = new Date(row.date);
+    if (isNaN(date)) return;
+
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
+    const dayName = date.toLocaleDateString('en-US', {
+      weekday: 'long'
+    });
+
+    if (!weekendDays.includes(dayName)) return;
+
+    const weekKey = getWeekStart(row.date);
+    const empKey = `${row.employeeNo}-${year}-${month}`;
+
+    if (!employeeMonthWeekMap[empKey]) {
+      employeeMonthWeekMap[empKey] = {};
+    }
+
+    if (!employeeMonthWeekMap[empKey][weekKey]) {
+      employeeMonthWeekMap[empKey][weekKey] = [];
+    }
+
+    employeeMonthWeekMap[empKey][weekKey].push({
+      row,
+      dayName
+    });
+  });
+
+  Object.values(employeeMonthWeekMap).forEach(weeks => {
+    let weekendGroupCount = 0;
+
+    Object.values(weeks).forEach(entries => {
+      const days = entries.map(e => e.dayName);
+
+      const hasFriday = days.includes('Friday');
+      const hasSaturday = days.includes('Saturday');
+      const hasSunday = days.includes('Sunday');
+
+      const hasConsecutiveWeekend =
+        (hasFriday && hasSaturday) ||
+        (hasSaturday && hasSunday);
+
+      if (hasConsecutiveWeekend) {
+        entries.forEach(e => {
+          previewConflicts.push({
+            fileName: e.row.fileName,
+            sheetName: e.row.sheetName,
+            employeeNo: e.row.employeeNo,
+            date: e.row.date,
+            reason: 'Consecutive weekend Rest Days are not allowed.'
+          });
+        });
+      }
+
+      if (hasFriday || hasSaturday || hasSunday) {
+        weekendGroupCount++;
+      }
+    });
+
+    if (weekendGroupCount > 4) {
+      Object.values(weeks)
+        .flat()
+        .forEach(e => {
+          previewConflicts.push({
+            fileName: e.row.fileName,
+            sheetName: e.row.sheetName,
+            employeeNo: e.row.employeeNo,
+            date: e.row.date,
+            reason: 'Maximum weekend RD groups exceeded. Allowed maximum is 4 per month.'
+          });
+        });
+    }
+  });
+
   return previewConflicts;
 }
 
