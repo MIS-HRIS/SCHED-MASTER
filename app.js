@@ -823,7 +823,7 @@ const fileKeyCounts = {};
 
 importedFiles.forEach(file => {
   const key = file.importFileKey || file.fileName;
-  fileKeyCounts[key] = 1;
+  fileKeyCounts[key] = (fileKeyCounts[key] || 0) + 1;
 });
 
 Object.values(filesGrouped).forEach(fileGroup => {
@@ -1039,76 +1039,71 @@ async function handleImportFiles(event, appendMode = false) {
         type: 'array'
       });
 
-      workbook.SheetNames.forEach(sheetName => {
-        const sheet = workbook.Sheets[sheetName];
+workbook.SheetNames.forEach(sheetName => {
+  try {
+    const sheet = workbook.Sheets[sheetName];
 
-        const rows = XLSX.utils.sheet_to_json(sheet, {
-  header: 1,
-  raw: false,
-  defval: ''
-});
+    const rows = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      raw: false,
+      defval: ''
+    });
 
+    const cleanedRows = [];
 
-        const cleanedRows = [];
-
-        rows.forEach(row => {
-          if (
-            row &&
-            row.some(cell => String(cell || '').trim() !== '')
-          ) {
-            cleanedRows.push(
-              row.map(cell => String(cell || '').trim())
-            );
-          }
-        });
-
-        const scheduleContent = detectScheduleContent(cleanedRows);
-
-if (!scheduleContent.isScheduleSheet) {
-  console.log(`Skipped non-schedule sheet: ${sheetName}`);
-  return;
-}
-        
-
-        const dateContext = detectDominantMonthYearFromRows(cleanedRows);
-const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
-
-        parsedRows.forEach(row => {
-  row.sourceFile = file.name;
-  row.sourceSheet = sheetName;
-});
-
-        const conflicts = validateMixedRows(
-          parsedRows,
-          file.name,
-          sheetName
+    rows.forEach(row => {
+      if (
+        row &&
+        row.some(cell => String(cell || '').trim() !== '')
+      ) {
+        cleanedRows.push(
+          row.map(cell => String(cell || '').trim())
         );
+      }
+    });
 
-        importedFiles.push({
-  fileName: file.name,
-  importFileKey,
-          sheetName,
-          rows: parsedRows,
-          conflicts
-        });
+    const scheduleContent = detectScheduleContent(cleanedRows);
 
-        summaryMessage += `FILE: ${file.name}\n`;
-        summaryMessage += `SHEET: ${sheetName}\n`;
+    if (!scheduleContent.isScheduleSheet) {
+      console.log(`Skipped non-schedule sheet: ${sheetName}`);
+      return;
+    }
 
-        const hasConflict = conflicts.length > 0;
+    const dateContext = detectDominantMonthYearFromRows(cleanedRows);
 
-        if (!hasConflict) {
-          summaryMessage += `STATUS: NO CONFLICT\n\n`;
-        } else {
-          summaryMessage += `STATUS: HAS CONFLICT\n`;
+    const parsedRows = parseMixedScheduleRows(
+      cleanedRows,
+      dateContext
+    );
 
-          conflicts.forEach(conflict => {
-            summaryMessage += `• Row ${conflict.row}: ${conflict.reason}\n`;
-          });
+    parsedRows.forEach(row => {
+      row.sourceFile = file.name;
+      row.sourceSheet = sheetName;
+    });
 
-          summaryMessage += `\n`;
-        }
-      });
+    const conflicts = validateMixedRows(
+      parsedRows,
+      file.name,
+      sheetName
+    );
+
+    importedFiles.push({
+      fileName: file.name,
+      importFileKey,
+      sheetName,
+      rows: parsedRows,
+      conflicts
+    });
+
+  } catch (sheetError) {
+    console.error('Sheet failed:', {
+      file: file.name,
+      sheetName,
+      message: sheetError?.message,
+      stack: sheetError?.stack
+    });
+  }
+});
 
     } catch (error) {
 console.error('Import failed:', {
