@@ -373,29 +373,19 @@ const headers = findHeaderIndexes(row);
 const workDetectedHeader = headers.work;
 const restDetectedHeader = headers.rest;
 
-if (joined.includes('WORK SCHEDULE') || joined.includes('SHIFT CODE')) {
 if (hasUsableHeader(workDetectedHeader)) {
   workHeader = workDetectedHeader;
 }
-}
 
-if (
-  joined.includes('REST DAY SCHEDULE') ||
-  joined.includes('REST DAY DATE') ||
-  joined.includes('RD DATE')
-) {
 if (hasUsableHeader(restDetectedHeader)) {
   restHeader = restDetectedHeader;
 }
-}
 
-if (
-  joined.includes('WORK SCHEDULE') ||
-  joined.includes('SHIFT CODE') ||
-  joined.includes('REST DAY SCHEDULE') ||
-  joined.includes('REST DAY DATE') ||
-  joined.includes('RD DATE')
-) {
+const isHeaderRow =
+  hasUsableHeader(workDetectedHeader) ||
+  hasUsableHeader(restDetectedHeader);
+
+if (isHeaderRow) {
   return;
 }
 
