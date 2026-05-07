@@ -776,7 +776,7 @@ function renderImportSummaryDashboard() {
     const groupKey = file.importFileKey || file.fileName;
 
 if (!filesGrouped[groupKey]) {
-      filesGrouped[file.fileName] = {
+      filesGrouped[groupKey] = {
         fileName: file.fileName,
         importFileKey: groupKey,
         sheets: [],
@@ -797,7 +797,10 @@ filesGrouped[groupKey].restCount += file.rows.filter(row => row.type === 'rest')
   });
 
   previewConflicts.forEach(conflict => {
-    if (!filesGrouped[conflict.fileName]) return;
+    const conflictKey = conflict.importFileKey || conflict.fileName;
+
+if (!filesGrouped[conflictKey]) return;
+filesGrouped[conflictKey].scheduleConflicts.push(conflict);
     filesGrouped[conflict.fileName].scheduleConflicts.push(conflict);
   });
 
