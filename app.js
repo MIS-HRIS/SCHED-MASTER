@@ -900,15 +900,18 @@ if (!filesGrouped[groupKey]) {
         indexes: [],
         fieldConflicts: [],
         scheduleConflicts: [],
-workCount: 0,
-restCount: 0,
-isDuplicate: false
+        rows: [],
+	workCount: 0,
+	restCount: 0,
+isDuplicate: false,
+duplicateOf: ''
       };
     }
 
     filesGrouped[groupKey].sheets.push(file.sheetName);
 filesGrouped[groupKey].indexes.push(index);
 filesGrouped[groupKey].fieldConflicts.push(...file.conflicts);
+filesGrouped[groupKey].rows.push(...file.rows);
 filesGrouped[groupKey].workCount += file.rows.filter(row => row.type === 'work').length;
 filesGrouped[groupKey].restCount += file.rows.filter(row => row.type === 'rest').length;
   });
@@ -920,16 +923,33 @@ previewConflicts.forEach(conflict => {
   filesGrouped[conflictKey].scheduleConflicts.push(conflict);
 });
 
-const fileKeyCounts = {};
+const buildScheduleSignature = (rows) => {
+  const normalizedRows = rows
+    .filter(row =>
+      (row.type === 'work' || row.type === 'rest') &&
+      row.employeeNo &&
+      row.date
+    )
+    .map(row => `${row.type}|${String(row.employeeNo).trim()}|${String(row.date).trim()}`)
+    .sort();
 
-importedFiles.forEach(file => {
-  const key = file.importFileKey || file.fileName;
-  fileKeyCounts[key] = (fileKeyCounts[key] || 0) + 1;
-});
+  return normalizedRows.length ? normalizedRows.join('||') : '';
+};
+
+const signatureOwner = {};
 
 Object.values(filesGrouped).forEach(fileGroup => {
-  fileGroup.isDuplicate =
-    fileKeyCounts[fileGroup.importFileKey] > 1;
+  const signature = buildScheduleSignature(fileGroup.rows);
+
+  if (!signature) return;
+
+  if (signatureOwner[signature]) {
+    fileGroup.isDuplicate = true;
+    fileGroup.duplicateOf = signatureOwner[signature].fileName;
+    signatureOwner[signature].isDuplicate = true;
+  } else {
+    signatureOwner[signature] = fileGroup;
+  }
 });
 
   const fileGroups = Object.values(filesGrouped);
