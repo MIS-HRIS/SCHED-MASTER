@@ -88,17 +88,41 @@ addScheduleFilesInput.addEventListener('change', async (event) => {
 generateImportedBtn.addEventListener('click', generateImportedData);
 
 removeConflictFilesBtn.addEventListener('click', () => {
-  importedFiles = importedFiles.filter(file => file.conflicts.length === 0);
+  const previewConflicts = getImportedPreviewConflicts();
+  const conflictedImportKeys = new Set();
+
+  importedFiles.forEach(file => {
+    if (file.conflicts && file.conflicts.length > 0) {
+      conflictedImportKeys.add(file.importFileKey || file.fileName);
+    }
+  });
+
+  previewConflicts.forEach(conflict => {
+    conflictedImportKeys.add(conflict.importFileKey || conflict.fileName);
+  });
+
+  importedFiles = importedFiles.filter(file =>
+    !conflictedImportKeys.has(file.importFileKey || file.fileName)
+  );
+
   generateImportedBtn.disabled = importedFiles.length === 0;
 
 if (importedFiles.length === 0) {
   generateImportedBtn.classList.add('hidden');
+} else {
+  generateImportedBtn.classList.remove('hidden');
 }
 if (importedFiles.length === 0) {
   addScheduleFilesBtn.classList.add('hidden');
+} else {
+  addScheduleFilesBtn.classList.remove('hidden');
 }
   renderImportSummaryDashboard();
-  showWarning('Conflicted file(s) removed.');
+  showWarning(
+    conflictedImportKeys.size > 0
+      ? `${conflictedImportKeys.size} conflicted file(s) removed.`
+      : 'No conflicted file(s) found.'
+  );
 });
 
 removeAllImportedFilesBtn.addEventListener('click', () => {
