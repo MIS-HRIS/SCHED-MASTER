@@ -663,6 +663,42 @@ function detectScheduleType(rows) {
   return 'rest';
 }
 
+function normalizeDayName(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+
+  const dayMap = {
+    sun: 'Sunday',
+    sunday: 'Sunday',
+    mon: 'Monday',
+    monday: 'Monday',
+    tue: 'Tuesday',
+    tues: 'Tuesday',
+    tuesday: 'Tuesday',
+    wed: 'Wednesday',
+    wednesday: 'Wednesday',
+    thu: 'Thursday',
+    thurs: 'Thursday',
+    thursday: 'Thursday',
+    fri: 'Friday',
+    friday: 'Friday',
+    sat: 'Saturday',
+    saturday: 'Saturday'
+  };
+
+  return dayMap[normalized] || '';
+}
+
+function getRestDayName(row) {
+  const date = new Date(row.date);
+  if (!isNaN(date)) {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long'
+    });
+  }
+
+  return normalizeDayName(row.dayOfWeek);
+}
+
 function getImportedPreviewConflicts() {
   const previewConflicts = [];
 
@@ -778,9 +814,7 @@ const taggedRow = {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
 
-    const dayName = date.toLocaleDateString('en-US', {
-      weekday: 'long'
-    });
+    const dayName = getRestDayName(row);
 
     if (!weekendDays.includes(dayName)) return;
 
@@ -811,21 +845,19 @@ const taggedRow = {
       const hasSaturday = days.includes('Saturday');
       const hasSunday = days.includes('Sunday');
 
-      const hasConsecutiveWeekend =
-        (hasFriday && hasSaturday) ||
-        (hasSaturday && hasSunday);
-
-      if (hasConsecutiveWeekend) {
-        entries.forEach(e => {
-          previewConflicts.push({
-            fileName: e.row.fileName,
-            importFileKey: e.row.importFileKey,
-            sheetName: e.row.sheetName,
-            employeeNo: e.row.employeeNo,
-            date: e.row.date,
-            reason: 'Consecutive weekend Rest Days are not allowed.'
+      if (hasSaturday && hasSunday) {
+        entries
+          .filter(e => e.dayName === 'Saturday' || e.dayName === 'Sunday')
+          .forEach(e => {
+            previewConflicts.push({
+              fileName: e.row.fileName,
+              importFileKey: e.row.importFileKey,
+              sheetName: e.row.sheetName,
+              employeeNo: e.row.employeeNo,
+              date: e.row.date,
+              reason: 'Saturday-Sunday consecutive Rest Days are not allowed.'
+            });
           });
-        });
       }
 
       if (hasFriday || hasSaturday || hasSunday) {
@@ -1693,9 +1725,7 @@ restDayData.forEach(r => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
 
-  const dayName = date.toLocaleDateString('en-US', {
-    weekday: 'long'
-  });
+  const dayName = getRestDayName(r);
 
   if (!weekendDays.includes(dayName)) return;
 
@@ -1728,19 +1758,16 @@ Object.values(employeeMonthWeekMap).forEach(weeks => {
     const hasSaturday = days.includes('Saturday');
     const hasSunday = days.includes('Sunday');
 
-    const hasConsecutiveWeekend =
-      (hasFriday && hasSaturday) ||
-      (hasSaturday && hasSunday);
-
-    // ❌ Consecutive weekend RD
-    if (hasConsecutiveWeekend) {
-      entries.forEach(e => {
-        e.row.conflict = true;
-        e.row.conflictType = 'weekend';
-        e.row.conflictReasons.push(
-          'Consecutive weekend Rest Days are not allowed.'
-        );
-      });
+    if (hasSaturday && hasSunday) {
+      entries
+        .filter(e => e.dayName === 'Saturday' || e.dayName === 'Sunday')
+        .forEach(e => {
+          e.row.conflict = true;
+          e.row.conflictType = 'weekend';
+          e.row.conflictReasons.push(
+            'Saturday-Sunday consecutive Rest Days are not allowed.'
+          );
+        });
     }
 
     // ✅ Count valid weekend group
