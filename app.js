@@ -1495,7 +1495,11 @@ function handlePaste(event) {
             : '';
       }
       return entry;
-    });
+    }).filter(entry =>
+      entry.employeeNo &&
+      entry.date &&
+      (!isWork || entry.shiftCode)
+    );
   } else {
     // ✅ Flexible parsing (no headers)
     const classifyValue = (v) => {
@@ -1512,19 +1516,21 @@ function handlePaste(event) {
         return "employeeNo"; // Employee number
 
       // Accepts AASP-, RBG-, RBT-, WHSE- prefixes with 3 digits, optional details like (10-5)
-if (/^(?:AASP|RBG|RBT|WHSE)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
-  return "shiftCode";
+	if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
+	  return "shiftCode";
 
-      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|branch\s*head)$/i.test(v))
-        return "position"; // Known position words
+	      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|mac\s*expert|branch\s*head|site\s*supervisor)$/i.test(v))
+	        return "position"; // Known position words
 
-      if (/^[A-Za-z]+$/.test(v))
-        return "namePart"; // Name fragment
+	      if (/^[A-Za-z,\s.-]+$/.test(v))
+	        return "namePart"; // Name fragment
 
       return "unknown";
     };
 
-    data = rows.map(rawRow => {
+    data = rows
+      .filter(rawRow => !isLikelyPastedHeaderRow(rawRow))
+      .map(rawRow => {
       const tokens = rawRow.join(' ').split(/\s+/).filter(Boolean);
       const entry = { nameParts: [], positionParts: [] };
 
@@ -1544,8 +1550,13 @@ if (/^(?:AASP|RBG|RBT|WHSE)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
       delete entry.nameParts;
       delete entry.positionParts;
 
-      return entry;
-    });
+        return entry;
+      })
+      .filter(entry =>
+        entry.employeeNo &&
+        entry.date &&
+        (!isWork || entry.shiftCode)
+      );
   }
 
   // ✅ Ensure data goes into table
@@ -1568,6 +1579,39 @@ if (/^(?:AASP|RBG|RBT|WHSE)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
   console.log('Parsed data:', data);
 }
 
+function normalizeHeaderName(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[:*]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isLikelyPastedHeaderRow(row) {
+  const normalizedCells = row.map(normalizeHeaderName);
+  const joined = normalizedCells.join(' ');
+
+  const hasEmployeeHeader =
+    joined.includes('employee number') ||
+    joined.includes('employee no') ||
+    joined.includes('emp no');
+
+  const hasDateHeader =
+    joined.includes('work date') ||
+    joined.includes('rest day date') ||
+    joined.includes('rd date') ||
+    normalizedCells.includes('date');
+
+  const hasScheduleHeader =
+    joined.includes('shift code') ||
+    joined.includes('sched code') ||
+    joined.includes('day of week') ||
+    joined.includes('rest day') ||
+    joined.includes('work date');
+
+  return hasEmployeeHeader && hasDateHeader && hasScheduleHeader;
+}
+
 function detectColumnMapping(rows, isWork) {
   let headerRow = -1;
   let mapping = {};
@@ -1578,19 +1622,26 @@ function detectColumnMapping(rows, isWork) {
     employeeNo: ['employee no.', 'emp no', 'employee number', 'id'],
     name: ['name', 'employee name', 'fullname'],
     position: ['position', 'designation', 'role', 'title'],
-    date: isWork ? ['work date', 'date'] : ['rest day date', 'date', 'rest day'],
-    shiftCode: ['shift code', 'shift', 'scode'],
+    date: isWork
+      ? ['work date', 'workdate', 'date', 'schedule date']
+      : ['rest day date', 'rd date', 'restday date', 'date', 'rest day', 'work date'],
+    shiftCode: ['shift code', 'shiftcode', 'shift', 'scode', 'sched code'],
     dayOfWeek: ['day of week', 'day']
   };
 
   for (let i = 0; i < Math.min(rows.length, MAX_ROWS_TO_CHECK); i++) {
-    const row = rows[i].map(h => h.toLowerCase().trim().replace(':', ''));
+    const row = rows[i].map(h => normalizeHeaderName(h));
     let tempMapping = {};
     for (const key in potentialHeaders) {
       const index = row.findIndex(header => potentialHeaders[key].includes(header));
       tempMapping[key] = index !== -1 ? index : null;
     }
-    if (tempMapping.employeeNo !== null && tempMapping.name !== null && tempMapping.date !== null) {
+    const hasRequiredHeader =
+      tempMapping.employeeNo !== null &&
+      tempMapping.date !== null &&
+      (!isWork || tempMapping.shiftCode !== null);
+
+    if (hasRequiredHeader) {
       headerRow = i;
       mapping = tempMapping;
       break;
@@ -1601,12 +1652,12 @@ function detectColumnMapping(rows, isWork) {
   if (headerRow === -1) {
     const classifyValue = (v) => {
       v = v.trim();
-      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v)) return "date";
+      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
       if (/^\d{1,6}$/.test(v)) return "employeeNo";
-      if (/^(?:AASP|RBG|RBT|WHSE)-\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
-      if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead)$/i.test(v)) return "position";
-      if (/^[A-Za-z\s]+$/.test(v)) return "name";
+      if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO)-\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
+      if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead|cashier|mac\s*expert)$/i.test(v)) return "position";
+      if (/^[A-Za-z,\s.-]+$/.test(v)) return "name";
       return "unknown";
     };
 
