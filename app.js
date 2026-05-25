@@ -1286,6 +1286,19 @@ function detectFileHeaderType(buffer) {
   return 'unknown';
 }
 
+function isHiddenSheetRow(sheet, rowIndex) {
+  const rowMeta = sheet && sheet['!rows'] ? sheet['!rows'][rowIndex] : null;
+
+  if (!rowMeta) return false;
+
+  return (
+    rowMeta.hidden === true ||
+    rowMeta.hpx === 0 ||
+    rowMeta.hpt === 0 ||
+    rowMeta.levelHidden === true
+  );
+}
+
 async function readWorkbookFromFile(file) {
   const fileName = String(file.name || '').toLowerCase();
 
@@ -1297,7 +1310,7 @@ async function readWorkbookFromFile(file) {
 
   if (isCsv) {
     const text = await file.text();
-    return XLSX.read(text, { type: 'string', raw: false });
+    return XLSX.read(text, { type: 'string', raw: false, cellStyles: true });
   }
 
   const buffer = await file.arrayBuffer();
@@ -1305,15 +1318,15 @@ async function readWorkbookFromFile(file) {
 
   if (headerType === 'zip' || headerType === 'ole') {
     try {
-      return XLSX.read(buffer, { type: 'array' });
+      return XLSX.read(buffer, { type: 'array', cellStyles: true });
     } catch (arrayError) {
       try {
         const uint8 = new Uint8Array(buffer);
-        return XLSX.read(uint8, { type: 'array' });
+        return XLSX.read(uint8, { type: 'array', cellStyles: true });
       } catch (altError) {
         try {
           const binary = arrayBufferToBinary(buffer);
-          return XLSX.read(binary, { type: 'binary', raw: false });
+          return XLSX.read(binary, { type: 'binary', raw: false, cellStyles: true });
         } catch (binaryError) {
           const readError = arrayError || altError || binaryError;
           readError.message = `Unable to parse workbook (${headerType}): ${readError.message}`;
@@ -1325,7 +1338,7 @@ async function readWorkbookFromFile(file) {
 
   const text = await file.text();
   if (text.includes(',') || text.includes('\t')) {
-    return XLSX.read(text, { type: 'string', raw: false });
+    return XLSX.read(text, { type: 'string', raw: false, cellStyles: true });
   }
 
   const error = new Error(`Unsupported file header type: ${headerType}`);
@@ -1360,7 +1373,11 @@ async function handleImportFiles(event, appendMode = false) {
           });
 
           const cleanedRows = rows
-            .filter(row => Array.isArray(row) && row.some(cell => String(cell || '').trim() !== ''))
+            .filter((row, rowIndex) =>
+              !isHiddenSheetRow(sheet, rowIndex) &&
+              Array.isArray(row) &&
+              row.some(cell => String(cell || '').trim() !== '')
+            )
             .map(row => row.map(cell => String(cell || '').trim()));
 
           const scheduleContent = detectScheduleContent(cleanedRows, sheetName);
