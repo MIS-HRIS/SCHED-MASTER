@@ -288,17 +288,27 @@ function detectDominantMonthYearFromRows(rows) {
   };
 }
 
-function parseMixedScheduleRows(rows, dateContext = null) {
+function parseMixedScheduleRows(rows, dateContext = null, sheetName = '') {
   const parsed = [];
 
   let workHeader = null;
   let restHeader = null;
+  const upperSheetName = String(sheetName || '').toUpperCase();
+  const sheetNameLooksRest =
+    /\bRD\b/.test(upperSheetName) ||
+    upperSheetName.includes('REST');
+  const sheetNameLooksWork =
+    /\bWS\b/.test(upperSheetName) ||
+    upperSheetName.includes('WORK');
 
   const normalize = (v) =>
     String(v || '').toUpperCase().replace(/\s+/g, ' ').trim();
 
   const isShiftCode = (v) =>
-    /^(?:AASP|RBG|RBT|WHSE|CHAR|HO)-\d{3}/i.test(String(v || '').trim());
+    /^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)-\d{3}/i.test(String(v || '').trim());
+
+  const isRestMarkerShiftCode = (v) =>
+    /^(?:RD|R\/D|REST|REST DAY|OFF)$/i.test(String(v || '').trim());
 
   const isEmployeeHeader = (h) =>
     h.includes('EMPLOYEE NUMBER') ||
@@ -365,7 +375,9 @@ const findHeaderIndexes = (row) => {
     h.includes('SCHED CODE') ||
     h.includes('SCODE')
   );
-  const preferRestOnly = rowHasRestDate && !rowHasWorkDate && !rowHasShiftCode;
+  const preferRestOnly =
+    (rowHasRestDate && !rowHasWorkDate && !rowHasShiftCode) ||
+    (sheetNameLooksRest && !sheetNameLooksWork);
 
   const putSharedHeader = (key, idx) => {
     if (preferRestOnly) {
@@ -389,8 +401,13 @@ const findHeaderIndexes = (row) => {
     }
 
     else if (isWorkDateHeader(h)) {
-      if (workHeaders.start === null) workHeaders.start = idx;
-      workHeaders.date = idx;
+      if (preferRestOnly) {
+        if (restHeaders.start === null) restHeaders.start = idx;
+        restHeaders.date = idx;
+      } else {
+        if (workHeaders.start === null) workHeaders.start = idx;
+        workHeaders.date = idx;
+      }
     }
 
     else if (isRestDateHeader(h)) {
@@ -405,6 +422,8 @@ const findHeaderIndexes = (row) => {
       h.includes('SHIFTCODES') ||
       h.includes('SCHED CODE')
     ) {
+      if (preferRestOnly) return;
+
       if (workHeaders.start === null) workHeaders.start = idx;
       workHeaders.shiftCode = idx;
     }
@@ -604,7 +623,12 @@ const cleanDate = String(entry.date || '').trim();
 let hasUsefulData = false;
 
 if (cleanDate !== '') {
-    if (entry.type === 'work' && cleanEmpNo !== '' && entry.shiftCode) {
+    if (
+      entry.type === 'work' &&
+      cleanEmpNo !== '' &&
+      entry.shiftCode &&
+      !isRestMarkerShiftCode(entry.shiftCode)
+    ) {
         hasUsefulData = true;
     } else if (entry.type === 'rest' && cleanEmpNo !== '') {
         hasUsefulData = true;
@@ -1180,49 +1204,60 @@ document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
 });
 }
 function detectScheduleContent(rows, sheetName = '') {
-  const flattened = rows
-    .flat()
-    .map(cell => String(cell || '').toUpperCase().replace(/\s+/g, ' ').trim());
-
   const upperSheetName = String(sheetName || '').toUpperCase();
   const sheetNameLooksSchedule = /(?:WS|RD|WORK|REST|SCHEDULE)/.test(upperSheetName) &&
     !/(?:CODE|SUMMARY|HELP|NOTICE)/.test(upperSheetName);
 
-  const hasEmployeeNo = flattened.some(v =>
+  const normalizeCell = (cell) =>
+    String(cell || '').toUpperCase().replace(/\s+/g, ' ').trim();
+
+  const isEmployeeHeader = (v) =>
     v.includes('EMPLOYEE NUMBER') ||
     v.includes('EMPLOYEE NO') ||
     v.includes('EMP NO') ||
     v.includes('EMPLOYEE #') ||
-    v.includes('EMP ID')
-  );
+    v.includes('EMP ID');
 
-  const hasWorkDate = flattened.some(v =>
+  const isWorkDateHeader = (v) =>
     v.includes('WORK DATE') ||
     v.includes('WORKDATE') ||
-    (v.includes('DATE') && !v.includes('REST'))
-  );
+    v === 'DATE' ||
+    v === 'SCHEDULE DATE';
 
-  const hasShiftCode = flattened.some(v =>
+  const isShiftHeader = (v) =>
     v.includes('SHIFT CODE') ||
     v.includes('SCHED CODE') ||
     v.includes('SCODE') ||
-    v.includes('SHIFT')
-  );
+    v === 'SHIFT';
 
-  const hasRestDayDate = flattened.some(v =>
+  const isRestDateHeader = (v) =>
     v.includes('REST DAY DATE') ||
     v.includes('RESTDAY DATE') ||
     v.includes('RD DATE') ||
-    v.includes('REST DAY') ||
-    v.includes('RESTDAY')
-  );
+    v === 'REST DATE';
+
+  const headerMatches = rows.map(row => {
+    const normalizedRow = row.map(normalizeCell);
+    const hasEmployeeNo = normalizedRow.some(isEmployeeHeader);
+    const hasWorkDate = normalizedRow.some(isWorkDateHeader);
+    const hasShiftCode = normalizedRow.some(isShiftHeader);
+    const hasRestDayDate = normalizedRow.some(isRestDateHeader);
+
+    return {
+      hasWorkSchedule: hasEmployeeNo && hasWorkDate && hasShiftCode,
+      hasRestDay: hasEmployeeNo && hasRestDayDate
+    };
+  });
+
+  const hasWorkSchedule = headerMatches.some(match => match.hasWorkSchedule);
+  const hasRestDay = headerMatches.some(match => match.hasRestDay);
 
   return {
-    hasWorkSchedule: hasEmployeeNo && hasWorkDate && hasShiftCode,
-    hasRestDay: hasEmployeeNo && hasRestDayDate,
+    hasWorkSchedule,
+    hasRestDay,
     isScheduleSheet:
-      (hasEmployeeNo && hasWorkDate && hasShiftCode) ||
-      (hasEmployeeNo && hasRestDayDate) ||
+      hasWorkSchedule ||
+      hasRestDay ||
       sheetNameLooksSchedule
   };
 }
@@ -1337,12 +1372,17 @@ async function handleImportFiles(event, appendMode = false) {
 
           const dateContext = detectDominantMonthYearFromRows(cleanedRows);
 
-          const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext);
+          const parsedRows = parseMixedScheduleRows(cleanedRows, dateContext, sheetName);
 
           parsedRows.forEach(row => {
             row.sourceFile = file.name;
             row.sourceSheet = sheetName;
           });
+
+          if (parsedRows.length === 0) {
+            console.log(`Skipped schedule-like sheet with no valid rows: ${sheetName}`);
+            return;
+          }
 
           const conflicts = validateMixedRows(parsedRows, file.name, sheetName);
 
@@ -1351,15 +1391,7 @@ async function handleImportFiles(event, appendMode = false) {
             importFileKey,
             sheetName,
             rows: parsedRows,
-            conflicts: parsedRows.length > 0
-              ? conflicts
-              : [
-                  ...conflicts,
-                  {
-                    row: '-',
-                    reason: 'Schedule sheet was found, but no valid schedule rows were parsed. Please check the header names and date columns.'
-                  }
-                ]
+            conflicts
           });
           importedSheetCount += 1;
         } catch (sheetError) {
@@ -1540,7 +1572,7 @@ function handlePaste(event) {
         return "employeeNo"; // Employee number
 
       // Accepts AASP-, RBG-, RBT-, WHSE- prefixes with 3 digits, optional details like (10-5)
-	if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
+	if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
 	  return "shiftCode";
 
 	      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|mac\s*expert|branch\s*head|site\s*supervisor)$/i.test(v))
@@ -1679,7 +1711,7 @@ function detectColumnMapping(rows, isWork) {
       if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
       if (/^\d{1,6}$/.test(v)) return "employeeNo";
-      if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO)-\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
+      if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)-\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
       if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead|cashier|mac\s*expert)$/i.test(v)) return "position";
       if (/^[A-Za-z,\s.-]+$/.test(v)) return "name";
       return "unknown";
