@@ -305,7 +305,7 @@ function parseMixedScheduleRows(rows, dateContext = null, sheetName = '') {
     String(v || '').toUpperCase().replace(/\s+/g, ' ').trim();
 
   const isShiftCode = (v) =>
-    /^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)-\d{3}/i.test(String(v || '').trim());
+    /^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)\s*[- ]\s*\d{3}/i.test(String(v || '').trim());
 
   const isRestMarkerShiftCode = (v) =>
     /^(?:RD|R\/D|REST|REST DAY|OFF)$/i.test(String(v || '').trim());
@@ -573,7 +573,7 @@ blocks.forEach(block => {
         entry.employeeNo = getVal('employeeNo');
         const rawDate = getVal('date');
 entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
-        entry.shiftCode = getVal('shiftCode').toUpperCase();
+        entry.shiftCode = normalizeShiftCode(getVal('shiftCode'));
         entry.dayOfWeek = getVal('dayOfWeek');
         entry.position = getVal('position');
       } else {
@@ -582,7 +582,7 @@ entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
           const upper = value.toUpperCase();
 
           if (/^\d{1,6}$/.test(value)) entry.employeeNo ||= value;
-          else if (isShiftCode(upper)) entry.shiftCode ||= upper;
+          else if (isShiftCode(upper)) entry.shiftCode ||= normalizeShiftCode(upper);
           else if (isDate(value)) entry.date ||= excelDateToJS(value, dateContext);
           else if (isDay(value)) entry.dayOfWeek ||= value;
           else if (/^(branch\s*head|oic|officer\s*in\s*charge|cashier|manager|assistant|lead|mac\s*expert|site\s*supervisor)$/i.test(value)) entry.position ||= value;
@@ -709,6 +709,16 @@ function detectScheduleType(rows) {
   }
 
   return 'rest';
+}
+
+function normalizeShiftCode(value) {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/^([A-Z]+)\s*[- ]\s*(\d{3})(.*)$/i, '$1-$2$3')
+    .replace(/\s*\(\s*/g, ' (')
+    .replace(/\s*\)\s*/g, ')')
+    .replace(/\s+/g, ' ');
 }
 
 function normalizeDayName(value) {
@@ -1512,7 +1522,7 @@ else if (
     name: row.name,
     position: row.position,
     date: String(row.date || ''),
-    shiftCode: row.shiftCode,
+    shiftCode: normalizeShiftCode(row.shiftCode),
     dayOfWeek: row.dayOfWeek
   }));
 
@@ -1567,6 +1577,7 @@ function handlePaste(event) {
             ? row[mapping[key]].trim()
             : '';
       }
+      if (entry.shiftCode) entry.shiftCode = normalizeShiftCode(entry.shiftCode);
       return entry;
     }).filter(entry =>
       entry.employeeNo &&
@@ -1589,7 +1600,7 @@ function handlePaste(event) {
         return "employeeNo"; // Employee number
 
       // Accepts AASP-, RBG-, RBT-, WHSE- prefixes with 3 digits, optional details like (10-5)
-	if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)-\d{3}(?:\s*\([^)]*\))?$/i.test(v))
+	if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)\s*[- ]\s*\d{3}(?:\s*\([^)]*\))?$/i.test(v))
 	  return "shiftCode";
 
 	      if (/^(cashier|manager|supervisor|assistant|oic|head|lead|ia|mac|expert|mac\s*expert|branch\s*head|site\s*supervisor)$/i.test(v))
@@ -1614,7 +1625,7 @@ function handlePaste(event) {
         } else if (type === "position") {
           entry.positionParts.push(t);
         } else if (type !== "unknown" && !entry[type]) {
-          entry[type] = t;
+          entry[type] = type === 'shiftCode' ? normalizeShiftCode(t) : t;
         }
       });
 
@@ -1728,7 +1739,7 @@ function detectColumnMapping(rows, isWork) {
       if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
       if (/^\d{1,6}$/.test(v)) return "employeeNo";
-      if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)-\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
+      if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)\s*[- ]\s*\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
       if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead|cashier|mac\s*expert)$/i.test(v)) return "position";
       if (/^[A-Za-z,\s.-]+$/.test(v)) return "name";
       return "unknown";
