@@ -425,7 +425,7 @@ const findHeaderIndexes = (row) => {
       if (preferRestOnly) return;
 
       if (workHeaders.start === null) workHeaders.start = idx;
-      workHeaders.shiftCode = idx;
+      if (workHeaders.shiftCode === null) workHeaders.shiftCode = idx;
     }
 
     else if (h.includes('DAY OF WEEK')) {
@@ -436,6 +436,22 @@ const findHeaderIndexes = (row) => {
       putSharedHeader('position', idx);
     }
   });
+
+  const inferEmployeeNoColumn = (header) => {
+    if (header.employeeNo !== null || header.date === null) return;
+
+    if (header.name !== null && header.name > 0) {
+      header.employeeNo = header.name - 1;
+      return;
+    }
+
+    if (header.date > 0) {
+      header.employeeNo = 0;
+    }
+  };
+
+  inferEmployeeNoColumn(workHeaders);
+  inferEmployeeNoColumn(restHeaders);
 
   if (workHeaders.date !== null && restHeaders.date !== null) {
     const assignSharedHeadersByNearestDate = (key, matcher) => {
@@ -570,7 +586,7 @@ blocks.forEach(block => {
         };
 
         entry.name = getVal('name');
-        entry.employeeNo = getVal('employeeNo');
+        entry.employeeNo = normalizeEmployeeNo(getVal('employeeNo'));
         const rawDate = getVal('date');
 entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
         entry.shiftCode = normalizeShiftCode(getVal('shiftCode'));
@@ -581,7 +597,7 @@ entry.date = rawDate ? excelDateToJS(rawDate, dateContext) : '';
           value = String(value || '').trim();
           const upper = value.toUpperCase();
 
-          if (/^\d{1,6}$/.test(value)) entry.employeeNo ||= value;
+          if (/^\d{1,6}(?:\.0+)?$/.test(value)) entry.employeeNo ||= normalizeEmployeeNo(value);
           else if (isShiftCode(upper)) entry.shiftCode ||= normalizeShiftCode(upper);
           else if (isDate(value)) entry.date ||= excelDateToJS(value, dateContext);
           else if (isDay(value)) entry.dayOfWeek ||= value;
@@ -719,6 +735,15 @@ function normalizeShiftCode(value) {
     .replace(/\s*\(\s*/g, ' (')
     .replace(/\s*\)\s*/g, ')')
     .replace(/\s+/g, ' ');
+}
+
+function normalizeEmployeeNo(value) {
+  const text = String(value || '').trim();
+  const numericMatch = text.match(/^(\d+)\.0+$/);
+
+  if (numericMatch) return numericMatch[1];
+
+  return text;
 }
 
 function normalizeDayName(value) {
@@ -1246,9 +1271,30 @@ function detectScheduleContent(rows, sheetName = '') {
     v.includes('RD DATE') ||
     v === 'REST DATE';
 
-  const headerMatches = rows.map(row => {
+  const hasEmployeeLikeDataUnderHeader = (rowIndex, headerRow) => {
+    const normalizedRow = headerRow.map(normalizeCell);
+    const nameIndex = normalizedRow.findIndex(v => v === 'NAME' || v === 'EMPLOYEE NAME');
+    const dateIndex = normalizedRow.findIndex(v =>
+      isWorkDateHeader(v) ||
+      isRestDateHeader(v)
+    );
+    const candidateIndexes = [];
+
+    if (nameIndex > 0) candidateIndexes.push(nameIndex - 1);
+    if (dateIndex > 0) candidateIndexes.push(0);
+
+    return candidateIndexes.some(candidateIndex =>
+      rows
+        .slice(rowIndex + 1, rowIndex + 8)
+        .some(row => /^\d{1,6}(?:\.0+)?$/.test(String(row[candidateIndex] || '').trim()))
+    );
+  };
+
+  const headerMatches = rows.map((row, rowIndex) => {
     const normalizedRow = row.map(normalizeCell);
-    const hasEmployeeNo = normalizedRow.some(isEmployeeHeader);
+    const hasEmployeeNo =
+      normalizedRow.some(isEmployeeHeader) ||
+      hasEmployeeLikeDataUnderHeader(rowIndex, row);
     const hasWorkDate = normalizedRow.some(isWorkDateHeader);
     const hasShiftCode = normalizedRow.some(isShiftHeader);
     const hasRestDayDate = normalizedRow.some(isRestDateHeader);
@@ -1518,7 +1564,7 @@ else if (
   });
 
   workScheduleData = workRows.map(row => ({
-    employeeNo: row.employeeNo,
+    employeeNo: normalizeEmployeeNo(row.employeeNo),
     name: row.name,
     position: row.position,
     date: String(row.date || ''),
@@ -1527,7 +1573,7 @@ else if (
   }));
 
   restDayData = restRows.map(row => ({
-    employeeNo: row.employeeNo,
+    employeeNo: normalizeEmployeeNo(row.employeeNo),
     name: row.name,
     position: row.position,
     date: String(row.date || ''),
@@ -1577,6 +1623,7 @@ function handlePaste(event) {
             ? row[mapping[key]].trim()
             : '';
       }
+      if (entry.employeeNo) entry.employeeNo = normalizeEmployeeNo(entry.employeeNo);
       if (entry.shiftCode) entry.shiftCode = normalizeShiftCode(entry.shiftCode);
       return entry;
     }).filter(entry =>
@@ -1596,8 +1643,8 @@ function handlePaste(event) {
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v))
         return "dayOfWeek"; // Day
 
-      if (/^\d{1,6}$/.test(v))
-        return "employeeNo"; // Employee number
+	      if (/^\d{1,6}(?:\.0+)?$/.test(v))
+	        return "employeeNo"; // Employee number
 
       // Accepts AASP-, RBG-, RBT-, WHSE- prefixes with 3 digits, optional details like (10-5)
 	if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)\s*[- ]\s*\d{3}(?:\s*\([^)]*\))?$/i.test(v))
@@ -1625,7 +1672,12 @@ function handlePaste(event) {
         } else if (type === "position") {
           entry.positionParts.push(t);
         } else if (type !== "unknown" && !entry[type]) {
-          entry[type] = type === 'shiftCode' ? normalizeShiftCode(t) : t;
+          entry[type] =
+            type === 'shiftCode'
+              ? normalizeShiftCode(t)
+              : type === 'employeeNo'
+                ? normalizeEmployeeNo(t)
+                : t;
         }
       });
 
@@ -1738,7 +1790,7 @@ function detectColumnMapping(rows, isWork) {
       v = v.trim();
       if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(v) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return "date";
       if (/^(sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|fri(day)?|sat(urday)?)$/i.test(v)) return "dayOfWeek";
-      if (/^\d{1,6}$/.test(v)) return "employeeNo";
+      if (/^\d{1,6}(?:\.0+)?$/.test(v)) return "employeeNo";
       if (/^(?:AASP|RBG|RBT|WHSE|CHAR|HO|SG)\s*[- ]\s*\d{3}(?:\s*\([^)]*\))?$/i.test(v)) return "shiftCode";
       if (/^(branch\s*head|oic|ia|supervisor|manager|assistant|lead|cashier|mac\s*expert)$/i.test(v)) return "position";
       if (/^[A-Za-z,\s.-]+$/.test(v)) return "name";
