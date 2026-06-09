@@ -2190,6 +2190,17 @@ if (isWorkSchedule) {
            }
            data.forEach((item, index) => {
 const tr = tbody.insertRow();
+const sourceDetails = [
+  item.sourceFile ? `File: ${item.sourceFile}` : '',
+  item.sourceSheet ? `Sheet: ${item.sourceSheet}` : '',
+  item.sourceRowNumber ? `Excel row: ${item.sourceRowNumber}` : ''
+].filter(Boolean);
+tr.title = sourceDetails.length
+  ? sourceDetails.join('\n')
+  : 'Manual entry or pasted data';
+tr.dataset.sourceFile = item.sourceFile || '';
+tr.dataset.sourceSheet = item.sourceSheet || '';
+tr.dataset.sourceRowNumber = item.sourceRowNumber || '';
 
 // 🟢 Apply conflict highlight color only once
 let rowClass = '';
