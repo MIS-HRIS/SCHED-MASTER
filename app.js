@@ -300,6 +300,8 @@ function parseMixedScheduleRows(rows, dateContext = null, sheetName = '') {
   const sheetNameLooksWork =
     /\bWS\b/.test(upperSheetName) ||
     upperSheetName.includes('WORK');
+  const forceWorkOnly = sheetNameLooksWork && !sheetNameLooksRest;
+  const forceRestOnly = sheetNameLooksRest && !sheetNameLooksWork;
 
   const normalize = (v) =>
     String(v || '').toUpperCase().replace(/\s+/g, ' ').trim();
@@ -328,7 +330,9 @@ function parseMixedScheduleRows(rows, dateContext = null, sheetName = '') {
     h.includes('RESTDAY DATE') ||
     h.includes('RD DATE') ||
     h === 'RD' ||
-    h === 'REST DATE';
+    h === 'REST DATE' ||
+    h === 'REST DAY' ||
+    h === 'RESTDAY';
 
   const isDate = (v) => {
     const value = String(v || '').trim();
@@ -377,7 +381,7 @@ const findHeaderIndexes = (row) => {
   );
   const preferRestOnly =
     (rowHasRestDate && !rowHasWorkDate && !rowHasShiftCode) ||
-    (sheetNameLooksRest && !sheetNameLooksWork);
+    forceRestOnly;
 
   const putSharedHeader = (key, idx) => {
     if (preferRestOnly) {
@@ -411,8 +415,13 @@ const findHeaderIndexes = (row) => {
     }
 
     else if (isRestDateHeader(h)) {
-      if (restHeaders.start === null) restHeaders.start = idx;
-      restHeaders.date = idx;
+      if (forceWorkOnly) {
+        if (workHeaders.start === null) workHeaders.start = idx;
+        workHeaders.date = idx;
+      } else {
+        if (restHeaders.start === null) restHeaders.start = idx;
+        restHeaders.date = idx;
+      }
     }
 
     else if (
@@ -452,6 +461,25 @@ const findHeaderIndexes = (row) => {
 
   inferEmployeeNoColumn(workHeaders);
   inferEmployeeNoColumn(restHeaders);
+
+  if (forceWorkOnly) {
+    restHeaders.start = null;
+    restHeaders.name = null;
+    restHeaders.employeeNo = null;
+    restHeaders.date = null;
+    restHeaders.dayOfWeek = null;
+    restHeaders.position = null;
+  }
+
+  if (forceRestOnly) {
+    workHeaders.start = null;
+    workHeaders.name = null;
+    workHeaders.employeeNo = null;
+    workHeaders.date = null;
+    workHeaders.shiftCode = null;
+    workHeaders.dayOfWeek = null;
+    workHeaders.position = null;
+  }
 
   if (workHeaders.date !== null && restHeaders.date !== null) {
     const assignSharedHeadersByNearestDate = (key, matcher) => {
@@ -1261,7 +1289,7 @@ document.querySelectorAll('.remove-imported-file-btn').forEach(btn => {
 }
 function detectScheduleContent(rows, sheetName = '') {
   const upperSheetName = String(sheetName || '').toUpperCase();
-  const sheetNameLooksSchedule = /(?:WS|RD|WORK|REST|SCHEDULE)/.test(upperSheetName) &&
+  const sheetNameLooksSchedule = /(?:WS|RD|WORK|REST|SCHEDULE|SCEHDULE)/.test(upperSheetName) &&
     !/(?:CODE|SUMMARY|HELP|NOTICE)/.test(upperSheetName);
 
   const normalizeCell = (cell) =>
@@ -1290,7 +1318,9 @@ function detectScheduleContent(rows, sheetName = '') {
     v.includes('REST DAY DATE') ||
     v.includes('RESTDAY DATE') ||
     v.includes('RD DATE') ||
-    v === 'REST DATE';
+    v === 'REST DATE' ||
+    v === 'REST DAY' ||
+    v === 'RESTDAY';
 
   const hasEmployeeLikeDataUnderHeader = (rowIndex, headerRow) => {
     const normalizedRow = headerRow.map(normalizeCell);
