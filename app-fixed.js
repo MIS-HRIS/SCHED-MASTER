@@ -379,9 +379,11 @@ const findHeaderIndexes = (row) => {
     h.includes('SCHED CODE') ||
     h.includes('SCODE')
   );
+  const forceWorkOnlyForRow = forceWorkOnly && !rowHasRestDate;
+  const forceRestOnlyForRow = forceRestOnly && !rowHasWorkDate && !rowHasShiftCode;
   const preferRestOnly =
     (rowHasRestDate && !rowHasWorkDate && !rowHasShiftCode) ||
-    forceRestOnly;
+    forceRestOnlyForRow;
 
   const putSharedHeader = (key, idx) => {
     if (preferRestOnly) {
@@ -415,7 +417,7 @@ const findHeaderIndexes = (row) => {
     }
 
     else if (isRestDateHeader(h)) {
-      if (forceWorkOnly) {
+      if (forceWorkOnlyForRow) {
         if (workHeaders.start === null) workHeaders.start = idx;
         workHeaders.date = idx;
       } else {
@@ -462,7 +464,7 @@ const findHeaderIndexes = (row) => {
   inferEmployeeNoColumn(workHeaders);
   inferEmployeeNoColumn(restHeaders);
 
-  if (forceWorkOnly) {
+  if (forceWorkOnlyForRow) {
     restHeaders.start = null;
     restHeaders.name = null;
     restHeaders.employeeNo = null;
@@ -471,7 +473,7 @@ const findHeaderIndexes = (row) => {
     restHeaders.position = null;
   }
 
-  if (forceRestOnly) {
+  if (forceRestOnlyForRow) {
     workHeaders.start = null;
     workHeaders.name = null;
     workHeaders.employeeNo = null;

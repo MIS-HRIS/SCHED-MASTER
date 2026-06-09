@@ -44,8 +44,7 @@ body {
 }
 
 .dashboard-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
 }
 
 /* 🎨 Buttons & Tabs */
