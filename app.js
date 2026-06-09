@@ -802,6 +802,19 @@ const taggedRow = {
     });
   });
 
+  const getSourceRowIdentity = (row) => {
+    if (!row || row.rowNumber === undefined || row.rowNumber === null || row.rowNumber === '') {
+      return '';
+    }
+
+    return [
+      row.importFileKey || row.fileName || row.sourceFile || '',
+      row.sheetName || row.sourceSheet || '',
+      row.rowNumber,
+      row.type || ''
+    ].join('|');
+  };
+
   // 1. Same employee/date across WS and RD
   const workMap = new Map();
 
@@ -838,8 +851,16 @@ const taggedRow = {
       if (!row.employeeNo || !row.date) return;
 
       const key = `${row.employeeNo}-${row.date}`;
+      const rowIdentity = getSourceRowIdentity(row);
 
       if (seen.has(key)) {
+        const previousRow = seen.get(key);
+        const previousIdentity = getSourceRowIdentity(previousRow);
+
+        if (rowIdentity && previousIdentity && rowIdentity === previousIdentity) {
+          return;
+        }
+
         previewConflicts.push({
           fileName: row.fileName,
           importFileKey: row.importFileKey,
@@ -1569,7 +1590,10 @@ else if (
     position: row.position,
     date: String(row.date || ''),
     shiftCode: normalizeShiftCode(row.shiftCode),
-    dayOfWeek: row.dayOfWeek
+    dayOfWeek: row.dayOfWeek,
+    sourceFile: row.sourceFile || '',
+    sourceSheet: row.sourceSheet || '',
+    sourceRowNumber: row.rowNumber || ''
   }));
 
   restDayData = restRows.map(row => ({
@@ -1579,6 +1603,7 @@ else if (
     date: String(row.date || ''),
     sourceFile: row.sourceFile || '',
 sourceSheet: row.sourceSheet || '',
+    sourceRowNumber: row.rowNumber || '',
     dayOfWeek: row.dayOfWeek
   }));
 
@@ -1872,6 +1897,18 @@ function recheckConflicts() {
   });
 
   // --- 2️⃣ Duplicate dates within WS or RD ---
+  const getGeneratedSourceRowIdentity = (row) => {
+    if (!row || row.sourceRowNumber === undefined || row.sourceRowNumber === null || row.sourceRowNumber === '') {
+      return '';
+    }
+
+    return [
+      row.sourceFile || '',
+      row.sourceSheet || '',
+      row.sourceRowNumber
+    ].join('|');
+  };
+
   const detectDuplicates = (data, label) => {
     const seen = new Map();
     data.forEach((d, idx) => {
@@ -1879,6 +1916,13 @@ function recheckConflicts() {
       const key = `${d.employeeNo}-${d.date}`;
       if (seen.has(key)) {
         const other = seen.get(key);
+        const currentIdentity = getGeneratedSourceRowIdentity(d);
+        const otherIdentity = getGeneratedSourceRowIdentity(other);
+
+        if (currentIdentity && otherIdentity && currentIdentity === otherIdentity) {
+          return;
+        }
+
         d.conflict = true;
         d.conflictType = 'duplicate';
         other.conflict = true;
